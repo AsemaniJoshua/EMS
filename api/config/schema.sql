@@ -123,3 +123,12 @@ GROUP BY sa.registration_id;
 
 -- Best practice: Use the 'live_results' view for real-time display immediately after exam,
 -- then store the result in the 'results' table to preserve history and improve performance.
+
+CREATE TABLE notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    seen BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
