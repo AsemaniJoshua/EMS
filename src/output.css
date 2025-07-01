@@ -160,6 +160,9 @@
   }
 }
 @layer utilities {
+  .visible {
+    visibility: visible;
+  }
   .table {
     display: table;
   }
