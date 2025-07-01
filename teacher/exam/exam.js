@@ -3,6 +3,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     fetchQuestions();
     document.getElementById('questionForm').onsubmit = addQuestion;
+    document.getElementById('requestApprovalBtn').onclick = requestAdminApproval;
+    fetchExamStatus();
 });
 
 function fetchQuestions() {
@@ -64,6 +66,41 @@ function addQuestion(e) {
 function editQuestion(idx) {
     // Placeholder for edit logic
     showNotification('Edit question feature coming soon!', 'info');
+}
+
+function requestAdminApproval() {
+    // Placeholder for backend API call
+    fetch('/api/teacher/request-approval', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration: document.querySelector('[name=duration]').value })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Request failed');
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Approval requested! (placeholder)', 'success');
+        fetchExamStatus();
+    })
+    .catch(error => {
+        showNotification('Approval request failed (placeholder)', 'error');
+    });
+}
+
+function fetchExamStatus() {
+    // Placeholder for backend API call
+    fetch('/api/teacher/exam-status')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('examStatus').textContent = data.status || 'Pending';
+        })
+        .catch(error => {
+            document.getElementById('examStatus').textContent = 'Unknown';
+        });
 }
 
 function showNotification(message, type = 'info') {

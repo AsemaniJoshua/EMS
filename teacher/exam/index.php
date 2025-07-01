@@ -41,13 +41,24 @@
                     <option value="3">Choice 4</option>
                 </select>
             </div>
+            <div>
+                <label class="block text-gray-700">Exam Duration (minutes)</label>
+                <input type="number" name="duration" min="1" required class="w-full px-3 py-2 border rounded">
+            </div>
             <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700">Add Question</button>
         </form>
+        <div class="mb-8">
+            <button id="requestApprovalBtn" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Request Admin Approval</button>
+            <span id="examStatus" class="ml-4 font-semibold"></span>
+        </div>
         <div>
             <h3 class="text-xl font-semibold mb-2">Questions List</h3>
             <ul id="questionsList" class="space-y-2">
                 <!-- Questions will be loaded here by JS -->
             </ul>
+        </div>
+        <div class="mt-8 text-right">
+            <a href="../results/index.php" class="text-blue-500 hover:underline">View Student Results</a>
         </div>
     </div>
     <script src="exam.js"></script>

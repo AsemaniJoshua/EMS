@@ -8,10 +8,9 @@
     "build": "npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch"
   },
   "dependencies": {
-    "@tailwindcss/cli": "^0.1.0",
-    "tailwindcss": "^3.0.0"
+    "@tailwindcss/cli": "^4.1.11",
+    "tailwindcss": "^4.1.11"
   },
-  "devDependencies": {},
   "keywords": [],
   "author": "",
   "license": "ISC"
