@@ -1,8 +1,11 @@
 <?php
 // auto_finalize_results.php
 // Cron job to auto-insert results after exam end time
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/cron_errors.log');
 
-require_once 'config/db.php'; // your DB connection
+require_once 'config/db.php';
 
 // 1. Get all exams whose end time has passed
 $examQuery = "SELECT exam_id FROM exams WHERE end_datetime <= NOW()";
