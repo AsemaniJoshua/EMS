@@ -96,6 +96,7 @@ CREATE TABLE student_answers (
     FOREIGN KEY (choice_id) REFERENCES choices(choice_id)
 );
 
+-- Option 1: Persistent results table, populated at exam submission time
 CREATE TABLE results (
     result_id INT AUTO_INCREMENT PRIMARY KEY,
     registration_id INT NOT NULL,
@@ -106,3 +107,19 @@ CREATE TABLE results (
     completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (registration_id) REFERENCES exam_registrations(registration_id)
 );
+
+-- Option 2: Real-time view for live calculated results (hybrid logic)
+-- Useful for instant scoring preview before storing permanent result
+CREATE VIEW live_results AS
+SELECT
+    sa.registration_id,
+    COUNT(sa.question_id) AS total_questions,
+    SUM(CASE WHEN c.is_correct THEN 1 ELSE 0 END) AS correct_answers,
+    SUM(CASE WHEN NOT c.is_correct THEN 1 ELSE 0 END) AS incorrect_answers,
+    ROUND((SUM(CASE WHEN c.is_correct THEN 1 ELSE 0 END) / COUNT(sa.question_id)) * 100, 2) AS score_percentage
+FROM student_answers sa
+JOIN choices c ON sa.choice_id = c.choice_id
+GROUP BY sa.registration_id;
+
+-- Best practice: Use the 'live_results' view for real-time display immediately after exam,
+-- then store the result in the 'results' table to preserve history and improve performance.
