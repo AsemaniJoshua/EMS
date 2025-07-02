@@ -3,84 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examplify - Login</title>
-    <link href="../../src/output.css" rel="stylesheet">
-    <style>
-        /* Custom styles for Inter font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Custom Keyframes for subtle animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* Apply animations */
-        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-        .animate-zoom-in { animation: zoomIn 0.5s ease-out forwards; opacity: 0; }
-
-        /* Animation delays */
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-        .delay-400 { animation-delay: 0.4s; }
-    </style>
+    <title>Student Login</title>
+    <link rel="stylesheet" href="../../src/output.css">
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-2xl animate-zoom-in">
-        <div class="text-center">
-            <!-- Examplify Logo/Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-emerald-600 mb-4">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
-            <h2 class="mt-6 text-3xl font-extrabold text-gray-900 animate-fade-in delay-100">
-                Welcome Back!
-            </h2>
-            <p class="mt-2 text-sm text-gray-600 animate-fade-in delay-200">
-                Sign in to your Examplify account
-            </p>
-        </div>
-        <form class="mt-8 space-y-6" action="#" method="POST" id="login-form">
-            <div class="space-y-4">
-                <div class="animate-fade-in delay-300">
-                    <label for="email-address" class="sr-only">Email address</label>
-                    <input id="email-address" name="email" type="email" autocomplete="email" required
-                           class="appearance-none rounded-xl relative block w-full px-5 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#06b6d4] focus:border-[#06b6d4] focus:z-10 sm:text-base shadow-sm transition"
-                           placeholder="Email address">
-                </div>
-                <div class="animate-fade-in delay-400">
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required
-                           class="appearance-none rounded-xl relative block w-full px-5 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#06b6d4] focus:border-[#06b6d4] focus:z-10 sm:text-base shadow-sm transition"
-                           placeholder="Password">
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between animate-fade-in delay-500">
-                <div class="flex items-center">
-                    <input id="remember-me" name="remember-me" type="checkbox"
-                           class="h-4 w-4 text-[#06b6d4] focus:ring-[#06b6d4] border-gray-300 rounded">
-                    <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-                        Remember me
-                    </label>
-                </div>
-
-                <div class="text-sm">
-                    <a href="#" class="font-medium text-[#06b6d4] hover:text-[#0e7490] transition">Forgot your password?</a>
-                </div>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-2xl max-w-md w-full">
+        <h2 class="text-3xl font-extrabold mb-6 text-center text-blue-700">Student Login</h2>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-700">Email</label>
+                <input type="email" name="email" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
 
             <div class="animate-fade-in delay-600">
@@ -95,13 +27,48 @@
                     Sign in
                 </button>
             </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-semibold">Login</button>
         </form>
-        <p class="mt-4 text-center text-sm text-gray-600 animate-fade-in delay-700">
-            Don't have an account?
-            <a href="#" class="font-medium text-emerald-600 hover:text-emerald-500">
-                Register here
-            </a>
-        </p>
+        <div class="mt-4 text-center">
+            <button id="forgotPasswordBtn" class="text-blue-500 hover:underline">Forgot Password?</button>
+        </div>
+        <div class="mt-4 text-center">
+            <a href="../signup/index.php" class="text-purple-500 hover:underline">Don't have an account? Sign Up</a>
+        </div>
+    </div>
+    <!-- Forgot Password Modal -->
+    <div id="forgotModal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md relative animate-fadeIn">
+            <button id="closeForgotModal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h2 class="text-xl font-bold text-blue-700 mb-4">Reset Password</h2>
+            <form id="forgotForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-1">Index Number</label>
+                    <input type="text" id="forgotIndex" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your index number">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-semibold">Send OTP</button>
+            </form>
+            <div id="forgotMsg" class="mt-4 text-center text-sm"></div>
+        </div>
+    </div>
+    <!-- OTP Modal -->
+    <div id="otpModal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md relative animate-fadeIn">
+            <button id="closeOtpModal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h2 class="text-xl font-bold text-blue-700 mb-4">Enter OTP</h2>
+            <form id="otpForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-1">6-digit OTP Code</label>
+                    <input type="text" id="otpInput" maxlength="6" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter OTP">
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-semibold">Verify OTP</button>
+            </form>
+            <div id="otpMsg" class="mt-4 text-center text-sm"></div>
+        </div>
     </div>
 
     <script>
@@ -123,5 +90,12 @@
             alert('Login form submitted! (Check console for details)');
         });
     </script>
+    <style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn { animation: fadeIn 0.3s ease; }
+    </style>
 </body>
 </html>
