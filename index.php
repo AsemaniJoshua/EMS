@@ -56,6 +56,7 @@
             transform: translateX(0); /* Slide in from the left */
         }
     </style>
+
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-800">
 
