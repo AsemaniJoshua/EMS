@@ -1,21 +1,67 @@
 -- SQL Schema for Online Exam Management System (Simplified & Relational)
+-- This schema is designed to be simple, relational, and efficient for an online exam management system.
 
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
+CREATE TABLE admins (
+    admin_id INT PRIMARY KEY,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'teacher', 'student') NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+);
+
+CREATE TABLE students (
+    student_id INT PRIMARY KEY,
+    index_number VARCHAR(50) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    password_hash VARCHAR(255) NOT NULL,
+    date_of_birth DATE,
+    gender ENUM('male', 'female'),
+    status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
+    program_id INT NOT NULL,
+    department_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (index_number, program_id),
+    FOREIGN KEY (program_id) REFERENCES programs(program_id),
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+);
+
+CREATE TABLE teachers (
+    teacher_id INT PRIMARY KEY,
+    staff_id VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    password_hash VARCHAR(255) NOT NULL,
+    department_id INT NOT NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (staff_id, department_id),
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+);
+
+CREATE TABLE departments (
+    department_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
 );
 
 CREATE TABLE programs (
     program_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT
+    description TEXT,
+    department_id INT NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
 CREATE TABLE levels (
@@ -34,9 +80,12 @@ CREATE TABLE courses (
     course_id INT AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     title VARCHAR(100) NOT NULL,
+    department_id INT NOT NULL,
+    credits INT NOT NULL,
     program_id INT NOT NULL,
     level_id INT NOT NULL,
     semester_id INT NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id),
     FOREIGN KEY (program_id) REFERENCES programs(program_id),
     FOREIGN KEY (level_id) REFERENCES levels(level_id),
     FOREIGN KEY (semester_id) REFERENCES semesters(semester_id)
