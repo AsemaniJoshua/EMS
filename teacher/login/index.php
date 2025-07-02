@@ -84,38 +84,6 @@
         </p>
     </div>
 
-    <script>
-        document.getElementById('teacher-login-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-
-            const usernameEmail = document.getElementById('username-email').value;
-            const password = document.getElementById('password').value;
-
-            console.log('Teacher Login attempt with:');
-            console.log('Username/Email:', usernameEmail);
-            console.log('Password:', password);
-
-            // --- Conceptual First-Time Login / Password Reset Logic ---
-            // In a real application, you would send these credentials to your backend.
-            // The backend would authenticate the user and return a response indicating
-            // if it's a first-time login (e.g., a flag, or a specific redirect URL).
-
-            // For demonstration purposes, we'll simulate this:
-            // Let's say if the username is 'newteacher' and password is 'default123',
-            // it's considered a first-time login.
-            const isFirstLogin = (usernameEmail === 'newteacher' && password === 'default123');
-
-            if (isFirstLogin) {
-                alert('Welcome! This appears to be your first login. Please reset your password.');
-                // Redirect to the password reset page
-                window.location.href = 'reset-password/index.php';
-            } else {
-                // Simulate successful login for other cases
-                alert('Login successful! Redirecting to dashboard.');
-                // Redirect to the main teacher dashboard
-                window.location.href = '../index.php?page=dashboard';
-            }
-        });
-    </script>
+    <script src="login.js"></script>
 </body>
 </html>

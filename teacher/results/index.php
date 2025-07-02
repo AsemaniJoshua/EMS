@@ -99,3 +99,6 @@
         </table>
     </div>
 </div>
+
+<script src="results.js"></script>
+</body>

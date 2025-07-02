@@ -1,11 +1,42 @@
 // Teacher Results JS
 
 document.addEventListener('DOMContentLoaded', function () {
-    fetchResults();
-    document.getElementById('filterForm').onsubmit = function(e) {
-        e.preventDefault();
-        fetchResults();
-    };
+    fetch('/api/teacher/results')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('results-container');
+            if (container) {
+                container.innerHTML = '';
+                data.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-white rounded-lg shadow p-4 mb-4';
+                    div.innerHTML = `<div class='font-semibold text-gray-800'>${result.student_name}</div><div class='text-gray-600'>Score: ${result.score}</div>`;
+                    container.appendChild(div);
+                });
+            }
+        })
+        .catch(error => {
+            showNotification('Failed to load results.', 'error');
+        });
+    function showNotification(message, type = 'info') {
+        let notification = document.getElementById('notification-toast');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'notification-toast';
+            document.body.appendChild(notification);
+        }
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500',
+        };
+        notification.className = `fixed top-5 right-5 px-6 py-3 rounded shadow-lg text-white text-base font-semibold z-50 ${colors[type] || colors.info}`;
+        notification.textContent = message;
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
 });
 
 function fetchResults() {
@@ -44,19 +75,4 @@ function populateResults(results) {
         `;
         table.appendChild(row);
     });
-}
-
-function showNotification(message, type = 'info') {
-    const colors = {
-        success: 'bg-green-500',
-        error: 'bg-red-500',
-        info: 'bg-blue-500',
-    };
-    const toast = document.createElement('div');
-    toast.className = `fixed top-5 right-5 px-4 py-2 rounded shadow text-white z-50 ${colors[type] || colors.info}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
 } 

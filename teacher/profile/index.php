@@ -1,6 +1,3 @@
-
-
-
 <?php
 // teacher/profile/index.php
 // This file contains the main content for the Teacher Profile section.
@@ -88,29 +85,5 @@
     </form>
 </div>
 
-<script>
-    // Profile Form Submission (for demonstration)
-    document.getElementById('profile-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        console.log('Profile form submitted!');
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-        console.log('Profile Data:', data);
-        alert('Profile changes saved!');
-    });
-
-    // Change Password Form Submission (for demonstration)
-    document.getElementById('change-password-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const newPassword = document.getElementById('new-password').value;
-        const confirmNewPassword = document.getElementById('confirm-new-password').value;
-
-        if (newPassword !== confirmNewPassword) {
-            alert('New passwords do not match!');
-            return;
-        }
-        console.log('Change password form submitted!');
-        console.log('New Password:', newPassword);
-        alert('Password updated successfully!');
-    });
-</script>
+<script src="profile.js"></script>
+</body>
