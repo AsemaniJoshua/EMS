@@ -1,7 +1,7 @@
 // Student Login JS
 
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('loginForm');
+    const form = document.getElementById('login-form');
     if (form) {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function loginUser() {
-    // Placeholder for backend API call
     fetch('/api/student/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -25,25 +24,32 @@ function loginUser() {
         return response.json();
     })
     .then(data => {
-        showNotification('Login successful! (placeholder)', 'success');
-        // TODO: Redirect to dashboard
+        showNotification('Login successful!', 'success');
+        setTimeout(() => {
+            window.location.href = '/student/dashboard/index.php';
+        }, 1200);
     })
     .catch(error => {
-        showNotification('Login failed (placeholder)', 'error');
+        showNotification('Login failed: ' + error.message, 'error');
     });
 }
 
 function showNotification(message, type = 'info') {
+    let notification = document.getElementById('notification-toast');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'notification-toast';
+        document.body.appendChild(notification);
+    }
     const colors = {
         success: 'bg-green-500',
         error: 'bg-red-500',
         info: 'bg-blue-500',
     };
-    const toast = document.createElement('div');
-    toast.className = `fixed top-5 right-5 px-4 py-2 rounded shadow text-white z-50 ${colors[type] || colors.info}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+    notification.className = `fixed top-5 right-5 px-6 py-3 rounded shadow-lg text-white text-base font-semibold z-50 ${colors[type] || colors.info}`;
+    notification.textContent = message;
+    notification.style.display = 'block';
     setTimeout(() => {
-        toast.remove();
+        notification.style.display = 'none';
     }, 3000);
 } 

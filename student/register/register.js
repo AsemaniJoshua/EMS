@@ -19,7 +19,6 @@ function registerUser() {
         showNotification('Passwords do not match', 'error');
         return;
     }
-    // Placeholder for backend API call
     fetch('/api/student/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,25 +29,32 @@ function registerUser() {
         return response.json();
     })
     .then(data => {
-        showNotification('Registration successful! (placeholder)', 'success');
-        // TODO: Redirect to login or dashboard
+        showNotification('Registration successful!', 'success');
+        setTimeout(() => {
+            window.location.href = '../login/index.php';
+        }, 1200);
     })
     .catch(error => {
-        showNotification('Registration failed (placeholder)', 'error');
+        showNotification('Registration failed: ' + error.message, 'error');
     });
 }
 
 function showNotification(message, type = 'info') {
+    let notification = document.getElementById('notification-toast');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'notification-toast';
+        document.body.appendChild(notification);
+    }
     const colors = {
         success: 'bg-green-500',
         error: 'bg-red-500',
         info: 'bg-blue-500',
     };
-    const toast = document.createElement('div');
-    toast.className = `fixed top-5 right-5 px-4 py-2 rounded shadow text-white z-50 ${colors[type] || colors.info}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+    notification.className = `fixed top-5 right-5 px-6 py-3 rounded shadow-lg text-white text-base font-semibold z-50 ${colors[type] || colors.info}`;
+    notification.textContent = message;
+    notification.style.display = 'block';
     setTimeout(() => {
-        toast.remove();
+        notification.style.display = 'none';
     }, 3000);
 } 

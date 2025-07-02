@@ -16,8 +16,8 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 p-8 sm:p-10 bg-white rounded-3xl shadow-2xl border border-gray-200">
+<body class="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-100 to-green-100">
+    <div class="max-w-md w-full space-y-8 p-6 sm:p-8 bg-white rounded-lg shadow-md border border-gray-200">
         <div class="text-center">
             <!-- Examplify Logo/Icon - More prominent and refined -->
             <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-emerald-600 mb-4">
@@ -87,24 +87,6 @@
         </p>
     </div>
 
-    <script>
-        // Basic JavaScript for form submission (for demonstration)
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            console.log('Form submission detected.');
-            event.preventDefault(); // Prevent default form submission
-
-            const email = document.getElementById('email-address').value;
-            const password = document.getElementById('password').value;
-
-            console.log('Login attempt with:');
-            console.log('Email:', email);
-            console.log('Password:', password);
-
-            // For now, just a simple message box for demonstration
-            // In a real application, you would send this data to a backend server
-            // using fetch() or XMLHttpRequest and handle the response.
-            alert('Login form submitted! (Check console for details)');
-        });
-    </script>
+    <script src="./login.js"></script>
 </body>
 </html>
