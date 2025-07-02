@@ -78,6 +78,7 @@
                     Sign In
                 </button>
             </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-semibold">Login</button>
         </form>
         <p class="mt-6 text-center text-base text-gray-600">
             Don't have an account?
@@ -87,6 +88,24 @@
         </p>
     </div>
 
-    <script src="./login.js"></script>
+    <script>
+        // Basic JavaScript for form submission (for demonstration)
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const email = document.getElementById('email-address').value;
+            const password = document.getElementById('password').value;
+
+            // In a real application, you would send this data to a backend server
+            // using fetch() or XMLHttpRequest.
+            console.log('Login attempt with:');
+            console.log('Email:', email);
+            console.log('Password:', password);
+
+            // You might show a loading spinner or a success/error message here
+            // For now, just a simple alert for demonstration
+            alert('Login form submitted! (Check console for details)');
+        });
+    </script>
 </body>
 </html>
