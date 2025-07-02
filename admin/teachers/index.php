@@ -1,6 +1,7 @@
 <?php
-$pageTitle = "Manage Teachers";
-$breadcrumb = "Teachers";
+include_once __DIR__ . '/../components/adminSidebar.php';
+include_once __DIR__ . '/../components/adminHeader.php';
+$currentPage = 'teachers';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -9,10 +10,11 @@ $breadcrumb = "Teachers";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <?php include '../components/Sidebar.php'; ?>
-    <?php include '../components/Header.php'; ?>
+    <?php renderAdminSidebar($currentPage); ?>
+    <?php renderAdminHeader(); ?>>
     
     <!-- Main content area -->
     <main class="pt-20 lg:ml-64 min-h-screen bg-gray-50 transition-all duration-300">
