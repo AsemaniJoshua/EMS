@@ -95,6 +95,9 @@ CREATE TABLE exams (
     exam_id INT AUTO_INCREMENT PRIMARY KEY,
     exam_code VARCHAR(50) NOT NULL UNIQUE,
     title VARCHAR(100) NOT NULL,
+    department_id INT NOT NULL,
+    program_id INT NOT NULL,
+    semester_id INT NOT NULL,
     course_id INT NOT NULL,
     teacher_id INT NOT NULL,
     duration_minutes INT NOT NULL,
@@ -104,9 +107,12 @@ CREATE TABLE exams (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     approved_at TIMESTAMP NULL,
     approved_by INT,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id),
+    FOREIGN KEY (program_id) REFERENCES programs(program_id),
+    FOREIGN KEY (semester_id) REFERENCES semesters(semester_id),
     FOREIGN KEY (course_id) REFERENCES courses(course_id),
-    FOREIGN KEY (teacher_id) REFERENCES users(user_id),
-    FOREIGN KEY (approved_by) REFERENCES users(user_id)
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id),
+    FOREIGN KEY (approved_by) REFERENCES admins(admin_id)
 );
 
 CREATE TABLE questions (
