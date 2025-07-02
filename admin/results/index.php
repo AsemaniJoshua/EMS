@@ -1,37 +1,216 @@
+<?php
+$pageTitle = "Student Results";
+$breadcrumb = "Results";
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Results</title>
-    <link href="/src/output.css" rel="stylesheet">
+    <title><?php echo $pageTitle; ?> - EMS Admin</title>
+    <link rel="stylesheet" href="../../src/output.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="max-w-5xl mx-auto mt-10 p-6 bg-white rounded shadow">
-        <h2 class="text-2xl font-bold mb-6 text-blue-600">Student Results</h2>
-        <form id="filterForm" class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input type="text" name="student" placeholder="Student Name" class="px-3 py-2 border rounded">
-            <input type="text" name="exam" placeholder="Exam" class="px-3 py-2 border rounded">
-            <input type="text" name="category" placeholder="Category" class="px-3 py-2 border rounded">
-            <input type="date" name="date" class="px-3 py-2 border rounded">
-            <button type="submit" class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 col-span-1 md:col-span-4">Filter</button>
-        </form>
-        <table class="min-w-full bg-white border rounded">
-            <thead>
-                <tr>
-                    <th class="py-2 px-4 border-b">Student</th>
-                    <th class="py-2 px-4 border-b">Exam</th>
-                    <th class="py-2 px-4 border-b">Category</th>
-                    <th class="py-2 px-4 border-b">Date</th>
-                    <th class="py-2 px-4 border-b">Score</th>
-                    <th class="py-2 px-4 border-b">Result</th>
-                </tr>
-            </thead>
-            <tbody id="resultsTable">
-                <!-- Results will be populated here by JS -->
-            </tbody>
-        </table>
-    </div>
+    <?php include '../components/Sidebar.php'; ?>
+    <?php include '../components/Header.php'; ?>
+    
+    <!-- Main content area -->
+    <main class="pt-20 lg:ml-64 min-h-screen bg-gray-50 transition-all duration-300">
+        <div class="p-4 lg:p-8 max-w-7xl mx-auto">
+            <?php include '../components/PageHeader.php'; ?>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-blue-100 text-sm font-medium">Total Results</p>
+                            <p class="text-3xl font-bold">2,847</p>
+                            <p class="text-blue-100 text-sm">+156 this week</p>
+                        </div>
+                        <div class="text-blue-200">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg shadow-lg text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-green-100 text-sm font-medium">Pass Rate</p>
+                            <p class="text-3xl font-bold">87.3%</p>
+                            <p class="text-green-100 text-sm">+2.1% improvement</p>
+                        </div>
+                        <div class="text-green-200">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-lg text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-purple-100 text-sm font-medium">Avg. Score</p>
+                            <p class="text-3xl font-bold">78.5%</p>
+                            <p class="text-purple-100 text-sm">+3.2% this term</p>
+                        </div>
+                        <div class="text-purple-200">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg shadow-lg text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-orange-100 text-sm font-medium">Pending Reviews</p>
+                            <p class="text-3xl font-bold">23</p>
+                            <p class="text-orange-100 text-sm">Need attention</p>
+                        </div>
+                        <div class="text-orange-200">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Form -->
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter Results</h3>
+                <form id="filterForm" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <input type="text" id="searchStudent" name="student" placeholder="Student Name" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="text" id="searchExam" name="exam" placeholder="Exam Name" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="filterCategory" name="category" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Science">Science</option>
+                        <option value="English">English</option>
+                        <option value="History">History</option>
+                        <option value="Computer Science">Computer Science</option>
+                    </select>
+                    <input type="date" id="filterDate" name="date" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button type="button" onclick="filterResults()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">Filter</button>
+                </form>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Results Management</h3>
+                        <p class="text-gray-600">View, analyze, and manage student exam results</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="exportResultsBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Export Results
+                        </button>
+                        <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Table -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">All Results</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable" class="bg-white divide-y divide-gray-200">
+                            <!-- Results will be populated here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
     <script src="results.js"></script>
+    <script>
+    // Filter functionality for results
+    function filterResults() {
+        const searchStudent = document.getElementById('searchStudent').value.toLowerCase();
+        const searchExam = document.getElementById('searchExam').value.toLowerCase();
+        const filterCategory = document.getElementById('filterCategory').value;
+        const filterDate = document.getElementById('filterDate').value;
+        
+        const table = document.getElementById('resultsTable');
+        const rows = table.getElementsByTagName('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const studentCell = row.cells[0];
+            const examCell = row.cells[1];
+            const categoryCell = row.cells[2];
+            const dateCell = row.cells[3];
+            
+            if (studentCell && examCell && categoryCell && dateCell) {
+                const student = studentCell.textContent.toLowerCase();
+                const exam = examCell.textContent.toLowerCase();
+                const category = categoryCell.textContent;
+                const date = dateCell.textContent;
+                
+                const studentMatch = searchStudent === '' || student.includes(searchStudent);
+                const examMatch = searchExam === '' || exam.includes(searchExam);
+                const categoryMatch = filterCategory === '' || category === filterCategory;
+                const dateMatch = filterDate === '' || date.includes(filterDate);
+                
+                if (studentMatch && examMatch && categoryMatch && dateMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+        
+        showNotification('Results filtered successfully!', 'info');
+    }
+    
+    function showNotification(message, type = 'info') {
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500'
+        };
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info}`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
+    }
+    </script>
 </body>
 </html> 

@@ -55,6 +55,7 @@
             transform: translateX(0); /* Slide in from the left */
         }
     </style>
+
 </head>
 <body class="max-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100 py-6 px-4 sm:px-6 lg:px-6">
     <div class="min-w-md w-full space-y-8 p-6 sm:p-10 bg-white rounded-3xl shadow-2xl border border-gray-200">
