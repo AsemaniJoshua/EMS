@@ -1,0 +1,12 @@
+RewriteEngine On
+RewriteBase /admin/
+
+# If the request is exactly /admin/ or /admin, redirect to /admin/login/
+RewriteRule ^$ /admin/login/ [R=302,L]
+RewriteRule ^index\.php$ /admin/login/ [R=302,L] # Redirect /admin/index.php too if it exists
+
+# Skip if the request already contains "login" (case-insensitive)
+# This prevents redirecting login-related pages (like /admin/login/index.php)
+RewriteCond %{REQUEST_URI} login [NC]
+RewriteRule ^ - [L]
+
