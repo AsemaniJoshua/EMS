@@ -22,6 +22,7 @@ $currentPage = 'dashboard';
     <!-- Main content -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
+            
             <!-- Page Header -->
             <div class="mb-6 md:flex md:items-center md:justify-between">
                 <div class="flex-1 min-w-0">
@@ -252,8 +253,8 @@ $currentPage = 'dashboard';
                     </div>
                 </div>
             </div>
+
         </div>
     </main>
 </body>
-
 </html>
