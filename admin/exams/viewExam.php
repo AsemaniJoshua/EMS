@@ -161,6 +161,13 @@ $exam = [
                                                 </span>
                                             </div>
                                             <div class="px-4 py-3 border-b flex justify-between items-center">
+                                                <span class="text-sm font-medium text-gray-700">Exam Code</span>
+                                                <span class="text-sm text-gray-900"><?php echo $exam['examCode']; ?></span>
+                                            </div>
+
+                                            
+
+                                            <div class="px-4 py-3 border-b flex justify-between items-center">
                                                 <span class="text-sm font-medium text-gray-700">Passing Score</span>
                                                 <span class="text-sm text-gray-900"><?php echo $exam['passMark']; ?>%</span>
                                             </div>
