@@ -1,9 +1,62 @@
 <?php
+include_once __DIR__ . '/../../api/login/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'teachers';
-?>
 
+// Database connection
+$db = new Database();
+$conn = $db->getConnection();
+
+// Fetch stats
+$totalTeachers = 0;
+$activeTeachers = 0;
+$totalDepartments = 0;
+$pendingReviews = 0;
+
+$stmt = $conn->query("SELECT COUNT(*) as count FROM teachers");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalTeachers = $row['count'];
+}
+$stmt = $conn->query("SELECT COUNT(*) as count FROM teachers WHERE status = 'active'");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $activeTeachers = $row['count'];
+}
+$stmt = $conn->query("SELECT COUNT(*) as count FROM departments");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalDepartments = $row['count'];
+}
+// Pending reviews: count of teachers with status 'inactive' (example logic)
+$stmt = $conn->query("SELECT COUNT(*) as count FROM teachers WHERE status = 'inactive'");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $pendingReviews = $row['count'];
+}
+
+// Fetch departments for filter
+$departments = [];
+$stmt = $conn->query("SELECT name FROM departments ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $departments[] = $row['name'];
+}
+
+// Pagination setup
+$recordsPerPage = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $recordsPerPage;
+
+// Count total records for pagination
+$countStmt = $conn->query("SELECT COUNT(*) FROM teachers t JOIN departments d ON t.department_id = d.department_id");
+$totalRecords = $countStmt->fetchColumn();
+$totalPages = ceil($totalRecords / $recordsPerPage);
+
+// Fetch teachers with pagination
+$teachers = [];
+$stmt = $conn->query("SELECT t.teacher_id, t.staff_id, t.email, t.phone_number, t.username, t.first_name, t.last_name, t.status, d.name as department_name FROM teachers t JOIN departments d ON t.department_id = d.department_id ORDER BY t.first_name, t.last_name LIMIT $offset, $recordsPerPage");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $teachers[] = $row;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -58,7 +111,7 @@ $currentPage = 'teachers';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Total Teachers</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">124</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalTeachers); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-emerald-600 font-medium">+5</span>
                                             <span class="ml-1 text-gray-500">new this month</span>
@@ -81,7 +134,7 @@ $currentPage = 'teachers';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Active Teachers</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">118</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($activeTeachers); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-emerald-600 font-medium">95.2%</span>
                                             <span class="ml-1 text-gray-500">active rate</span>
@@ -104,7 +157,7 @@ $currentPage = 'teachers';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Departments</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">12</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalDepartments); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-purple-600 font-medium">All</span>
                                             <span class="ml-1 text-gray-500">covered</span>
@@ -127,7 +180,7 @@ $currentPage = 'teachers';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Pending Reviews</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">6</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($pendingReviews); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-orange-600 font-medium">Requires</span>
                                             <span class="ml-1 text-gray-500">attention</span>
@@ -153,12 +206,9 @@ $currentPage = 'teachers';
                         </div>
                         <select id="filterDepartment" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                             <option value="">All Departments</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Science">Science</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Physical Education">Physical Education</option>
+                            <?php foreach ($departments as $dept): ?>
+                                <option value="<?php echo htmlspecialchars($dept); ?>"><?php echo htmlspecialchars($dept); ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <select id="filterStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                             <option value="">All Status</option>
@@ -190,118 +240,93 @@ $currentPage = 'teachers';
                             </tr>
                         </thead>
                         <tbody id="teachersTable" class="bg-white divide-y divide-gray-200">
-                            <!-- Sample teacher data -->
+                        <?php foreach ($teachers as $teacher): ?>
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
-                                            <img class="h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                                            <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=<?php echo urlencode($teacher['first_name'] . ' ' . $teacher['last_name']); ?>&background=4ade80&color=fff" alt="">
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">Dr. John Smith</div>
-                                            <div class="text-sm text-gray-500">Staff ID: TCH001</div>
+                                            <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
+                                            <div class="text-sm text-gray-500">Staff ID: <?php echo htmlspecialchars($teacher['staff_id']); ?></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">john.smith@school.edu</div>
-                                    <div class="text-sm text-gray-500">+1 (555) 123-4567</div>
+                                    <div class="text-sm text-gray-900"><?php echo htmlspecialchars($teacher['email']); ?></div>
+                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($teacher['phone_number']); ?></div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        Mathematics
+                                        <?php echo htmlspecialchars($teacher['department_name']); ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5"></span>
-                                        Active
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="viewTeacher(1)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button onclick="editTeacher(1)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="deleteTeacher(1)" class="text-red-600 hover:text-red-900 transition-colors">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- Add more sample rows here -->
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <img class="h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1494790108755-2616c6f5e241?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">Prof. Sarah Johnson</div>
-                                            <div class="text-sm text-gray-500">Staff ID: TCH002</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">sarah.johnson@school.edu</div>
-                                    <div class="text-sm text-gray-500">+1 (555) 234-5678</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                        Science
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5"></span>
-                                        Active
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $teacher['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'; ?>">
+                                        <span class="w-1.5 h-1.5 <?php echo $teacher['status'] === 'active' ? 'bg-emerald-400' : 'bg-gray-400'; ?> rounded-full mr-1.5"></span>
+                                        <?php echo ucfirst($teacher['status']); ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
-                                        <button onclick="viewTeacher(2)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
+                                        <a href="view.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-emerald-600 hover:text-emerald-900 transition-colors" title="View">
                                             <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button onclick="editTeacher(2)" class="text-blue-600 hover:text-blue-900 transition-colors">
+                                        </a>
+                                        <a href="edit.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
                                             <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="deleteTeacher(2)" class="text-red-600 hover:text-red-900 transition-colors">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
+                                        </a>
+                                        <a href="delete.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-red-600 hover:text-red-900 transition-colors" title="Delete" onclick="return confirm('Are you sure you want to delete this teacher?');">
                 <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-700">
-                            Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">124</span> teachers
+                            <?php 
+                            $start = min($offset + 1, $totalRecords);
+                            $end = min($offset + $recordsPerPage, $totalRecords);
+                            ?>
+                            Showing <span class="font-medium"><?php echo $start; ?></span> to <span class="font-medium"><?php echo $end; ?></span> of <span class="font-medium"><?php echo $totalRecords; ?></span> teachers
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            <?php if ($page > 1): ?>
+                            <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                                 Previous
-                            </button>
-                            <button class="px-3 py-1 text-sm text-white bg-emerald-600 border border-emerald-600 rounded-md">
-                                1
-                            </button>
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                2
-                            </button>
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                3
-                            </button>
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            </a>
+                            <?php else: ?>
+                            <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
+                                Previous
+                            </span>
+                            <?php endif; ?>
+                            
+                            <?php
+                            $startPage = max(1, $page - 2);
+                            $endPage = min($totalPages, $page + 2);
+                            
+                            for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md <?php echo ($i == $page) ? 'text-white bg-emerald-600 border-emerald-600' : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            <?php endfor; ?>
+                            
+                            <?php if ($page < $totalPages): ?>
+                            <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                                 Next
-                            </button>
+                            </a>
+                            <?php else: ?>
+                            <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
+                                Next
+                            </span>
+                            <?php endif; ?>
                         </div>
+                    </div>
+                </div>
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
                     </div>
                 </div>
             </div>
@@ -340,9 +365,40 @@ $currentPage = 'teachers';
                         row.style.display = 'none';
                     }
                 }
+        function exportTeachers() {
+            showNotification('Exporting teachers data...', 'info');
+            
+            // Create a CSV export of teachers
+            const table = document.getElementById('teachersTable');
+            if (!table) return;
+            
+            let csv = 'Name,Email,Phone,Department,Status\n';
+            
+            for (let i = 0; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                if (row.style.display !== 'none') {
+                    const name = row.cells[0].textContent.trim().split('Staff ID:')[0].trim();
+                    const email = row.cells[1].textContent.trim().split('\n')[0].trim();
+                    const phone = row.cells[1].textContent.trim().split('\n')[1]?.trim() || '';
+                    const department = row.cells[2].textContent.trim();
+                    const status = row.cells[3].textContent.trim();
+                    
+                    csv += `"${name}","${email}","${phone}","${department}","${status}"\n`;
+                }
             }
-
-            showNotification('Teachers filtered successfully!', 'success');
+            
+            // Create and trigger download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'teachers_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Export complete!', 'success');
         }
 
         // Teacher actions
