@@ -28,7 +28,6 @@ CREATE TABLE students (
     department_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE (index_number, program_id),
     FOREIGN KEY (program_id) REFERENCES programs(program_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
@@ -46,7 +45,6 @@ CREATE TABLE teachers (
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE (staff_id, department_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
