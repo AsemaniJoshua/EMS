@@ -7,7 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Include database connection
-require_once '../config/database.php';
+require_once __DIR__ .'/../../api/config/database.php';
+$database = new Database();
+$conn = $database->getConnection();
 
 // Allow CORS for development (adjust in production)
 header('Access-Control-Allow-Origin: *');
@@ -55,13 +57,12 @@ try {
     }
 
     // Prepare SQL statement to find the admin
-    $stmt = $conn->prepare("SELECT admin_id, email, username, first_name, last_name, password_hash FROM admins WHERE email = ?");
-    $stmt->bind_param("s", $email);
+    $stmt = $conn->prepare("SELECT admin_id, email, username, first_name, last_name, password_hash FROM admins WHERE email = :email");
+    $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->execute();
-    $result = $stmt->get_result();
 
-    if ($result->num_rows === 1) {
-        $admin = $result->fetch_assoc();
+    if ($stmt->rowCount() === 1) {
+        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Verify password
         if (password_verify($password, $admin['password_hash'])) {
@@ -102,11 +103,13 @@ try {
         $response['message'] = 'Invalid email or password';
     }
 
-    $stmt->close();
-} catch (Exception $e) {
+    $stmt = null;
+}catch(Exception $e) {
+    // Handle any exceptions
     $response['message'] = 'An error occurred. Please try again later.';
     // Log the error (in production, use a proper logging system)
     error_log('Login error: ' . $e->getMessage());
+ 
 }
 
 // Return JSON response
