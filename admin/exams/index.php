@@ -30,10 +30,11 @@ $currentPage = 'exams';
                     <p class="mt-1 text-sm text-gray-500">Create, configure and monitor all examination activities</p>
                 </div>
                 <div class="mt-4 md:mt-0">
-                    <button onclick="openCreateExamModal()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                    <!-- Change the button to a direct link instead of opening the modal -->
+                    <a href="createExam.php" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                         <i class="fas fa-plus mr-2 -ml-1"></i>
                         Create New Exam
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -135,14 +136,13 @@ $currentPage = 'exams';
             <!-- Tab Navigation -->
             <div class="mb-6">
                 <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-8">
-                        <button id="tab-upcoming" class="tab-button border-emerald-500 text-emerald-600 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                    <nav class="-mb-px flex space-x-12"> <button id="tab-upcoming" class="tab-button border-emerald-500 text-emerald-600 whitespace-nowrap pb-4 px-2 border-b-2 font-medium text-sm mx-4">
                             Upcoming & Draft
                         </button>
-                        <button id="tab-active" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                        <button id="tab-active" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-2 border-b-2 font-medium text-sm mx-4">
                             Active
                         </button>
-                        <button id="tab-past" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
+                        <button id="tab-past" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-2 border-b-2 font-medium text-sm mx-4">
                             Completed
                         </button>
                     </nav>
@@ -413,79 +413,28 @@ $currentPage = 'exams';
         </div>
     </main>
 
-    <!-- Create/Edit Exam Modal -->
-    <div id="examModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-2xl">
-            <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-6">
-                <h2 class="text-xl font-bold text-gray-900" id="examModalTitle">Create New Exam</h2>
-                <button onclick="closeExamModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form id="examForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Exam Title *</label>
-                        <input type="text" name="title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                        <select name="subject" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <option value="">Select Subject</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Exam Date *</label>
-                        <input type="date" name="examDate" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
-                        <input type="time" name="startTime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
-                        <input type="number" name="duration" min="15" max="240" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <option value="draft">Draft</option>
-                            <option value="ready">Ready</option>
-                            <option value="published">Published</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea name="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeExamModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                        Save Exam
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         // Tab functionality
         document.addEventListener('DOMContentLoaded', function() {
             const tabs = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
-            
+
+            // Set the first tab as active by default
+            if (tabs.length > 0) {
+                tabs.forEach(t => {
+                    t.classList.remove('border-emerald-500', 'text-emerald-600');
+                    t.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                });
+                tabs[0].classList.add('border-emerald-500', 'text-emerald-600');
+                tabs[0].classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                const firstContentId = tabs[0].id.replace('tab-', 'content-');
+                document.getElementById(firstContentId).classList.remove('hidden');
+            }
+
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     // Remove active state from all tabs
@@ -493,16 +442,16 @@ $currentPage = 'exams';
                         t.classList.remove('border-emerald-500', 'text-emerald-600');
                         t.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                     });
-                    
+
                     // Add active state to clicked tab
                     tab.classList.add('border-emerald-500', 'text-emerald-600');
                     tab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                    
+
                     // Hide all tab contents
                     tabContents.forEach(content => {
                         content.classList.add('hidden');
                     });
-                    
+
                     // Show the corresponding content
                     const contentId = tab.id.replace('tab-', 'content-');
                     document.getElementById(contentId).classList.remove('hidden');
@@ -519,12 +468,12 @@ $currentPage = 'exams';
 
         function editExam(id) {
             document.getElementById('examModalTitle').textContent = 'Edit Exam';
-            
+
             // In a real app, you'd fetch the exam data and populate the form
             // For now, we'll just show the modal with empty fields
             document.getElementById('examForm').reset();
             document.getElementById('examModal').classList.remove('hidden');
-            
+
             // Show notification for demonstration
             showNotification('Fetching exam details...', 'info');
         }
@@ -536,13 +485,13 @@ $currentPage = 'exams';
         // Form submission
         document.getElementById('examForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             // Get form data
             const formData = new FormData(this);
-            
+
             // In a real app, you'd send this data to the server
             console.log('Form data:', Object.fromEntries(formData));
-            
+
             // Close modal and show success message
             closeExamModal();
             showNotification('Exam saved successfully!', 'success');
@@ -580,7 +529,7 @@ $currentPage = 'exams';
         function filterExams() {
             const searchTerm = document.getElementById('searchExam').value.toLowerCase();
             const filterSubject = document.getElementById('filterSubject').value;
-            
+
             showNotification('Applying filters...', 'info');
             // In a real app, you'd filter the table data based on the search term and filters
         }
