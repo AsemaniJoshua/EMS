@@ -24,7 +24,7 @@ $currentPage = 'dashboard';
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
             
             <!-- Page Header -->
-            <div class="mb-6 md:flex md:items-center md:justify-between">
+            <div class="mb-4 md:flex md:items-center md:justify-between">
                 <div class="flex-1 min-w-0">
                     <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Dashboard</h1>
                     <p class="mt-1 text-sm text-gray-500">Welcome back! Here's your examination overview.</p>
