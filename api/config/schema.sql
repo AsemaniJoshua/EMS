@@ -103,7 +103,7 @@ CREATE TABLE exams (
     duration_minutes INT NOT NULL,
     start_datetime DATETIME,
     end_datetime DATETIME,
-    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    status ENUM('Pending', 'Approved', 'Rejected', 'Draft', 'Completed') DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     approved_at TIMESTAMP NULL,
     approved_by INT,
