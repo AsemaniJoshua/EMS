@@ -48,6 +48,9 @@ $exam = [
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add SweetAlert CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -79,7 +82,7 @@ $exam = [
 
                 <form id="editExamForm" class="p-6 space-y-8">
                     <input type="hidden" name="examId" value="<?php echo $exam['id']; ?>">
-                    
+
                     <!-- Basic Exam Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -196,85 +199,66 @@ $exam = [
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
-                                <input type="number" name="duration" min="15" max="240" required value="<?php echo $exam['duration']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120">
-                            </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score (%) *</label>
+                                    <input type="number" name="passingScore" min="1" max="100" required value="<?php echo $exam['passMark']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 60">
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score (%) *</label>
-                                <input type="number" name="passingScore" min="1" max="100" required value="<?php echo $exam['passMark']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 60">
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Exam Settings</label>
-                                <div class="space-y-3">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="randomizeQuestions" <?php echo $exam['randomize'] ? 'checked' : ''; ?> class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span class="ml-2 text-sm text-gray-700">Randomize question order</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="showResults" <?php echo $exam['showResults'] ? 'checked' : ''; ?> class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span class="ml-2 text-sm text-gray-700">Show results immediately after exam</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="preventCheating" <?php echo $exam['antiCheating'] ? 'checked' : ''; ?> class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span class="ml-2 text-sm text-gray-700">Enable anti-cheating measures</span>
-                                    </label>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Exam Settings</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="randomizeQuestions" <?php echo $exam['randomize'] ? 'checked' : ''; ?> class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                            <span class="ml-2 text-sm text-gray-700">Randomize question order</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="showResults" <?php echo $exam['showResults'] ? 'checked' : ''; ?> class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                            <span class="ml-2 text-sm text-gray-700">Show results immediately after exam</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="preventCheating" <?php echo $exam['antiCheating'] ? 'checked' : ''; ?> class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                            <span class="ml-2 text-sm text-gray-700">Enable anti-cheating measures</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Exam Description -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                            <i class="fas fa-align-left mr-2 text-purple-600"></i>
-                            Additional Information
-                        </h3>
+                        <!-- Exam Description -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Exam Description</label>
-                            <textarea name="description" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter a description or instructions for the exam"><?php echo htmlspecialchars($exam['description']); ?></textarea>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-align-left mr-2 text-purple-600"></i>
+                                Additional Information
+                            </h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Exam Description</label>
+                                <textarea name="description" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter a description or instructions for the exam"><?php echo htmlspecialchars($exam['description']); ?></textarea>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Form Actions -->
-                    <div class="flex justify-between space-x-4 pt-6 border-t border-gray-100">
-                        <div>
-                            <button type="button" onclick="confirmDelete(<?php echo $examId; ?>)" class="inline-flex items-center px-6 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
-                                <i class="fas fa-trash mr-2"></i>
-                                Delete Exam
-                            </button>
+                        <!-- Form Actions -->
+                        <div class="flex justify-between space-x-4 pt-6 border-t border-gray-100">
+                            <div>
+                                <button type="button" onclick="confirmDelete(<?php echo $examId; ?>)" class="inline-flex items-center px-6 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Delete Exam
+                                </button>
+                            </div>
+                            <div class="flex space-x-4">
+                                <button type="button" onclick="window.location.href='viewExam.php?id=<?php echo $examId; ?>'" class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
+                                    <i class="fas fa-times mr-2"></i>
+                                    Cancel
+                                </button>
+                                <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex space-x-4">
-                            <button type="button" onclick="window.location.href='viewExam.php?id=<?php echo $examId; ?>'" class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
-                                <i class="fas fa-times mr-2"></i>
-                                Cancel
-                            </button>
-                            <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
-                                <i class="fas fa-save mr-2"></i>
-                                Save Changes
-                            </button>
-                        </div>
-                    </div>
                 </form>
             </div>
         </div>
     </main>
-
-    <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h3 class="text-lg font-bold text-gray-900 mb-3">Delete Exam</h3>
-            <p class="text-gray-600 mb-6">Are you sure you want to delete this exam? This action cannot be undone.</p>
-            <div class="flex justify-end space-x-3">
-                <button id="confirm-cancel" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                    Cancel
-                </button>
-                <button id="confirm-delete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                    Delete
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Date validation
@@ -320,68 +304,74 @@ $exam = [
 
             // In a real application, you'd send this data to the server
             console.log('Updating exam:', examData);
-            
-            // Show success message
-            showNotification('Exam updated successfully!', 'success');
-            
-            // Redirect to exam view after a short delay
-            setTimeout(() => {
+
+            // Show success message with SweetAlert
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Exam updated successfully!',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                // Redirect to exam view
                 window.location.href = 'viewExam.php?id=' + examData.examId;
-            }, 1500);
+            });
         });
 
-        // Confirmation modal for delete
+        // Confirmation modal for delete using SweetAlert
         function confirmDelete(examId) {
-            const modal = document.getElementById('confirm-modal');
-            modal.classList.remove('hidden');
-            
-            document.getElementById('confirm-cancel').addEventListener('click', function() {
-                modal.classList.add('hidden');
-            });
-            
-            document.getElementById('confirm-delete').addEventListener('click', function() {
-                // In a real app, you'd send a delete request to the server
-                console.log('Deleting exam:', examId);
-                showNotification('Exam deleted successfully!', 'success');
-                
-                // Redirect to exams list
-                setTimeout(() => {
-                    window.location.href = 'index.php';
-                }, 1500);
-                
-                modal.classList.add('hidden');
+            Swal.fire({
+                title: 'Delete Exam',
+                text: 'Are you sure you want to delete this exam? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // In a real app, you'd send a delete request to the server
+                    console.log('Deleting exam:', examId);
+                    
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Exam deleted successfully!',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect to exams list
+                        window.location.href = 'index.php';
+                    });
+                }
             });
         }
 
-        // Notification system
+        // Notification system using SweetAlert
         function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
+            // Map our types to SweetAlert types
+            const sweetAlertTypes = {
+                success: 'success',
+                error: 'error',
+                info: 'info',
+                warning: 'warning'
             };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
+            
+            Swal.fire({
+                title: '',
+                text: message,
+                icon: sweetAlertTypes[type] || 'info',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
         }
     </script>
 </body>
