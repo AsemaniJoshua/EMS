@@ -1,10 +1,20 @@
 <?php
+include_once __DIR__ . '/../../api/login/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+include_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'teachers';
 $pageTitle = "Add New Teacher";
-?>
 
+// Fetch departments from DB
+$db = new Database();
+$conn = $db->getConnection();
+$departments = [];
+$stmt = $conn->query("SELECT department_id, name FROM departments ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $departments[] = $row;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,6 +24,10 @@ $pageTitle = "Add New Teacher";
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -32,7 +46,8 @@ $pageTitle = "Add New Teacher";
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Add New Teacher</h1>
-                        <p class="mt-1 text-sm text-gray-500">Fill in the details below to add a new teacher to the system</p>
+                        <p class="mt-1 text-sm text-gray-500">Fill in the details below to add a new teacher to the system
+                        </p>
                     </div>
                 </div>
             </div>
@@ -42,8 +57,7 @@ $pageTitle = "Add New Teacher";
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">Teacher Information</h3>
                 </div>
-
-                <form id="addTeacherForm" class="p-6 space-y-8">
+                <form id="addTeacherForm" class="p-6 space-y-8" autocomplete="off">
                     <!-- Personal Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -89,15 +103,9 @@ $pageTitle = "Add New Teacher";
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
                                 <select name="departmentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                     <option value="">Select Department</option>
-                                    <option value="1">Mathematics</option>
-                                    <option value="2">Science</option>
-                                    <option value="3">English</option>
-                                    <option value="4">History</option>
-                                    <option value="5">Computer Science</option>
-                                    <option value="6">Physical Education</option>
-                                    <option value="7">Arts</option>
-                                    <option value="8">Music</option>
-                                    <option value="9">Languages</option>
+                                    <?php foreach ($departments as $dept): ?>
+                                        <option value="<?php echo $dept['department_id']; ?>"><?php echo htmlspecialchars($dept['name']); ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
@@ -139,9 +147,6 @@ $pageTitle = "Add New Teacher";
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
                                 <div class="relative">
                                     <input type="password" name="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter password">
-                                    <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                        <i class="fas fa-eye" id="password-eye"></i>
-                                    </button>
                                 </div>
                             </div>
 
@@ -149,9 +154,6 @@ $pageTitle = "Add New Teacher";
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
                                 <div class="relative">
                                     <input type="password" name="confirmPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Confirm password">
-                                    <button type="button" onclick="togglePassword('confirmPassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                        <i class="fas fa-eye" id="confirmPassword-eye"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -164,7 +166,7 @@ $pageTitle = "Add New Teacher";
                             Cancel
                         </button>
                         <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
-                            <i class="fas fa-plus mr-2"></i>
+                            <i class="fas fa-save mr-2"></i>
                             Add Teacher
                         </button>
                     </div>
@@ -172,161 +174,49 @@ $pageTitle = "Add New Teacher";
             </div>
         </div>
     </main>
-
     <script>
-        // Toggle password visibility
-        function togglePassword(fieldName) {
-            const passwordField = document.querySelector(`input[name="${fieldName}"]`);
-            const eyeIcon = document.getElementById(`${fieldName}-eye`);
-
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
-            }
-        }
-
-        // Auto-generate username from email
-        document.querySelector('input[name="email"]').addEventListener('blur', function() {
-            const email = this.value;
-            const usernameField = document.querySelector('input[name="username"]');
-
-            if (email && !usernameField.value) {
-                const username = email.split('@')[0];
-                usernameField.value = username;
-            }
-        });
-
-        // Auto-generate staff ID
-        document.querySelector('select[name="departmentId"]').addEventListener('change', function() {
-            const staffIdField = document.querySelector('input[name="staffId"]');
-            const selectedDept = this.options[this.selectedIndex].text;
-
-            if (selectedDept && selectedDept !== 'Select Department' && !staffIdField.value) {
-                // Generate a simple staff ID - in real application, this would come from backend
-                const deptCode = selectedDept.substring(0, 3).toUpperCase();
-                const randomNum = Math.floor(Math.random() * 999) + 1;
-                const staffId = `${deptCode}${randomNum.toString().padStart(3, '0')}`;
-                staffIdField.value = staffId;
-            }
-        });
-
-        // Form submission
         document.getElementById('addTeacherForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
-            // Get form data
-            const formData = new FormData(this);
-            const teacherData = {};
-
-            // Convert FormData to object
-            for (let [key, value] of formData.entries()) {
-                teacherData[key] = value;
-            }
-
-            // Validate passwords match
-            if (teacherData.password !== teacherData.confirmPassword) {
-                showNotification('Passwords do not match!', 'error');
-                return;
-            }
-
-            // Validate required fields
-            const requiredFields = ['firstName', 'lastName', 'email', 'staffId', 'departmentId', 'username', 'password'];
-            for (let field of requiredFields) {
-                if (!teacherData[field]) {
-                    const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
-                    showNotification(`Please fill in the ${fieldName} field.`, 'error');
-                    return;
+            const form = this;
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
-            }
-
-            // Validate staff ID format
-            if (!/^[A-Z]{3}\d{3}$/.test(teacherData.staffId)) {
-                showNotification('Staff ID must be in format: ABC123 (3 letters followed by 3 numbers)', 'error');
-                return;
-            }
-
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(teacherData.email)) {
-                showNotification('Please enter a valid email address.', 'error');
-                return;
-            }
-
-            // Validate password strength
-            if (teacherData.password.length < 8) {
-                showNotification('Password must be at least 8 characters long.', 'error');
-                return;
-            }
-
-            // Here you would typically send the data to your backend
-            console.log('Adding teacher:', teacherData);
-
-            // Show success message
-            showNotification('Teacher added successfully!', 'success');
-
-            // Redirect back to teachers list after a short delay
-            setTimeout(() => {
-                window.location.href = 'index.php';
-            }, 2000);
-        });
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
+            });
+            axios.post('/api/teachers/createTeacher.php', data)
+                .then(function(response) {
+                    if (response.data.status === 'success') {
+                        Toast.fire({
+                            icon: 'success',
+                            title: response.data.message
+                        });
+                        setTimeout(function() {
+                            window.location.href = 'index.php';
+                        }, 2000);
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: response.data.message
+                        });
                     }
-                }, 300);
-            }, 3000);
-        }
-
-        // Real-time validation feedback
-        document.querySelector('input[name="email"]').addEventListener('input', function() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (this.value && !emailRegex.test(this.value)) {
-                this.classList.add('border-red-300');
-                this.classList.remove('border-gray-300');
-            } else {
-                this.classList.remove('border-red-300');
-                this.classList.add('border-gray-300');
-            }
-        });
-
-        document.querySelector('input[name="confirmPassword"]').addEventListener('input', function() {
-            const password = document.querySelector('input[name="password"]').value;
-            if (this.value && this.value !== password) {
-                this.classList.add('border-red-300');
-                this.classList.remove('border-gray-300');
-            } else {
-                this.classList.remove('border-red-300');
-                this.classList.add('border-gray-300');
-            }
+                })
+                .catch(function(error) {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Server error. Please try again.'
+                    });
+                });
         });
     </script>
 </body>

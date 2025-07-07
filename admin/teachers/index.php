@@ -359,12 +359,15 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     const departmentMatch = filterDepartment === '' || department === filterDepartment;
                     const statusMatch = filterStatus === '' || status.includes(filterStatus.toLowerCase());
 
-                    if (nameMatch && departmentMatch && statusMatch) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                if (nameMatch && departmentMatch && statusMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
+            }
+        }
+    }
+
         function exportTeachers() {
             showNotification('Exporting teachers data...', 'info');
             
