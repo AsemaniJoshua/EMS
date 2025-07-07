@@ -1,43 +1,38 @@
 <?php
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'teachers';
 $pageTitle = "Teacher Details";
 
-// In a real implementation, you would fetch the teacher data from the database
-// This is just mock data for the UI
-$teacherId = isset($_GET['id']) ? intval($_GET['id']) : 1;
-$teacher = [
-    'id' => $teacherId,
-    'firstName' => 'John',
-    'lastName' => 'Smith',
-    'email' => 'john.smith@school.edu',
-    'phoneNumber' => '+1 (555) 123-4567',
-    'staffId' => 'TCH001',
-    'department' => 'Mathematics',
-    'status' => 'active',
-    'joinDate' => '2021-09-01',
-    'lastLogin' => '2023-12-05 14:23:45',
-    'title' => 'Dr.',
-    'qualifications' => [
-        'PhD in Mathematics, Stanford University',
-        'MSc in Applied Mathematics, MIT',
-        'BSc in Mathematics, University of Michigan'
-    ],
-    'courses' => [
-        ['code' => 'MATH101', 'name' => 'Introduction to Calculus'],
-        ['code' => 'MATH203', 'name' => 'Linear Algebra'],
-        ['code' => 'MATH305', 'name' => 'Differential Equations']
-    ],
-    'exams' => [
-        ['id' => 1, 'title' => 'Midterm Exam - Calculus', 'date' => '2023-10-15', 'status' => 'Completed'],
-        ['id' => 2, 'title' => 'Final Exam - Linear Algebra', 'date' => '2023-11-20', 'status' => 'Completed'],
-        ['id' => 3, 'title' => 'Quiz 1 - Differential Equations', 'date' => '2023-12-10', 'status' => 'Upcoming']
-    ],
-    'profileImage' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-];
-?>
+// Fetch teacher data from DB
+$teacherId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$teacher = null;
+$courses = [];
+$exams = [];
+$qualifications = [];
 
+if ($teacherId > 0) {
+    $db = new Database();
+    $conn = $db->getConnection();
+    // Fetch teacher main info
+    $stmt = $conn->prepare("SELECT t.*, d.name as department FROM teachers t JOIN departments d ON t.department_id = d.department_id WHERE t.teacher_id = ?");
+    $stmt->execute([$teacherId]);
+    $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($teacher) {
+        // Fetch qualifications (if you have a table, otherwise use a field or skip)
+        // Example: $qualifications = ...
+        // Fetch courses
+        $stmt = $conn->prepare("SELECT c.code, c.title FROM courses c WHERE c.department_id = ?");
+        $stmt->execute([$teacher['department_id']]);
+        $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Fetch exams
+        $stmt = $conn->prepare("SELECT exam_id, title, start_datetime as date, status FROM exams WHERE teacher_id = ?");
+        $stmt->execute([$teacherId]);
+        $exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,6 +42,7 @@ $teacher = [
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -57,6 +53,13 @@ $teacher = [
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
 
+            <?php if (!$teacher): ?>
+                <div class="bg-white p-8 rounded-xl shadow text-center">
+                    <h2 class="text-2xl font-bold mb-2 text-red-600">Teacher Not Found</h2>
+                    <p class="mb-4">The teacher you are looking for does not exist.</p>
+                    <a href="index.php" class="inline-block px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium">Back to List</a>
+                </div>
+            <?php else: ?>
             <!-- Page Header with Navigation -->
             <div class="mb-6">
                 <div class="flex items-center mb-4">
@@ -65,14 +68,14 @@ $teacher = [
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Teacher Profile</h1>
-                        <p class="mt-1 text-sm text-gray-500">Viewing details for <?php echo $teacher['title'] . ' ' . $teacher['firstName'] . ' ' . $teacher['lastName']; ?></p>
+                        <p class="mt-1 text-sm text-gray-500">Viewing details for <?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></p>
                     </div>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="mb-6 flex justify-end space-x-3">
-                <button onclick="window.location.href='edit.php?id=<?php echo $teacher['id']; ?>'" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                <button onclick="window.location.href='edit.php?id=<?php echo $teacherId; ?>'" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
                     <i class="fas fa-edit mr-2"></i>
                     Edit Profile
                 </button>
@@ -88,13 +91,13 @@ $teacher = [
                     <!-- Left Column - Profile Image & Basic Info -->
                     <div class="md:w-1/3 bg-gray-50 p-6 border-r border-gray-100">
                         <div class="flex flex-col items-center text-center">
-                            <img src="<?php echo $teacher['profileImage']; ?>" alt="<?php echo $teacher['firstName'] . ' ' . $teacher['lastName']; ?>" class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($teacher['first_name'] . ' ' . $teacher['last_name']); ?>&background=4ade80&color=fff" alt="<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>" class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md">
                             
-                            <h2 class="mt-4 text-xl font-semibold text-gray-900"><?php echo $teacher['title'] . ' ' . $teacher['firstName'] . ' ' . $teacher['lastName']; ?></h2>
+                            <h2 class="mt-4 text-xl font-semibold text-gray-900"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></h2>
                             
                             <div class="mt-1">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <?php echo $teacher['department']; ?>
+                                    <?php echo htmlspecialchars($teacher['department']); ?>
                                 </span>
                             </div>
                             
@@ -110,7 +113,7 @@ $teacher = [
                                     <i class="fas fa-id-badge text-gray-500 mr-3"></i>
                                     <div>
                                         <p class="text-xs text-gray-500">Staff ID</p>
-                                        <p class="text-sm font-medium"><?php echo $teacher['staffId']; ?></p>
+                                        <p class="text-sm font-medium"><?php echo htmlspecialchars($teacher['staff_id']); ?></p>
                                     </div>
                                 </div>
                                 
@@ -118,7 +121,7 @@ $teacher = [
                                     <i class="fas fa-calendar-alt text-gray-500 mr-3"></i>
                                     <div>
                                         <p class="text-xs text-gray-500">Joined</p>
-                                        <p class="text-sm font-medium"><?php echo date('M d, Y', strtotime($teacher['joinDate'])); ?></p>
+                                        <p class="text-sm font-medium"><?php echo date('M d, Y', strtotime($teacher['created_at'])); ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -138,44 +141,31 @@ $teacher = [
                                     <i class="fas fa-envelope text-gray-500 mr-3 w-5 text-center"></i>
                                     <div>
                                         <p class="text-xs text-gray-500">Email</p>
-                                        <p class="text-sm font-medium"><?php echo $teacher['email']; ?></p>
+                                        <p class="text-sm font-medium"><?php echo htmlspecialchars($teacher['email']); ?></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
                                     <i class="fas fa-phone text-gray-500 mr-3 w-5 text-center"></i>
                                     <div>
                                         <p class="text-xs text-gray-500">Phone</p>
-                                        <p class="text-sm font-medium"><?php echo $teacher['phoneNumber']; ?></p>
+                                        <p class="text-sm font-medium"><?php echo htmlspecialchars($teacher['phone_number']); ?></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
                                     <i class="fas fa-building text-gray-500 mr-3 w-5 text-center"></i>
                                     <div>
                                         <p class="text-xs text-gray-500">Department</p>
-                                        <p class="text-sm font-medium"><?php echo $teacher['department']; ?></p>
+                                        <p class="text-sm font-medium"><?php echo htmlspecialchars($teacher['department']); ?></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
                                     <i class="fas fa-clock text-gray-500 mr-3 w-5 text-center"></i>
                                     <div>
                                         <p class="text-xs text-gray-500">Last Login</p>
-                                        <p class="text-sm font-medium"><?php echo date('M d, Y H:i', strtotime($teacher['lastLogin'])); ?></p>
+                                        <p class="text-sm font-medium"><?php echo !empty($teacher['updated_at']) ? date('M d, Y H:i', strtotime($teacher['updated_at'])) : 'N/A'; ?></p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Qualifications -->
-                        <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <i class="fas fa-graduation-cap text-blue-600 mr-2"></i>
-                                Qualifications
-                            </h3>
-                            <ul class="list-disc pl-6 space-y-2">
-                                <?php foreach ($teacher['qualifications'] as $qualification): ?>
-                                <li class="text-sm text-gray-700"><?php echo $qualification; ?></li>
-                                <?php endforeach; ?>
-                            </ul>
                         </div>
                         
                         <!-- Stats -->
@@ -186,15 +176,15 @@ $teacher = [
                             </h3>
                             <div class="grid grid-cols-3 gap-4">
                                 <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                    <p class="text-2xl font-bold text-blue-700"><?php echo count($teacher['courses']); ?></p>
+                                    <p class="text-2xl font-bold text-blue-700"><?php echo count($courses); ?></p>
                                     <p class="text-xs text-blue-700 mt-1">Courses</p>
                                 </div>
                                 <div class="bg-emerald-50 rounded-lg p-4 text-center">
-                                    <p class="text-2xl font-bold text-emerald-700"><?php echo count($teacher['exams']); ?></p>
+                                    <p class="text-2xl font-bold text-emerald-700"><?php echo count($exams); ?></p>
                                     <p class="text-xs text-emerald-700 mt-1">Exams</p>
                                 </div>
                                 <div class="bg-purple-50 rounded-lg p-4 text-center">
-                                    <p class="text-2xl font-bold text-purple-700">96%</p>
+                                    <p class="text-2xl font-bold text-purple-700">-</p>
                                     <p class="text-xs text-purple-700 mt-1">Pass Rate</p>
                                 </div>
                             </div>
@@ -213,9 +203,6 @@ $teacher = [
                         <button id="tab-exams" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
                             Exams
                         </button>
-                        <button id="tab-activity" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">
-                            Recent Activity
-                        </button>
                     </nav>
                 </div>
             </div>
@@ -226,9 +213,6 @@ $teacher = [
                 <div id="content-courses" class="tab-content bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-gray-900">Assigned Courses</h3>
-                        <button class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
-                            View All Courses
-                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -236,29 +220,16 @@ $teacher = [
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <?php foreach ($teacher['courses'] as $index => $course): ?>
+                                <?php foreach ($courses as $course): ?>
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900"><?php echo $course['code']; ?></div>
+                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($course['code']); ?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900"><?php echo $course['name']; ?></div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900"><?php echo rand(15, 40); ?> students</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 transition-colors mr-3">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="text-blue-600 hover:text-blue-900 transition-colors">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
+                                        <div class="text-sm text-gray-900"><?php echo htmlspecialchars($course['title']); ?></div>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -271,9 +242,6 @@ $teacher = [
                 <div id="content-exams" class="hidden tab-content bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-gray-900">Examinations</h3>
-                        <button class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
-                            Create New Exam
-                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -282,14 +250,13 @@ $teacher = [
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <?php foreach ($teacher['exams'] as $exam): ?>
+                                <?php foreach ($exams as $exam): ?>
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900"><?php echo $exam['title']; ?></div>
+                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900"><?php echo date('M d, Y', strtotime($exam['date'])); ?></div>
@@ -301,17 +268,9 @@ $teacher = [
                                         </span>
                                         <?php else: ?>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Upcoming
+                                            <?php echo htmlspecialchars($exam['status']); ?>
                                         </span>
                                         <?php endif; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 transition-colors mr-3">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="text-blue-600 hover:text-blue-900 transition-colors">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -319,85 +278,8 @@ $teacher = [
                         </table>
                     </div>
                 </div>
-
-                <!-- Activity Tab -->
-                <div id="content-activity" class="hidden tab-content bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">Recent Activities</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="flow-root">
-                            <ul class="-mb-8">
-                                <li>
-                                    <div class="relative pb-8">
-                                        <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                                        <div class="relative flex items-start space-x-3">
-                                            <div class="relative">
-                                                <div class="h-10 w-10 rounded-full bg-emerald-500 flex items-center justify-center ring-8 ring-white">
-                                                    <i class="fas fa-clipboard-check text-white"></i>
-                                                </div>
-                                            </div>
-                                            <div class="min-w-0 flex-1">
-                                                <div>
-                                                    <div class="text-sm font-medium text-gray-900">Graded Final Exam - Linear Algebra</div>
-                                                    <p class="mt-0.5 text-sm text-gray-500">December 1, 2023 at 2:30 PM</p>
-                                                </div>
-                                                <div class="mt-2 text-sm text-gray-700">
-                                                    <p>Completed grading for 32 students with an average score of 87%.</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-                                <li>
-                                    <div class="relative pb-8">
-                                        <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                                        <div class="relative flex items-start space-x-3">
-                                            <div class="relative">
-                                                <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-                                                    <i class="fas fa-plus text-white"></i>
-                                                </div>
-                                            </div>
-                                            <div class="min-w-0 flex-1">
-                                                <div>
-                                                    <div class="text-sm font-medium text-gray-900">Created Quiz - Differential Equations</div>
-                                                    <p class="mt-0.5 text-sm text-gray-500">November 25, 2023 at 10:15 AM</p>
-                                                </div>
-                                                <div class="mt-2 text-sm text-gray-700">
-                                                    <p>Added 15 questions to the upcoming quiz scheduled for December 10.</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-                                <li>
-                                    <div class="relative">
-                                        <div class="relative flex items-start space-x-3">
-                                            <div class="relative">
-                                                <div class="h-10 w-10 rounded-full bg-purple-500 flex items-center justify-center ring-8 ring-white">
-                                                    <i class="fas fa-file-alt text-white"></i>
-                                                </div>
-                                            </div>
-                                            <div class="min-w-0 flex-1">
-                                                <div>
-                                                    <div class="text-sm font-medium text-gray-900">Updated course materials for Linear Algebra</div>
-                                                    <p class="mt-0.5 text-sm text-gray-500">November 20, 2023 at 9:45 AM</p>
-                                                </div>
-                                                <div class="mt-2 text-sm text-gray-700">
-                                                    <p>Added new lecture notes and practice problems for the upcoming exam.</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
-
+            <?php endif; ?>
         </div>
     </main>
 
@@ -430,37 +312,6 @@ $teacher = [
                 });
             });
         });
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
-        }
     </script>
 </body>
 

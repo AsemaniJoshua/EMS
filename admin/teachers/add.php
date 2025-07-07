@@ -165,9 +165,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <i class="fas fa-times mr-2"></i>
                             Cancel
                         </button>
-                        <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
+                        <button type="submit" id="submitBtn" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
                             <i class="fas fa-save mr-2"></i>
-                            Add Teacher
+                            <span>Add Teacher</span>
                         </button>
                     </div>
                 </form>
@@ -178,11 +178,18 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         document.getElementById('addTeacherForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const form = this;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Disable button and show loading spinner
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span>Processing...</span>';
+            
             const formData = new FormData(form);
             const data = {};
             formData.forEach((value, key) => {
                 data[key] = value;
             });
+            
             const Toast = Swal.mixin({
                 toast: true,
                 position: 'top-end',
@@ -194,6 +201,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
+            
             axios.post('/api/teachers/createTeacher.php', data)
                 .then(function(response) {
                     if (response.data.status === 'success') {
@@ -209,6 +217,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             icon: 'error',
                             title: response.data.message
                         });
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i><span>Add Teacher</span>';
                     }
                 })
                 .catch(function(error) {
@@ -216,6 +227,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         icon: 'error',
                         title: 'Server error. Please try again.'
                     });
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i><span>Add Teacher</span>';
                 });
         });
     </script>

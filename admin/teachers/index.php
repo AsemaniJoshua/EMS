@@ -14,10 +14,20 @@ $totalTeachers = 0;
 $activeTeachers = 0;
 $totalDepartments = 0;
 $pendingReviews = 0;
+$newTeachersThisMonth = 0;
 
 $stmt = $conn->query("SELECT COUNT(*) as count FROM teachers");
 if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $totalTeachers = $row['count'];
+}
+
+// Calculate new teachers added this month
+$currentYear = date('Y');
+$currentMonth = date('m');
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM teachers WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month");
+$stmt->execute(['year' => $currentYear, 'month' => $currentMonth]);
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $newTeachersThisMonth = $row['count'];
 }
 $stmt = $conn->query("SELECT COUNT(*) as count FROM teachers WHERE status = 'active'");
 if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -41,7 +51,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 }
 
 // Pagination setup
-$recordsPerPage = 10;
+$recordsPerPage = 3;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
@@ -52,7 +62,10 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
 
 // Fetch teachers with pagination
 $teachers = [];
-$stmt = $conn->query("SELECT t.teacher_id, t.staff_id, t.email, t.phone_number, t.username, t.first_name, t.last_name, t.status, d.name as department_name FROM teachers t JOIN departments d ON t.department_id = d.department_id ORDER BY t.first_name, t.last_name LIMIT $offset, $recordsPerPage");
+$stmt = $conn->prepare("SELECT t.teacher_id, t.staff_id, t.email, t.phone_number, t.username, t.first_name, t.last_name, t.status, d.name as department_name FROM teachers t JOIN departments d ON t.department_id = d.department_id ORDER BY t.first_name, t.last_name LIMIT :offset, :recordsPerPage");
+$stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+$stmt->bindValue(':recordsPerPage', (int)$recordsPerPage, PDO::PARAM_INT);
+$stmt->execute();
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $teachers[] = $row;
 }
@@ -113,7 +126,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                     <dd>
                                         <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalTeachers); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+5</span>
+                                            <span class="text-emerald-600 font-medium">
+                                                <?php echo $newTeachersThisMonth > 0 ? '+' : ''; echo $newTeachersThisMonth; ?>
+                                            </span>
                                             <span class="ml-1 text-gray-500">new this month</span>
                                         </div>
                                     </dd>
@@ -126,6 +141,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 <!-- Active Teachers -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                     <div class="p-5">
+                        <?php
+                            $activeRate = $totalTeachers > 0 ? round(($activeTeachers / $totalTeachers) * 100, 1) : 0;
+                        ?>
                         <div class="flex items-center">
                             <div class="flex-shrink-0 bg-blue-50 rounded-lg p-3">
                                 <i class="fas fa-user-check text-blue-600 text-xl"></i>
@@ -136,7 +154,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                     <dd>
                                         <div class="text-xl font-semibold text-gray-900"><?php echo number_format($activeTeachers); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">95.2%</span>
+                                            <span class="text-emerald-600 font-medium"><?php echo $activeRate; ?>%</span>
                                             <span class="ml-1 text-gray-500">active rate</span>
                                         </div>
                                     </dd>
@@ -248,7 +266,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                             <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=<?php echo urlencode($teacher['first_name'] . ' ' . $teacher['last_name']); ?>&background=4ade80&color=fff" alt="">
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
+                                            <div class="text-sm font-medium text-gray-900" data-teacher-name="<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
                                             <div class="text-sm text-gray-500">Staff ID: <?php echo htmlspecialchars($teacher['staff_id']); ?></div>
                                         </div>
                                     </div>
@@ -277,6 +295,16 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <a href="delete.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-red-600 hover:text-red-900 transition-colors" title="Delete" onclick="return confirm('Are you sure you want to delete this teacher?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
                 <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div class="flex items-center justify-between">
@@ -320,22 +348,44 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
                 </div>
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                    </div>
-                </div>
             </div>
         
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Filter functionality
+        // Initialize SweetAlert Toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        /**
+         * Displays a notification toast using SweetAlert.
+         * @param {string} message - The message to display in the notification.
+         * @param {string} [type='info'] - The type of notification ('success', 'error', 'info', 'warning').
+         */
+        function showNotification(message, type = 'info') {
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+
+        /**
+         * Filters the teachers table rows based on the search input (teacher name),
+         * selected department, and selected status.
+         * Only rows matching all active filters will be displayed; others are hidden.
+         * This function is triggered by the Filter button and also by real-time search and dropdown changes.
+         */
         function filterTeachers() {
             const searchName = document.getElementById('searchName').value.toLowerCase();
             const filterDepartment = document.getElementById('filterDepartment').value;
@@ -359,15 +409,21 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     const departmentMatch = filterDepartment === '' || department === filterDepartment;
                     const statusMatch = filterStatus === '' || status.includes(filterStatus.toLowerCase());
 
-                if (nameMatch && departmentMatch && statusMatch) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+                    if (nameMatch && departmentMatch && statusMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 }
             }
         }
-    }
 
+        /**
+         * Exports the currently visible teachers in the table to a CSV file.
+         * Only rows that are currently displayed (not filtered out) will be included.
+         * The CSV will contain columns: Name, Email, Phone, Department, Status.
+         * Triggers a download of the generated CSV file and shows notifications for export status.
+         */
         function exportTeachers() {
             showNotification('Exporting teachers data...', 'info');
             
@@ -381,8 +437,11 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 const row = table.rows[i];
                 if (row.style.display !== 'none') {
                     const name = row.cells[0].textContent.trim().split('Staff ID:')[0].trim();
-                    const email = row.cells[1].textContent.trim().split('\n')[0].trim();
-                    const phone = row.cells[1].textContent.trim().split('\n')[1]?.trim() || '';
+                    // Robust extraction for email and phone
+                    const emailElem = row.cells[1].querySelector('.text-gray-900');
+                    const phoneElem = row.cells[1].querySelector('.text-gray-500');
+                    const email = emailElem ? emailElem.textContent.trim() : '';
+                    const phone = phoneElem ? phoneElem.textContent.trim() : '';
                     const department = row.cells[2].textContent.trim();
                     const status = row.cells[3].textContent.trim();
                     
@@ -415,65 +474,35 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             // Add edit functionality here
         }
 
+        /**
+         * Handles the deletion of a teacher.
+         * @param {number} id - The ID of the teacher to delete.
+         */
         function deleteTeacher(id) {
-            if (confirm('Are you sure you want to delete this teacher?')) {
-                showNotification('Teacher deleted successfully!', 'success');
-                // Add delete functionality here
-            }
-        }
-
-        function openAddTeacherModal() {
-            showNotification('Opening add teacher form...', 'info');
-            // Add modal functionality here
-        }
-
-        function exportTeachers() {
-            showNotification('Exporting teachers data...', 'info');
-            // Add export functionality here
-        }
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
+            showNotification('Delete functionality not implemented in JS. Use the delete link in the Actions column.', 'warning');
+            // You can add AJAX call here if you want to handle deletion via JS.
         }
 
         // Real-time search
-        document.getElementById('searchName').addEventListener('input', function() {
-            if (this.value.length > 2 || this.value.length === 0) {
-                filterTeachers();
-            }
-        });
-
+        const searchNameInput = document.getElementById('searchName');
+        if (searchNameInput) {
+            searchNameInput.addEventListener('input', function() {
+                if (this.value.length > 2 || this.value.length === 0) {
+                    filterTeachers();
+                }
+            });
+        }
+        
         // Auto-filter on dropdown change
-        document.getElementById('filterDepartment').addEventListener('change', filterTeachers);
-        document.getElementById('filterStatus').addEventListener('change', filterTeachers);
+        const filterDepartmentElem = document.getElementById('filterDepartment');
+        if (filterDepartmentElem) {
+            filterDepartmentElem.addEventListener('change', filterTeachers);
+        }
+        
+        const filterStatusElem = document.getElementById('filterStatus');
+        if (filterStatusElem) {
+            filterStatusElem.addEventListener('change', filterTeachers);
+        }
     </script>
 </body>
-
 </html>
