@@ -12,7 +12,7 @@ if (!isset($active_page)) {
 ?>
 
 <!-- Top Navigation Bar -->
-<header class="bg-white shadow-sm py-3 px-6 md:px-8 lg:px-12 flex justify-between items-center sticky top-0 z-40">
+<header class="bg-white shadow-sm py-4 px-8 flex justify-between items-center sticky top-0 z-40 border-b border-gray-100">
     <div class="flex items-center space-x-2">
         <!-- Hamburger menu for mobile -->
         <button id="sidebar-toggle" class="md:hidden text-gray-600 hover:text-emerald-600 focus:outline-none mr-2">
@@ -37,8 +37,8 @@ if (!isset($active_page)) {
 <!-- Main Layout: Sidebar and Content Wrapper -->
 <div class="flex flex-1">
     <!-- Sidebar for Desktop -->
-    <aside class="hidden md:flex flex-col w-64 bg-white shadow-lg border-r border-gray-100 py-6 px-4 space-y-2">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 px-2">Navigation</h3>
+    <aside class="hidden md:flex flex-col w-60 bg-white shadow-lg border-r border-gray-100 py-8 px-4 space-y-2 sticky top-0 h-screen z-30">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6 px-2 tracking-wide uppercase">Navigation</h3>
         <a href="../dashboard/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'dashboard') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
@@ -81,11 +81,11 @@ if (!isset($active_page)) {
     </aside>
 
     <!-- Mobile Sidebar Overlay -->
-    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-50 md:hidden flex flex-col py-6 px-4 space-y-2">
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-60 bg-white shadow-xl z-50 md:hidden flex flex-col py-8 px-4 space-y-2 border-r border-gray-100">
         <button id="close-sidebar" class="self-end text-gray-600 hover:text-emerald-600 focus:outline-none mb-4">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
-        <h3 class="text-lg font-semibold text-gray-900 mb-4 px-2">Navigation</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-6 px-2 tracking-wide uppercase">Navigation</h3>
         <a href="../dashboard/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'dashboard') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
