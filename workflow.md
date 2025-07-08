@@ -45,3 +45,10 @@ Student can update profile, view past performances, and retake exams if allowed.
 
 
 
+Using the admin dashboard at @/admin as a reference, redesign the student dashboard to look like that of the admin dashboard. The content of the student dashboard must not change. Make the modification where ever necessary from sidebar to navbar, to individual sections keep our project colour in mind and making the dashboard neat, nice and appealing.
+
+Perfect!!!. Well done. Wow. I'm impressed.
+
+Now let's move on to the inner content or sections of the dashboard that changes based on the sidebar link clicks. Use the same admin dashboard at @/admin to redesign the inner content of the dashboard(all inner content based on the link clicked at the sidebar).
+
+do not forget our color and design structure.
