@@ -1,5 +1,6 @@
-<?php 
-include_once __DIR__ . '/../components/adminSidebar.php'; 
+<?php
+    include_once __DIR__ . '/../../api/login/sessionCheck.php';
+    include_once __DIR__ . '/../components/adminSidebar.php'; 
 include_once __DIR__ . '/../components/adminHeader.php';
 $currentPage = 'students';
 ?>

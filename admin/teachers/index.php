@@ -51,7 +51,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 }
 
 // Pagination setup
-$recordsPerPage = 3;
+$recordsPerPage = 100;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
@@ -294,9 +294,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                         <a href="edit.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="delete.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-red-600 hover:text-red-900 transition-colors" title="Delete" onclick="return confirm('Are you sure you want to delete this teacher?');">
+                                        <button onclick="confirmDelete(<?php echo $teacher['teacher_id']; ?>, '<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>')" class="text-red-600 hover:text-red-900 transition-colors border-0 bg-transparent p-0" title="Delete">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -475,12 +475,91 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         /**
-         * Handles the deletion of a teacher.
-         * @param {number} id - The ID of the teacher to delete.
+         * Handles the deletion of a teacher via AJAX.
+         * @param {number} teacherId - The ID of the teacher to delete.
+         * @param {string} teacherName - The name of the teacher (for the confirmation message).
          */
-        function deleteTeacher(id) {
-            showNotification('Delete functionality not implemented in JS. Use the delete link in the Actions column.', 'warning');
-            // You can add AJAX call here if you want to handle deletion via JS.
+        function confirmDelete(teacherId, teacherName) {
+            Swal.fire({
+                title: 'Delete Teacher',
+                html: `Are you sure you want to delete <strong>${teacherName}</strong>?<br><br>This action cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show processing state
+                    Toast.fire({
+                        icon: 'info',
+                        title: 'Processing deletion...'
+                    });
+                    
+                    // Send delete request
+                    axios.post('/api/teachers/deleteTeacher.php', {
+                        teacherId: teacherId
+                    })
+                    .then(function(response) {
+                        if (response.data.status === 'success') {
+                            Toast.fire({
+                                icon: 'success',
+                                title: response.data.message
+                            });
+                            
+                            // Remove the row from the table
+                            const rows = document.getElementById('teachersTable').getElementsByTagName('tr');
+                            for (let i = 0; i < rows.length; i++) {
+                                const deleteBtn = rows[i].querySelector(`button[onclick*="${teacherId}"]`);
+                                if (deleteBtn) {
+                                    // Fade out and remove the row
+                                    rows[i].style.transition = 'opacity 0.5s';
+                                    rows[i].style.opacity = '0';
+                                    setTimeout(() => {
+                                        rows[i].remove();
+                                        
+                                        // Update the "Showing X to Y of Z teachers" text
+                                        updatePaginationCounters();
+                                    }, 500);
+                                    break;
+                                }
+                            }
+                        } else {
+                            Toast.fire({
+                                icon: 'error',
+                                title: response.data.message
+                            });
+                        }
+                    })
+                    .catch(function(error) {
+                        Toast.fire({
+                            icon: 'error',
+                            title: 'Server error. Please try again.'
+                        });
+                        console.error(error);
+                    });
+                }
+            });
+        }
+
+        // Add this helper function to update the pagination counters after deletion
+        function updatePaginationCounters() {
+            const paginationText = document.querySelector('.text-sm.text-gray-700');
+            if (paginationText) {
+                const countText = paginationText.textContent;
+                const matches = countText.match(/Showing (\d+) to (\d+) of (\d+) teachers/);
+                
+                if (matches && matches.length === 4) {
+                    const start = parseInt(matches[1]);
+                    const end = parseInt(matches[2]);
+                    const total = parseInt(matches[3]) - 1;
+                    
+                    const newEnd = Math.min(end, total);
+                    paginationText.textContent = `Showing ${start} to ${newEnd} of ${total} teachers`;
+                }
+            }
         }
 
         // Real-time search
