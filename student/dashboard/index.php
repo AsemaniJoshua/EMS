@@ -138,13 +138,21 @@ $breadcrumb = "Dashboard";
                                         <td class="px-6 py-4 whitespace-nowrap">Math Final 2024</td>
                                         <td class="px-6 py-4 whitespace-nowrap">2024-06-20</td>
                                         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-semibold">Pending</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap"><a href="../exam/index.php" class="text-emerald-600 hover:underline">Start</a></td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <button onclick="window.location.href='../exam/index.php'" class="text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
+                                                <i class="fas fa-play text-lg cursor-pointer"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">Science Quiz</td>
                                         <td class="px-6 py-4 whitespace-nowrap">2024-06-25</td>
                                         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-semibold">Pending</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap"><a href="../exam/index.php" class="text-emerald-600 hover:underline">Start</a></td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <button onclick="window.location.href='../exam/index.php'" class="text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
+                                                <i class="fas fa-play text-lg cursor-pointer"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
