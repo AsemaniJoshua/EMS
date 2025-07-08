@@ -56,30 +56,45 @@ if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $examPassRate = $row['avg_score'] ? round($row['avg_score'], 1) : 0.0;
 }
 
-// Fetch programs for filter
+// Fetch programs, departments, levels for filters
 $programs = [];
 $stmt = $conn->query("SELECT name FROM programs ORDER BY name");
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $programs[] = $row['name'];
 }
+$departments = [];
+$stmt = $conn->query("SELECT name FROM departments ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $departments[] = $row['name'];
+}
+$levels = [];
+$stmt = $conn->query("SELECT name FROM levels ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $levels[] = $row['name'];
+}
 
 // Pagination setup
-$recordsPerPage = 1000;
+$recordsPerPage = 500;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
 // Count total records for pagination
-$countStmt = $conn->query("SELECT COUNT(*) FROM students s JOIN programs p ON s.program_id = p.program_id");
+$countStmt = $conn->query("SELECT COUNT(*) FROM students s 
+    JOIN programs p ON s.program_id = p.program_id
+    JOIN departments d ON s.department_id = d.department_id
+    JOIN levels l ON s.level_id = l.level_id");
 $totalRecords = $countStmt->fetchColumn();
 $totalPages = ceil($totalRecords / $recordsPerPage);
 
-// Fetch students with pagination
+// Fetch students with pagination (include department and level)
 $students = [];
 $stmt = $conn->prepare(
     "SELECT s.student_id, s.index_number, s.email, s.phone_number, s.username, s.first_name, s.last_name, s.status, 
-            p.name as program_name
+            p.name as program_name, d.name as department_name, l.name as level_name
      FROM students s
      JOIN programs p ON s.program_id = p.program_id
+     JOIN departments d ON s.department_id = d.department_id
+     JOIN levels l ON s.level_id = l.level_id
      ORDER BY s.first_name, s.last_name
      LIMIT :offset, :recordsPerPage"
 );
@@ -232,7 +247,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             <!-- Search and Filter Bar -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 mb-6">
                 <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                         <div class="relative">
                             <input type="text" id="searchName" placeholder="Search students..."
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -244,6 +259,18 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <option value="">All Programs</option>
                             <?php foreach ($programs as $prog): ?>
                                 <option value="<?php echo htmlspecialchars($prog); ?>"><?php echo htmlspecialchars($prog); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select id="filterDepartment" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="">All Departments</option>
+                            <?php foreach ($departments as $dept): ?>
+                                <option value="<?php echo htmlspecialchars($dept); ?>"><?php echo htmlspecialchars($dept); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select id="filterLevel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="">All Levels</option>
+                            <?php foreach ($levels as $level): ?>
+                                <option value="<?php echo htmlspecialchars($level); ?>"><?php echo htmlspecialchars($level); ?></option>
                             <?php endforeach; ?>
                         </select>
                         <select id="filterStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -265,13 +292,15 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">All Students</h3>
                 </div>
-                <div class="overflow-x-auto">
+                <div>
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -290,28 +319,40 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900"><?php echo htmlspecialchars($student['email']); ?></div>
-                                        <div class="text-sm text-gray-500"><?php echo htmlspecialchars($student['phone_number']); ?></div>
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-48">
+                                        <div><?php echo htmlspecialchars($student['email']); ?></div>
+                                        <div class="text-gray-500"><?php echo htmlspecialchars($student['phone_number']); ?></div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-32">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             <?php echo htmlspecialchars($student['program_name']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-32">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <?php echo htmlspecialchars($student['department_name']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <?php echo htmlspecialchars($student['level_name']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        <?php
-                                        if ($student['status'] === 'active') echo 'bg-emerald-100 text-emerald-800';
-                                        elseif ($student['status'] === 'graduated') echo 'bg-purple-100 text-purple-800';
-                                        else echo 'bg-gray-100 text-gray-600';
-                                        ?>">
+                <?php
+                                if ($student['status'] === 'active') echo 'bg-emerald-100 text-emerald-800';
+                                elseif ($student['status'] === 'graduated') echo 'bg-purple-100 text-purple-800';
+                                else echo 'bg-gray-100 text-gray-600';
+                ?>">
                                             <span class="w-1.5 h-1.5
-                                            <?php
-                                            if ($student['status'] === 'active') echo 'bg-emerald-400';
-                                            elseif ($student['status'] === 'graduated') echo 'bg-purple-400';
-                                            else echo 'bg-gray-400';
-                                            ?> rounded-full mr-1.5"></span>
+                <?php
+                                if ($student['status'] === 'active') echo 'bg-emerald-400';
+                                elseif ($student['status'] === 'graduated') echo 'bg-purple-400';
+                                else echo 'bg-gray-400';
+                ?> rounded-full mr-1.5"></span>
                                             <?php echo ucfirst($student['status']); ?>
                                         </span>
                                     </td>
@@ -334,7 +375,6 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </table>
                 </div>
 
-                <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-700">
@@ -405,6 +445,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         function filterStudents() {
             const searchName = document.getElementById('searchName').value.toLowerCase();
             const filterProgram = document.getElementById('filterProgram').value;
+            const filterDepartment = document.getElementById('filterDepartment').value;
+            const filterLevel = document.getElementById('filterLevel').value;
             const filterStatus = document.getElementById('filterStatus').value;
 
             const table = document.getElementById('studentsTable');
@@ -414,18 +456,24 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 const row = rows[i];
                 const nameCell = row.cells[0];
                 const programCell = row.cells[2];
-                const statusCell = row.cells[3];
+                const departmentCell = row.cells[3];
+                const levelCell = row.cells[4];
+                const statusCell = row.cells[5];
 
-                if (nameCell && programCell && statusCell) {
+                if (nameCell && programCell && departmentCell && levelCell && statusCell) {
                     const name = nameCell.textContent.toLowerCase();
                     const program = programCell.textContent.trim();
+                    const department = departmentCell.textContent.trim();
+                    const level = levelCell.textContent.trim();
                     const status = statusCell.textContent.toLowerCase();
 
                     const nameMatch = searchName === '' || name.includes(searchName);
                     const programMatch = filterProgram === '' || program === filterProgram;
+                    const departmentMatch = filterDepartment === '' || department === filterDepartment;
+                    const levelMatch = filterLevel === '' || level === filterLevel;
                     const statusMatch = filterStatus === '' || status.includes(filterStatus.toLowerCase());
 
-                    if (nameMatch && programMatch && statusMatch) {
+                    if (nameMatch && programMatch && departmentMatch && levelMatch && statusMatch) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
@@ -439,7 +487,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             const table = document.getElementById('studentsTable');
             if (!table) return;
 
-            let csv = 'Name,Email,Phone,Program,Status\n';
+            let csv = 'Name,Email,Phone,Program,Department,Level,Status\n';
 
             for (let i = 0; i < table.rows.length; i++) {
                 const row = table.rows[i];
@@ -450,9 +498,11 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     const email = emailElem ? emailElem.textContent.trim() : '';
                     const phone = phoneElem ? phoneElem.textContent.trim() : '';
                     const program = row.cells[2].textContent.trim();
-                    const status = row.cells[3].textContent.trim();
+                    const department = row.cells[3].textContent.trim();
+                    const level = row.cells[4].textContent.trim();
+                    const status = row.cells[5].textContent.trim();
 
-                    csv += `"${name}","${email}","${phone}","${program}","${status}"\n`;
+                    csv += `"${name}","${email}","${phone}","${program}","${department}","${level}","${status}"\n`;
                 }
             }
 
@@ -510,6 +560,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
         // Auto-filter on dropdown change
         document.getElementById('filterProgram').addEventListener('change', filterStudents);
+        document.getElementById('filterDepartment').addEventListener('change', filterStudents);
+        document.getElementById('filterLevel').addEventListener('change', filterStudents);
         document.getElementById('filterStatus').addEventListener('change', filterStudents);
     </script>
 </body>
