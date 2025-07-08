@@ -1197,6 +1197,9 @@
   .bg-purple-200 {
     background-color: var(--color-purple-200);
   }
+  .bg-purple-400 {
+    background-color: var(--color-purple-400);
+  }
   .bg-purple-500 {
     background-color: var(--color-purple-500);
   }

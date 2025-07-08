@@ -67,10 +67,12 @@ CREATE TABLE students (
     date_of_birth DATE,
     gender ENUM('male', 'female'),
     status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
+    level_id INT NOT NULL,
     program_id INT NOT NULL,
     department_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (level_id) REFERENCES levels(level_id) ,
     FOREIGN KEY (program_id) REFERENCES programs(program_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
