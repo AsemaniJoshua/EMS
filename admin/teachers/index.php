@@ -79,6 +79,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     <title>Teachers - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -100,7 +103,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         <i class="fas fa-download mr-2 -ml-1"></i>
                         Export
                     </button>
-                   
+
                     <a href="./add.php">
                         <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                             <i class="fas fa-plus mr-2 -ml-1"></i>
@@ -127,7 +130,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                         <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalTeachers); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-emerald-600 font-medium">
-                                                <?php echo $newTeachersThisMonth > 0 ? '+' : ''; echo $newTeachersThisMonth; ?>
+                                                <?php echo $newTeachersThisMonth > 0 ? '+' : '';
+                                                echo $newTeachersThisMonth; ?>
                                             </span>
                                             <span class="ml-1 text-gray-500">new this month</span>
                                         </div>
@@ -142,7 +146,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                     <div class="p-5">
                         <?php
-                            $activeRate = $totalTeachers > 0 ? round(($activeTeachers / $totalTeachers) * 100, 1) : 0;
+                        $activeRate = $totalTeachers > 0 ? round(($activeTeachers / $totalTeachers) * 100, 1) : 0;
                         ?>
                         <div class="flex items-center">
                             <div class="flex-shrink-0 bg-blue-50 rounded-lg p-3">
@@ -258,49 +262,49 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             </tr>
                         </thead>
                         <tbody id="teachersTable" class="bg-white divide-y divide-gray-200">
-                        <?php foreach ($teachers as $teacher): ?>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=<?php echo urlencode($teacher['first_name'] . ' ' . $teacher['last_name']); ?>&background=4ade80&color=fff" alt="">
+                            <?php foreach ($teachers as $teacher): ?>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=<?php echo urlencode($teacher['first_name'] . ' ' . $teacher['last_name']); ?>&background=4ade80&color=fff" alt="">
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900" data-teacher-name="<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
+                                                <div class="text-sm text-gray-500">Staff ID: <?php echo htmlspecialchars($teacher['staff_id']); ?></div>
+                                            </div>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900" data-teacher-name="<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
-                                            <div class="text-sm text-gray-500">Staff ID: <?php echo htmlspecialchars($teacher['staff_id']); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?php echo htmlspecialchars($teacher['email']); ?></div>
+                                        <div class="text-sm text-gray-500"><?php echo htmlspecialchars($teacher['phone_number']); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <?php echo htmlspecialchars($teacher['department_name']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $teacher['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'; ?>">
+                                            <span class="w-1.5 h-1.5 <?php echo $teacher['status'] === 'active' ? 'bg-emerald-400' : 'bg-gray-400'; ?> rounded-full mr-1.5"></span>
+                                            <?php echo ucfirst($teacher['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-2">
+                                            <a href="view.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-emerald-600 hover:text-emerald-900 transition-colors" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="edit.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button onclick="confirmDelete(<?php echo $teacher['teacher_id']; ?>, '<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>')" class="text-red-600 hover:text-red-900 transition-colors border-0 bg-transparent p-0" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900"><?php echo htmlspecialchars($teacher['email']); ?></div>
-                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($teacher['phone_number']); ?></div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <?php echo htmlspecialchars($teacher['department_name']); ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $teacher['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'; ?>">
-                                        <span class="w-1.5 h-1.5 <?php echo $teacher['status'] === 'active' ? 'bg-emerald-400' : 'bg-gray-400'; ?> rounded-full mr-1.5"></span>
-                                        <?php echo ucfirst($teacher['status']); ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
-                                        <a href="view.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-emerald-600 hover:text-emerald-900 transition-colors" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="edit.php?id=<?php echo $teacher['teacher_id']; ?>" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button onclick="confirmDelete(<?php echo $teacher['teacher_id']; ?>, '<?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?>')" class="text-red-600 hover:text-red-900 transition-colors border-0 bg-transparent p-0" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -309,7 +313,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-700">
-                            <?php 
+                            <?php
                             $start = min($offset + 1, $totalRecords);
                             $end = min($offset + $recordsPerPage, $totalRecords);
                             ?>
@@ -317,39 +321,39 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                         <div class="flex items-center space-x-2">
                             <?php if ($page > 1): ?>
-                            <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                Previous
-                            </a>
+                                <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                    Previous
+                                </a>
                             <?php else: ?>
-                            <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
-                                Previous
-                            </span>
+                                <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
+                                    Previous
+                                </span>
                             <?php endif; ?>
-                            
+
                             <?php
                             $startPage = max(1, $page - 2);
                             $endPage = min($totalPages, $page + 2);
-                            
+
                             for ($i = $startPage; $i <= $endPage; $i++): ?>
                                 <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md <?php echo ($i == $page) ? 'text-white bg-emerald-600 border-emerald-600' : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'; ?>">
                                     <?php echo $i; ?>
                                 </a>
                             <?php endfor; ?>
-                            
+
                             <?php if ($page < $totalPages): ?>
-                            <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                Next
-                            </a>
+                                <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                    Next
+                                </a>
                             <?php else: ?>
-                            <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
-                                Next
-                            </span>
+                                <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
+                                    Next
+                                </span>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
-        
+
         </div>
     </main>
 
@@ -426,13 +430,13 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
          */
         function exportTeachers() {
             showNotification('Exporting teachers data...', 'info');
-            
+
             // Create a CSV export of teachers
             const table = document.getElementById('teachersTable');
             if (!table) return;
-            
+
             let csv = 'Name,Email,Phone,Department,Status\n';
-            
+
             for (let i = 0; i < table.rows.length; i++) {
                 const row = table.rows[i];
                 if (row.style.display !== 'none') {
@@ -444,13 +448,15 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     const phone = phoneElem ? phoneElem.textContent.trim() : '';
                     const department = row.cells[2].textContent.trim();
                     const status = row.cells[3].textContent.trim();
-                    
+
                     csv += `"${name}","${email}","${phone}","${department}","${status}"\n`;
                 }
             }
-            
+
             // Create and trigger download
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csv], {
+                type: 'text/csv;charset=utf-8;'
+            });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
@@ -459,7 +465,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             showNotification('Export complete!', 'success');
         }
 
@@ -497,49 +503,49 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         icon: 'info',
                         title: 'Processing deletion...'
                     });
-                    
+
                     // Send delete request
                     axios.post('/api/teachers/deleteTeacher.php', {
-                        teacherId: teacherId
-                    })
-                    .then(function(response) {
-                        if (response.data.status === 'success') {
-                            Toast.fire({
-                                icon: 'success',
-                                title: response.data.message
-                            });
-                            
-                            // Remove the row from the table
-                            const rows = document.getElementById('teachersTable').getElementsByTagName('tr');
-                            for (let i = 0; i < rows.length; i++) {
-                                const deleteBtn = rows[i].querySelector(`button[onclick*="${teacherId}"]`);
-                                if (deleteBtn) {
-                                    // Fade out and remove the row
-                                    rows[i].style.transition = 'opacity 0.5s';
-                                    rows[i].style.opacity = '0';
-                                    setTimeout(() => {
-                                        rows[i].remove();
-                                        
-                                        // Update the "Showing X to Y of Z teachers" text
-                                        updatePaginationCounters();
-                                    }, 500);
-                                    break;
+                            teacherId: teacherId
+                        })
+                        .then(function(response) {
+                            if (response.data.status === 'success') {
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: response.data.message
+                                });
+
+                                // Remove the row from the table
+                                const rows = document.getElementById('teachersTable').getElementsByTagName('tr');
+                                for (let i = 0; i < rows.length; i++) {
+                                    const deleteBtn = rows[i].querySelector(`button[onclick*="${teacherId}"]`);
+                                    if (deleteBtn) {
+                                        // Fade out and remove the row
+                                        rows[i].style.transition = 'opacity 0.5s';
+                                        rows[i].style.opacity = '0';
+                                        setTimeout(() => {
+                                            rows[i].remove();
+
+                                            // Update the "Showing X to Y of Z teachers" text
+                                            updatePaginationCounters();
+                                        }, 500);
+                                        break;
+                                    }
                                 }
+                            } else {
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: response.data.message
+                                });
                             }
-                        } else {
+                        })
+                        .catch(function(error) {
                             Toast.fire({
                                 icon: 'error',
-                                title: response.data.message
+                                title: 'Server error. Please try again.'
                             });
-                        }
-                    })
-                    .catch(function(error) {
-                        Toast.fire({
-                            icon: 'error',
-                            title: 'Server error. Please try again.'
+                            console.error(error);
                         });
-                        console.error(error);
-                    });
                 }
             });
         }
@@ -550,12 +556,12 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             if (paginationText) {
                 const countText = paginationText.textContent;
                 const matches = countText.match(/Showing (\d+) to (\d+) of (\d+) teachers/);
-                
+
                 if (matches && matches.length === 4) {
                     const start = parseInt(matches[1]);
                     const end = parseInt(matches[2]);
                     const total = parseInt(matches[3]) - 1;
-                    
+
                     const newEnd = Math.min(end, total);
                     paginationText.textContent = `Showing ${start} to ${newEnd} of ${total} teachers`;
                 }
@@ -571,17 +577,18 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 }
             });
         }
-        
+
         // Auto-filter on dropdown change
         const filterDepartmentElem = document.getElementById('filterDepartment');
         if (filterDepartmentElem) {
             filterDepartmentElem.addEventListener('change', filterTeachers);
         }
-        
+
         const filterStatusElem = document.getElementById('filterStatus');
         if (filterStatusElem) {
             filterStatusElem.addEventListener('change', filterTeachers);
         }
     </script>
 </body>
+
 </html>

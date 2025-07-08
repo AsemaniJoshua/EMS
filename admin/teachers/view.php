@@ -7,7 +7,8 @@ $currentPage = 'teachers';
 $pageTitle = "Teacher Details";
 
 // Helper function for status color classes
-function getStatusColorClass($status, $type = 'bg') {
+function getStatusColorClass($status, $type = 'bg')
+{
     $status = strtolower($status);
     if ($type === 'bg') {
         if ($status === 'active' || $status === 'approved') return 'bg-emerald-500';
@@ -65,8 +66,10 @@ if ($teacherId > 0) {
         $stmt->execute([$teacherId]);
         $exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
+};
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,9 +77,10 @@ if ($teacherId > 0) {
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
     <?php renderAdminSidebar($currentPage); ?>
     <?php renderAdminHeader(); ?>
@@ -136,43 +140,43 @@ if ($teacherId > 0) {
                                     <?php echo ucfirst($teacher['status']); ?>
                                 </span>
                             </div>
-                            
+
                             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Full Name</label>
                                     <div class="text-gray-900"><?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Department</label>
                                     <div class="text-gray-900"><?php echo htmlspecialchars($teacher['department']); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Email</label>
                                     <div class="text-gray-900"><?php echo htmlspecialchars($teacher['email']); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Phone Number</label>
                                     <div class="text-gray-900"><?php echo htmlspecialchars($teacher['phone_number']); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Staff ID</label>
                                     <div class="text-gray-900"><?php echo htmlspecialchars($teacher['staff_id']); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Username</label>
                                     <div class="text-gray-900"><?php echo htmlspecialchars($teacher['username']); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Created Date</label>
                                     <div class="text-gray-900"><?php echo date('M d, Y', strtotime($teacher['created_at'])); ?></div>
                                 </div>
-                                
+
                                 <div>
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Last Updated</label>
                                     <div class="text-gray-900"><?php echo date('M d, Y', strtotime($teacher['updated_at'])); ?></div>
@@ -194,7 +198,7 @@ if ($teacherId > 0) {
                             </button>
                         </nav>
                     </div>
-                    
+
                     <div id="courses" class="tab-content p-6">
                         <?php if (empty($courses)): ?>
                             <div class="text-center py-8">
@@ -220,7 +224,7 @@ if ($teacherId > 0) {
                             </ul>
                         <?php endif; ?>
                     </div>
-                    
+
                     <div id="exams" class="tab-content p-6 hidden">
                         <?php if (empty($exams)): ?>
                             <div class="text-center py-8">
@@ -252,105 +256,102 @@ if ($teacherId > 0) {
                                 <?php endforeach; ?>
                             </ul>
                         <?php endif; ?>
-                <script>
-                    // Initialize Toast for notifications using SweetAlert2.
-                    // This creates a reusable toast instance for showing quick messages at the top-end of the screen.
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
-                    });
-                
-                    // Tab switching logic for Courses and Exams tabs.
-                    // Adds click event listeners to tab buttons to switch visible content and update active styles.
-                    document.querySelectorAll('.tab-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            // Remove active class and highlight from all tab buttons
-                            document.querySelectorAll('.tab-button').forEach(btn => {
-                                btn.classList.remove('active', 'border-emerald-500', 'text-emerald-600');
-                                btn.classList.add('border-transparent', 'text-gray-500');
+                        <script>
+                            // Initialize Toast for notifications using SweetAlert2.
+                            // This creates a reusable toast instance for showing quick messages at the top-end of the screen.
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                                }
                             });
-                            
-                            // Add active class and highlight to the clicked tab button
-                            this.classList.add('active', 'border-emerald-500', 'text-emerald-600');
-                            this.classList.remove('border-transparent', 'text-gray-500');
-                            
-                            // Hide all tab content sections
-                            document.querySelectorAll('.tab-content').forEach(content => {
-                                content.classList.add('hidden');
-                            });
-                            
-                            // Show the tab content corresponding to the clicked button
-                            const tabContent = document.getElementById(this.getAttribute('data-tab'));
-                            if (tabContent) {
-                                tabContent.classList.remove('hidden');
-                            }
-                        });
-                    });
-                    
-                    // Delete confirmation dialog for deleting a teacher.
-                    // Delete confirmation
-                    window.confirmDelete = function(teacherId) {
-                        Swal.fire({
-                            title: 'Are you sure?',
-                            text: "You won't be able to revert this!",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#ef4444',
-                            cancelButtonColor: '#6b7280',
-                            confirmButtonText: 'Yes, delete it!'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Show processing state
-                                Toast.fire({
-                                    icon: 'info',
-                                    title: 'Processing deletion...'
-                                });
-                                
-                                // Send delete request
-                                axios.post('/api/teachers/deleteTeacher.php', {
-                                    teacherId: teacherId
-                                })
-                                .then(function(response) {
-                                    if (response.data.status === 'success') {
-                                        Toast.fire({
-                                            icon: 'success',
-                                            title: response.data.message
-                                        });
-                                        
-                                        // Redirect to teacher list after successful deletion
-                                        setTimeout(() => {
-                                            window.location.href = 'index.php';
-                                        }, 1000);
-                                    } else {
-                                        Toast.fire({
-                                            icon: 'error',
-                                            title: response.data.message
-                                        });
-                                    }
-                                })
-                                .catch(function(error) {
-                                    Toast.fire({
-                                        icon: 'error',
-                                        title: 'Server error. Please try again.'
+
+                            // Tab switching logic for Courses and Exams tabs.
+                            // Adds click event listeners to tab buttons to switch visible content and update active styles.
+                            document.querySelectorAll('.tab-button').forEach(button => {
+                                button.addEventListener('click', function() {
+                                    // Remove active class and highlight from all tab buttons
+                                    document.querySelectorAll('.tab-button').forEach(btn => {
+                                        btn.classList.remove('active', 'border-emerald-500', 'text-emerald-600');
+                                        btn.classList.add('border-transparent', 'text-gray-500');
                                     });
-                                    console.error(error);
+
+                                    // Add active class and highlight to the clicked tab button
+                                    this.classList.add('active', 'border-emerald-500', 'text-emerald-600');
+                                    this.classList.remove('border-transparent', 'text-gray-500');
+
+                                    // Hide all tab content sections
+                                    document.querySelectorAll('.tab-content').forEach(content => {
+                                        content.classList.add('hidden');
+                                    });
+
+                                    // Show the tab content corresponding to the clicked button
+                                    const tabContent = document.getElementById(this.getAttribute('data-tab'));
+                                    if (tabContent) {
+                                        tabContent.classList.remove('hidden');
+                                    }
+                                });
+                            });
+
+                            // Delete confirmation dialog for deleting a teacher.
+                            const confirmDelete = function(teacherId) {
+                                Swal.fire({
+                                    title: 'Are you sure?',
+                                    text: "You won't be able to revert this!",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#ef4444',
+                                    cancelButtonColor: '#6b7280',
+                                    confirmButtonText: 'Yes, delete it!'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Show processing state
+                                        Toast.fire({
+                                            icon: 'info',
+                                            title: 'Processing deletion...'
+                                        });
+
+                                        // Send delete request
+                                        axios.post('/api/teachers/deleteTeacher.php', {
+                                                teacherId: teacherId
+                                            })
+                                            .then(function(response) {
+                                                if (response.data.status === 'success') {
+                                                    Toast.fire({
+                                                        icon: 'success',
+                                                        title: response.data.message
+                                                    });
+
+                                                    // Redirect to teacher list after successful deletion
+                                                    setTimeout(() => {
+                                                        window.location.href = 'index.php';
+                                                    }, 1000);
+                                                } else {
+                                                    Toast.fire({
+                                                        icon: 'error',
+                                                        title: response.data.message
+                                                    });
+                                                }
+                                            })
+                                            .catch(function(error) {
+                                                Toast.fire({
+                                                    icon: 'error',
+                                                    title: 'Server error. Please try again.'
+                                                });
+                                                console.error(error);
+                                            });
+                                    }
                                 });
                             }
-                        });
-                    }
-                </script>
-                        });
-                    }
-                </script>
-            <?php endif; ?>
-        </div>
+                        </script>
+                    <?php endif; ?>
+                    </div>
     </main>
 </body>
+
 </html>

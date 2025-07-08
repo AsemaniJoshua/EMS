@@ -232,10 +232,10 @@ if (!$teacher) {
 
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
-                                    <input id="reset_password" name="reset_password" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                    <input id="resetOnLogin" name="resetOnLogin" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
                                 </div>
                                 <div class="ml-3 text-sm">
-                                    <label for="reset_password" class="font-medium text-gray-700">Force password reset on next login</label>
+                                    <label for="resetOnLogin" class="font-medium text-gray-700">Force password reset on next login</label>
                                     <p class="text-gray-500">The teacher will be required to set a new password when they next log in.</p>
                                 </div>
                             </div>
@@ -301,13 +301,13 @@ if (!$teacher) {
 
             // Get form data
             const formData = new FormData(this);
-            const data = {};
+            const data = Object.fromEntries(formData.entries());
 
             // Validate required fields
             const requiredFields = ['firstName', 'lastName', 'email', 'staffId', 'departmentId', 'username'];
             for (let field of requiredFields) {
                 if (!data[field]) {
-                    const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+                    const fieldName = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                     Toast.fire({
                         icon: 'error',
                         title: `Please fill in the ${fieldName} field.`

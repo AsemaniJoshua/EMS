@@ -42,8 +42,7 @@ $status = trim($input['status']);
 $username = trim($input['username']);
 $password = isset($input['password']) ? trim($input['password']) : '';
 $sendNotification = isset($input['send_notification']) && $input['send_notification'] === 'on';
-$resetPassword = isset($input['reset_password']) && $input['reset_password'] === 'on';
-$qualifications = isset($input['qualifications']) ? $input['qualifications'] : [];
+$resetOnLogin = isset($input['resetOnLogin']) && $input['resetOnLogin'] === 'on';
 
 try {
     $db = new Database();
@@ -89,7 +88,8 @@ try {
                 staff_id = ?,
                 department_id = ?,
                 status = ?,
-                username = ?";
+                username = ?,
+                resetOnLogin = ?";
     
     $params = [
         $firstName,
@@ -99,7 +99,8 @@ try {
         $staffId,
         $departmentId,
         $status,
-        $username
+        $username,
+        $resetOnLogin ? 1 : 0
     ];
 
     // If password is provided, update it as well
@@ -115,33 +116,10 @@ try {
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
 
-    // If qualifications table exists, update qualifications
-    try {
-        // First check if the table exists
-        $stmt = $conn->prepare("SHOW TABLES LIKE 'teacher_qualifications'");
-        $stmt->execute();
-        if ($stmt->rowCount() > 0) {
-            // Delete existing qualifications
-            $stmt = $conn->prepare("DELETE FROM teacher_qualifications WHERE teacher_id = ?");
-            $stmt->execute([$teacherId]);
-            
-            // Insert new qualifications
-            if (!empty($qualifications)) {
-                $stmt = $conn->prepare("INSERT INTO teacher_qualifications (teacher_id, qualification_text) VALUES (?, ?)");
-                foreach ($qualifications as $qualification) {
-                    if (!empty(trim($qualification))) {
-                        $stmt->execute([$teacherId, trim($qualification)]);
-                    }
-                }
-            }
-        }
-    } catch (Exception $e) {
-        // Qualifications table might not exist, ignore this error
-    }
-    
+    if ($stmt->rowCount() === 0) {
+        throw new Exception("No changes made to the teacher's information");
+    }   
     // TODO: If send_notification is true, implement email notification logic
-    
-    // TODO: If reset_password is true, set a flag in the database
     
     // Commit transaction
     $conn->commit();
