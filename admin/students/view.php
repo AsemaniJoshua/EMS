@@ -121,142 +121,140 @@ if ($studentId > 0) {
                 </div>
 
                 <!-- Profile Overview Card -->
-                <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden mb-6">
-                    <div class="md:flex">
-                        <!-- Left Column - Profile Image & Basic Info -->
-                        <div class="md:w-1/3 bg-gray-50 p-6 border-r border-gray-100">
-                            <div class="flex flex-col items-center text-center">
-                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($student['first_name'] . ' ' . $student['last_name']); ?>&background=60a5fa&color=fff" alt="<?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?>" class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md">
-                                <h2 class="mt-4 text-xl font-semibold text-gray-900"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?></h2>
-                                <div class="mt-1">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <?php echo htmlspecialchars($student['program']); ?>
-                                    </span>
-                                </div>
-                                <div class="mt-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <?php echo htmlspecialchars($student['department']); ?>
-                                    </span>
-                                </div>
-                                <div class="mt-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        <?php echo htmlspecialchars($student['level']); ?>
-                                    </span>
-                                </div>
-                                <div class="mt-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?php echo $student['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : ($student['status'] === 'graduated' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'); ?>">
-                                        <span class="w-2 h-2 <?php echo $student['status'] === 'active' ? 'bg-emerald-500' : ($student['status'] === 'graduated' ? 'bg-purple-500' : 'bg-gray-500'); ?> rounded-full mr-2"></span>
-                                        <?php echo ucfirst($student['status']); ?>
-                                    </span>
-                                </div>
-                                <div class="mt-6 grid grid-cols-1 gap-4 w-full max-w-xs">
-                                    <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
-                                        <i class="fas fa-id-badge text-gray-500 mr-3"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Index Number</p>
-                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($student['index_number']); ?></p>
-                                        </div>
+                <div class="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden mb-6">
+                    <div class="md:flex md:min-h-[300px]">
+                        <div class="md:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($student['first_name'] . ' ' . $student['last_name']); ?>&background=60a5fa&color=fff"
+                                alt="<?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?>"
+                                class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md">
+
+                            <h2 class="mt-4 text-2xl font-bold text-gray-900 leading-tight text-center">
+                                <?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?>
+                            </h2>
+
+                            <div class="mt-3 flex flex-wrap justify-center gap-2 max-w-full">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 truncate max-w-[calc(50%-0.25rem)] md:max-w-full">
+                                    <?php echo htmlspecialchars($student['program']); ?>
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 truncate max-w-[calc(50%-0.25rem)] md:max-w-full">
+                                    <?php echo htmlspecialchars($student['department']); ?>
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 truncate max-w-[calc(50%-0.25rem)] md:max-w-full">
+                                    <?php echo htmlspecialchars($student['level']); ?>
+                                </span>
+                            </div>
+
+                            <div class="mt-4">
+                                <span class="inline-flex items-center px-4 py-1.5 rounded-full text-base font-semibold 
+                    <?php echo $student['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : ($student['status'] === 'graduated' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'); ?>">
+                                    <span class="w-2.5 h-2.5 
+                        <?php echo $student['status'] === 'active' ? 'bg-emerald-500' : ($student['status'] === 'graduated' ? 'bg-purple-500' : 'bg-gray-500'); ?> 
+                        rounded-full mr-2"></span>
+                                    <?php echo ucfirst($student['status']); ?>
+                                </span>
+                            </div>
+
+                            <div class="mt-6 grid grid-cols-1 gap-4 w-full px-4 sm:px-0 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                                <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
+                                    <i class="fas fa-id-badge text-gray-500 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Index Number</p>
+                                        <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['index_number']); ?></p>
                                     </div>
-                                    <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
-                                        <i class="fas fa-calendar-alt text-gray-500 mr-3"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Enrolled</p>
-                                            <p class="text-sm font-medium"><?php echo date('M d, Y', strtotime($student['enrollment_date'])); ?></p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
-                                        <i class="fas fa-graduation-cap text-gray-500 mr-3"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Level</p>
-                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($student['level']); ?></p>
-                                        </div>
+                                </div>
+                                <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
+                                    <i class="fas fa-calendar-alt text-gray-500 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Enrolled</p>
+                                        <p class="text-sm font-medium text-gray-900"><?php echo date('M d, Y', strtotime($student['enrollment_date'])); ?></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Right Column - Detailed Information -->
-                        <div class="md:w-2/3 p-6">
-                            <!-- Contact Information -->
-                            <div class="mb-8">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                    <i class="fas fa-address-card text-emerald-600 mr-2"></i>
-                                    Contact Information
-                                </h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-envelope text-gray-500 mr-3 w-5 text-center"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Email</p>
-                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($student['email']); ?></p>
+
+                        <div class="md:w-2/3 p-6 flex flex-col justify-between">
+                            <div>
+                                <div class="mb-8">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-address-card text-emerald-600 text-xl mr-2"></i>
+                                        Contact Information
+                                    </h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-envelope text-gray-500 text-lg mr-3 w-5 text-center"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Email</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['email']); ?></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <i class="fas fa-phone text-gray-500 mr-3 w-5 text-center"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Phone</p>
-                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($student['phone_number']); ?></p>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-phone text-gray-500 text-lg mr-3 w-5 text-center"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Phone</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['phone_number']); ?></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <i class="fas fa-birthday-cake text-gray-500 mr-3 w-5 text-center"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Date of Birth</p>
-                                            <p class="text-sm font-medium"><?php echo $student['dob'] ? date('M d, Y', strtotime($student['dob'])) : '-'; ?></p>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-birthday-cake text-gray-500 text-lg mr-3 w-5 text-center"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Date of Birth</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo $student['dob'] ? date('M d, Y', strtotime($student['dob'])) : '-'; ?></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <i class="fas fa-venus-mars text-gray-500 mr-3 w-5 text-center"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Gender</p>
-                                            <p class="text-sm font-medium"><?php echo ucfirst($student['gender']); ?></p>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-venus-mars text-gray-500 text-lg mr-3 w-5 text-center"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Gender</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo ucfirst($student['gender']); ?></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="md:col-span-2 flex items-start">
-                                        <i class="fas fa-map-marker-alt text-gray-500 mr-3 w-5 text-center mt-0.5"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Address</p>
-                                            <p class="text-sm font-medium"><?php echo htmlspecialchars($student['address'] ?? '-'); ?></p>
+                                        <div class="sm:col-span-2 flex items-start">
+                                            <i class="fas fa-map-marker-alt text-gray-500 text-lg mr-3 w-5 text-center mt-0.5"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Address</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['address'] ?? '-'); ?></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <i class="fas fa-clock text-gray-500 mr-3 w-5 text-center"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Last Login</p>
-                                            <p class="text-sm font-medium"><?php echo isset($student['updated_at']) ? date('M d, Y H:i', strtotime($student['updated_at'])) : '-'; ?></p>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock text-gray-500 text-lg mr-3 w-5 text-center"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Last Login</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo isset($student['updated_at']) ? date('M d, Y H:i', strtotime($student['updated_at'])) : '-'; ?></p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Stats -->
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                    <i class="fas fa-chart-bar text-purple-600 mr-2"></i>
-                                    Academic Statistics
-                                </h3>
-                                <div class="grid grid-cols-3 gap-4">
-                                    <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                        <p class="text-2xl font-bold text-blue-700"><?php echo count($courses); ?></p>
-                                        <p class="text-xs text-blue-700 mt-1">Courses</p>
-                                    </div>
-                                    <div class="bg-emerald-50 rounded-lg p-4 text-center">
-                                        <p class="text-2xl font-bold text-emerald-700"><?php echo count($exams); ?></p>
-                                        <p class="text-xs text-emerald-700 mt-1">Exams</p>
-                                    </div>
-                                    <div class="bg-purple-50 rounded-lg p-4 text-center">
-                                        <p class="text-2xl font-bold text-purple-700">
-                                            <?php
-                                            $avgScore = 0;
-                                            $scoreCount = 0;
-                                            foreach ($exams as $exam) {
-                                                if ($exam['score_percentage'] !== null) {
-                                                    $avgScore += $exam['score_percentage'];
-                                                    $scoreCount++;
+
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-chart-bar text-purple-600 text-xl mr-2"></i>
+                                        Academic Statistics
+                                    </h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div class="bg-blue-50 rounded-lg p-4 text-center shadow-sm border border-blue-100">
+                                            <p class="text-3xl font-bold text-blue-700"><?php echo count($courses); ?></p>
+                                            <p class="text-xs text-blue-700 mt-1 uppercase tracking-wide">Courses</p>
+                                        </div>
+                                        <div class="bg-emerald-50 rounded-lg p-4 text-center shadow-sm border border-emerald-100">
+                                            <p class="text-3xl font-bold text-emerald-700"><?php echo count($exams); ?></p>
+                                            <p class="text-xs text-emerald-700 mt-1 uppercase tracking-wide">Exams</p>
+                                        </div>
+                                        <div class="bg-purple-50 rounded-lg p-4 text-center shadow-sm border border-purple-100">
+                                            <p class="text-3xl font-bold text-purple-700">
+                                                <?php
+                                                $avgScore = 0;
+                                                $scoreCount = 0;
+                                                foreach ($exams as $exam) {
+                                                    if ($exam['score_percentage'] !== null) {
+                                                        $avgScore += $exam['score_percentage'];
+                                                        $scoreCount++;
+                                                    }
                                                 }
-                                            }
-                                            echo $scoreCount ? round($avgScore / $scoreCount, 1) . '%' : '-';
-                                            ?>
-                                        </p>
-                                        <p class="text-xs text-purple-700 mt-1">Avg. Score</p>
+                                                echo $scoreCount ? round($avgScore / $scoreCount, 1) . '%' : '-';
+                                                ?>
+                                            </p>
+                                            <p class="text-xs text-purple-700 mt-1 uppercase tracking-wide">Avg. Score</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

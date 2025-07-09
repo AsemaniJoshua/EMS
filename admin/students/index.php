@@ -288,7 +288,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             </div>
 
             <!-- Students Table -->
-            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-auto">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">All Students</h3>
                 </div>
@@ -324,7 +324,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                         <div class="text-gray-500"><?php echo htmlspecialchars($student['phone_number']); ?></div>
                                     </td>
 
-                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-32">
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-28">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             <?php echo htmlspecialchars($student['program_name']); ?>
                                         </span>
