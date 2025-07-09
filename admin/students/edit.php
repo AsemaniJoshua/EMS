@@ -1,35 +1,60 @@
 <?php
+include_once __DIR__ . '/../../api/login/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'students';
 $pageTitle = "Edit Student";
 
-// In a real implementation, you would fetch the student data from the database based on the ID
-// This is just mock data for the UI
-$studentId = isset($_GET['id']) ? intval($_GET['id']) : 1;
-$student = [
-    'id' => $studentId,
-    'firstName' => 'Jacob',
-    'lastName' => 'Wilson',
-    'email' => 'jacob.wilson@example.com',
-    'phoneNumber' => '+1 (555) 234-5678',
-    'studentId' => 'STD10045',
-    'programId' => 1, // Computer Science
-    'departmentId' => 1, // Science and Technology
-    'status' => 'active',
-    'username' => 'jwilson',
-    'enrollmentDate' => '2022-09-01',
-    'currentSemester' => 3,
-    'dateOfBirth' => '2000-05-15',
-    'gender' => 'Male',
-    'address' => '123 College St, University Town, UT 12345',
-    'emergencyContactName' => 'Robert Wilson',
-    'emergencyContactRelation' => 'Father',
-    'emergencyContactPhone' => '+1 (555) 987-6543',
-    'emergencyContactEmail' => 'robert.wilson@example.com'
-];
-?>
+// Get student ID from query
+$studentId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($studentId <= 0) {
+    header("Location: index.php");
+    exit;
+}
 
+// Fetch student data
+$db = new Database();
+$conn = $db->getConnection();
+
+$stmt = $conn->prepare(
+    "SELECT s.*, 
+            d.name AS department_name, 
+            p.name AS program_name, 
+            l.name AS level_name 
+     FROM students s
+     JOIN departments d ON s.department_id = d.department_id
+     JOIN programs p ON s.program_id = p.program_id
+     JOIN levels l ON s.level_id = l.level_id
+     WHERE s.student_id = ?"
+);
+$stmt->execute([$studentId]);
+$student = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$student) {
+    header("Location: index.php");
+    exit;
+}
+
+// Fetch departments, programs, levels for dropdowns
+$departments = [];
+$stmt = $conn->query("SELECT department_id, name FROM departments ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $departments[] = $row;
+}
+
+$programs = [];
+$stmt = $conn->query("SELECT program_id, name, department_id FROM programs ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $programs[] = $row;
+}
+
+$levels = [];
+$stmt = $conn->query("SELECT level_id, name FROM levels ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $levels[] = $row;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -39,13 +64,14 @@ $student = [
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
     <?php renderAdminSidebar($currentPage); ?>
     <?php renderAdminHeader(); ?>
 
-    <!-- Main content -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
 
@@ -57,32 +83,19 @@ $student = [
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Edit Student</h1>
-                        <p class="mt-1 text-sm text-gray-500">Update information for <?php echo $student['firstName'] . ' ' . $student['lastName']; ?></p>
+                        <p class="mt-1 text-sm text-gray-500">Update information for <?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Form Actions - Top -->
-            <div class="mb-6 flex justify-end space-x-3">
-                <button onclick="window.location.href='view.php?id=<?php echo $student['id']; ?>'" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                    <i class="fas fa-eye mr-2"></i>
-                    View Profile
-                </button>
-            </div>
-
             <!-- Edit Student Form -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">Student Information</h3>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?php echo $student['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'; ?>">
-                        <span class="w-2 h-2 <?php echo $student['status'] === 'active' ? 'bg-emerald-500' : 'bg-gray-500'; ?> rounded-full mr-2"></span>
-                        <?php echo ucfirst($student['status']); ?>
-                    </span>
                 </div>
+                <form id="editStudentForm" class="p-6 space-y-8" autocomplete="off">
+                    <input type="hidden" name="student_id" value="<?php echo $student['student_id']; ?>">
 
-                <form id="editStudentForm" class="p-6 space-y-8">
-                    <input type="hidden" name="studentId" value="<?php echo $student['id']; ?>">
-                    
                     <!-- Personal Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -92,41 +105,30 @@ $student = [
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                                <input type="text" name="firstName" value="<?php echo $student['firstName']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter first name">
+                                <input type="text" name="first_name" value="<?php echo htmlspecialchars($student['first_name']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter first name">
                             </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                                <input type="text" name="lastName" value="<?php echo $student['lastName']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter last name">
+                                <input type="text" name="last_name" value="<?php echo htmlspecialchars($student['last_name']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter last name">
                             </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                                <input type="email" name="email" value="<?php echo $student['email']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter email address">
+                                <input type="email" name="email" value="<?php echo htmlspecialchars($student['email']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter email address">
                             </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" name="phoneNumber" value="<?php echo $student['phoneNumber']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter phone number">
+                                <input type="tel" name="phone_number" value="<?php echo htmlspecialchars($student['phone_number']); ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter phone number">
                             </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth *</label>
-                                <input type="date" name="dateOfBirth" value="<?php echo $student['dateOfBirth']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                <input type="date" name="date_of_birth" value="<?php echo htmlspecialchars($student['date_of_birth']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                             </div>
-                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
                                 <select name="gender" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="Male" <?php echo $student['gender'] === 'Male' ? 'selected' : ''; ?>>Male</option>
-                                    <option value="Female" <?php echo $student['gender'] === 'Female' ? 'selected' : ''; ?>>Female</option>
-                                    <option value="Other" <?php echo $student['gender'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                    <option value="male" <?php echo $student['gender'] === 'male' ? 'selected' : ''; ?>>Male</option>
+                                    <option value="female" <?php echo $student['gender'] === 'female' ? 'selected' : ''; ?>>Female</option>
                                 </select>
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                <textarea name="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter full address"><?php echo $student['address']; ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -139,51 +141,61 @@ $student = [
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Student ID *</label>
-                                <input type="text" name="studentId" value="<?php echo $student['studentId']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., STU20230001">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Index Number *</label>
+                                <input type="text" name="index_number" value="<?php echo htmlspecialchars($student['index_number']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., STU20230001">
                             </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Program *</label>
-                                <select name="programId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="">Select Program</option>
-                                    <option value="1" <?php echo $student['programId'] === 1 ? 'selected' : ''; ?>>Computer Science</option>
-                                    <option value="2" <?php echo $student['programId'] === 2 ? 'selected' : ''; ?>>Engineering</option>
-                                    <option value="3" <?php echo $student['programId'] === 3 ? 'selected' : ''; ?>>Business Administration</option>
-                                    <option value="4" <?php echo $student['programId'] === 4 ? 'selected' : ''; ?>>Mathematics</option>
-                                    <option value="5" <?php echo $student['programId'] === 5 ? 'selected' : ''; ?>>Physics</option>
-                                </select>
-                            </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
-                                <select name="departmentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                <select name="department_id" id="departmentSelect" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                     <option value="">Select Department</option>
-                                    <option value="1" <?php echo $student['departmentId'] === 1 ? 'selected' : ''; ?>>Science and Technology</option>
-                                    <option value="2" <?php echo $student['departmentId'] === 2 ? 'selected' : ''; ?>>Arts and Humanities</option>
-                                    <option value="3" <?php echo $student['departmentId'] === 3 ? 'selected' : ''; ?>>Business and Economics</option>
-                                    <option value="4" <?php echo $student['departmentId'] === 4 ? 'selected' : ''; ?>>Health Sciences</option>
+                                    <?php foreach ($departments as $dept): ?>
+                                        <option value="<?php echo $dept['department_id']; ?>" <?php echo $student['department_id'] == $dept['department_id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($dept['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
-
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Enrollment Date *</label>
-                                <input type="date" name="enrollmentDate" value="<?php echo $student['enrollmentDate']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Semester</label>
-                                <select name="currentSemester" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="">Select Semester</option>
-                                    <option value="1" <?php echo $student['currentSemester'] === 1 ? 'selected' : ''; ?>>Semester 1</option>
-                                    <option value="2" <?php echo $student['currentSemester'] === 2 ? 'selected' : ''; ?>>Semester 2</option>
-                                    <option value="3" <?php echo $student['currentSemester'] === 3 ? 'selected' : ''; ?>>Semester 3</option>
-                                    <option value="4" <?php echo $student['currentSemester'] === 4 ? 'selected' : ''; ?>>Semester 4</option>
-                                    <option value="5" <?php echo $student['currentSemester'] === 5 ? 'selected' : ''; ?>>Semester 5</option>
-                                    <option value="6" <?php echo $student['currentSemester'] === 6 ? 'selected' : ''; ?>>Semester 6</option>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Program *</label>
+                                <select name="program_id" id="programSelect" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    <option value="">Select Program</option>
+                                    <?php foreach ($programs as $prog): ?>
+                                        <option value="<?php echo $prog['program_id']; ?>" data-dept="<?php echo $prog['department_id']; ?>" <?php echo $student['program_id'] == $prog['program_id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($prog['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Level *</label>
+                                <select name="level_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    <option value="">Select Level</option>
+                                    <?php foreach ($levels as $level): ?>
+                                        <option value="<?php echo $level['level_id']; ?>" <?php echo $student['level_id'] == $level['level_id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($level['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Account Information Section -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-key mr-2 text-purple-600"></i>
+                            Account Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Username *</label>
+                                <input type="text" name="username" value="<?php echo htmlspecialchars($student['username']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter username">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input type="password" name="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter new password (leave blank to keep current)">
+                                <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current password</p>
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                                 <div class="flex items-center space-x-4">
@@ -201,101 +213,42 @@ $student = [
                                             Inactive
                                         </span>
                                     </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="status" value="graduated" <?php echo $student['status'] === 'graduated' ? 'checked' : ''; ?> class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-2 text-sm text-gray-700 flex items-center">
+                                            <span class="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
+                                            Graduated
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Emergency Contact Section -->
-                    <div class="border-b border-gray-100 pb-8">
+                    <!-- Additional Options -->
+                    <div class="pb-4">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                            <i class="fas fa-phone-alt mr-2 text-purple-600"></i>
-                            Emergency Contact
+                            <i class="fas fa-cog mr-2 text-gray-600"></i>
+                            Additional Options
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Contact Name</label>
-                                <input type="text" name="emergencyContactName" value="<?php echo $student['emergencyContactName']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter contact name">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
-                                <input type="text" name="emergencyContactRelation" value="<?php echo $student['emergencyContactRelation']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., Parent, Spouse, Guardian">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                                <input type="tel" name="emergencyContactPhone" value="<?php echo $student['emergencyContactPhone']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter emergency contact number">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" name="emergencyContactEmail" value="<?php echo $student['emergencyContactEmail']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter emergency contact email">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Account Information Section -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                            <i class="fas fa-key mr-2 text-amber-600"></i>
-                            Account Information
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Username *</label>
-                                <input type="text" name="username" value="<?php echo $student['username']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter username">
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6">
-                            <h4 class="text-sm font-medium text-gray-700 mb-2">Change Password</h4>
-                            <p class="text-sm text-gray-500 mb-4">Leave blank to keep current password</p>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                                    <div class="relative">
-                                        <input type="password" name="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter new password">
-                                        <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                            <i class="fas fa-eye" id="password-eye"></i>
-                                        </button>
-                                    </div>
-                                    <p class="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                                    <div class="relative">
-                                        <input type="password" name="confirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Confirm new password">
-                                        <button type="button" onclick="togglePassword('confirmPassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                            <i class="fas fa-eye" id="confirmPassword-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-4">
-                                <div class="flex items-start">
-                                    <div class="flex items-center h-5">
-                                        <input id="reset_password" name="reset_password" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-                                    </div>
-                                    <div class="ml-3 text-sm">
-                                        <label for="reset_password" class="font-medium text-gray-700">Force password reset on next login</label>
-                                        <p class="text-gray-500">The student will be required to set a new password when they next log in.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6">
+                        <div class="space-y-4">
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
                                     <input id="send_notification" name="send_notification" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
                                 </div>
                                 <div class="ml-3 text-sm">
                                     <label for="send_notification" class="font-medium text-gray-700">Send notification email</label>
-                                    <p class="text-gray-500">Send an email to the student notifying them of these changes.</p>
+                                    <p class="text-gray-500">Send a message to the student notifying them of these changes.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="resetOnLogin" name="resetOnLogin" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="resetOnLogin" class="font-medium text-gray-700">Force password reset on next login</label>
+                                    <p class="text-gray-500">The student will be required to set a new password when they next log in.</p>
                                 </div>
                             </div>
                         </div>
@@ -307,111 +260,79 @@ $student = [
                             <i class="fas fa-times mr-2"></i>
                             Cancel
                         </button>
-                        <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
+                        <button type="submit" id="submitBtn" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
                             <i class="fas fa-save mr-2"></i>
                             Save Changes
                         </button>
                     </div>
                 </form>
             </div>
-
         </div>
     </main>
-
     <script>
-        // Toggle password visibility
-        function togglePassword(fieldName) {
-            const passwordField = document.querySelector(`input[name="${fieldName}"]`);
-            const eyeIcon = document.getElementById(`${fieldName}-eye`);
+        // Department -> Program dynamic filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const deptSelect = document.getElementById('departmentSelect');
+            const progSelect = document.getElementById('programSelect');
+            const allOptions = Array.from(progSelect.options);
 
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
-            }
-        }
+            deptSelect.addEventListener('change', function() {
+                const deptId = this.value;
+                progSelect.innerHTML = '';
+                progSelect.disabled = !deptId;
+                progSelect.appendChild(new Option('Select Program', ''));
+                if (deptId) {
+                    allOptions.forEach(opt => {
+                        if (opt.value && opt.getAttribute('data-dept') == deptId) {
+                            progSelect.appendChild(opt.cloneNode(true));
+                        }
+                    });
+                }
+            });
+        });
 
         // Form submission
         document.getElementById('editStudentForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const form = this;
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span>Saving...</span>';
 
-            // Get form data
-            const formData = new FormData(this);
-            const studentData = {};
-            
-            // Convert FormData to object
-            for (let [key, value] of formData.entries()) {
-                studentData[key] = value;
-            }
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
 
-            // Validate required fields
-            const requiredFields = ['firstName', 'lastName', 'email', 'studentId', 'programId', 'departmentId', 'enrollmentDate', 'username'];
-            for (let field of requiredFields) {
-                if (!studentData[field]) {
-                    const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
-                    showNotification(`Please fill in the ${fieldName} field.`, 'error');
-                    return;
-                }
-            }
-
-            // Check if passwords match if changing password
-            if (studentData.password && studentData.password !== studentData.confirmPassword) {
-                showNotification('Passwords do not match!', 'error');
-                return;
-            }
-
-            // Validate password strength if changing password
-            if (studentData.password && studentData.password.length < 8) {
-                showNotification('Password must be at least 8 characters long.', 'error');
-                return;
-            }
-
-            // Here you would typically send the data to your backend
-            console.log('Updating student:', studentData);
-            
-            // Show success message
-            showNotification('Student information updated successfully!', 'success');
-            
-            // Redirect back to view page after a short delay
-            setTimeout(() => {
-                window.location.href = 'index.php';
-            }, 2000);
-        });
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
+            axios.post('/api/students/updateStudent.php', data)
+                .then(function(response) {
+                    if (response.data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: response.data.message
+                        });
+                        setTimeout(function() {
+                            window.location.href = 'index.php';
+                        }, 1500);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: response.data.message
+                        });
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i><span>Save Changes</span>';
                     }
-                }, 300);
-            }, 3000);
-        }
+                })
+                .catch(function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server error. Please try again later.'
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i><span>Save Changes</span>';
+                });
+        });
     </script>
 </body>
 

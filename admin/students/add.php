@@ -17,7 +17,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 }
 
 $programs = [];
-$stmt = $conn->query("SELECT program_id, name FROM programs ORDER BY name");
+$stmt = $conn->query("SELECT program_id, name, department_id FROM programs ORDER BY name");
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $programs[] = $row;
 }
@@ -103,14 +103,10 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                     <option value="female">Female</option>
                                 </select>
                             </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                <textarea name="address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter address"></textarea>
-                            </div>
+                          
                         </div>
                     </div>
 
-                    <!-- Academic Information Section -->
                     <!-- Academic Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -133,7 +129,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Program *</label>
-                                <select name="program_id" id="programSelect" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" disabled>
+                                <select name="program_id" id="programSelect" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                     <option value="">Select Program</option>
                                     <?php foreach ($programs as $prog): ?>
                                         <option value="<?php echo $prog['program_id']; ?>" data-dept="<?php echo $prog['department_id']; ?>">
@@ -152,30 +148,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    <script>
-                        // // Department -> Program dynamic filter
-                        // document.addEventListener('DOMContentLoaded', function() {
-                        //     const deptSelect = document.getElementById('departmentSelect');
-                        //     const progSelect = document.getElementById('programSelect');
-                        //     const allOptions = Array.from(progSelect.options);
-
-                        //     deptSelect.addEventListener('change', function() {
-                        //         const deptId = this.value;
-                        //         progSelect.innerHTML = '';
-                        //         progSelect.disabled = !deptId;
-                        //         progSelect.appendChild(new Option('Select Program', ''));
-                        //         if (deptId) {
-                        //             allOptions.forEach(opt => {
-                        //                 if (opt.value && opt.getAttribute('data-dept') == deptId) {
-                        //                     progSelect.appendChild(opt.cloneNode(true));
-                        //                 }
-                        //             });
-                        //         }
-                        //     });
-                        // });
-                    </script>
-
+                    </div>                       
 
                     <!-- Account Information Section -->
                     <div>
@@ -226,6 +199,35 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
 
+                       <!-- Additional Options -->
+                       <div class="pb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                            <i class="fas fa-cog mr-2 text-gray-600"></i>
+                            Additional Options
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="send_notification" name="send_notification" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="send_notification" class="font-medium text-gray-700">Send notification email</label>
+                                    <p class="text-gray-500">Send a message to student notifying them of these changes.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="resetOnLogin" name="resetOnLogin" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="resetOnLogin" class="font-medium text-gray-700">Force password reset on next login</label>
+                                    <p class="text-gray-500">The student will be required to set a new password when they next log in.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Form Actions -->
                     <div class="flex justify-end space-x-4 pt-6 border-t border-gray-100">
                         <button type="button" onclick="window.location.href='index.php'" class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
@@ -237,11 +239,55 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <span>Add Student</span>
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
     </main>
     <script>
+        // // Department -> Program dynamic filter
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     const deptSelect = document.getElementById('departmentSelect');
+        //     const progSelect = document.getElementById('programSelect');
+        //     const allOptions = Array.from(progSelect.options);
+
+        //     deptSelect.addEventListener('change', function() {
+        //         const deptId = this.value;
+        //         progSelect.innerHTML = '';
+        //         progSelect.disabled = !deptId;
+        //         progSelect.appendChild(new Option('Select Program', ''));
+        //         if (deptId) {
+        //             allOptions.forEach(opt => {
+        //                 if (opt.value && opt.getAttribute('data-dept') == deptId) {
+        //                     progSelect.appendChild(opt.cloneNode(true));
+        //                 }
+        //             });
+        //         }
+        //     });
+        // });
+
+        // Department -> Program dynamic filter
+        document.addEventListener('DOMContentLoaded', function () {
+            const deptSelect = document.getElementById('departmentSelect');
+            const progSelect = document.getElementById('programSelect');
+            const allOptions = Array.from(progSelect.options);
+
+            deptSelect.addEventListener('change', function () {
+                const deptId = this.value;
+                progSelect.innerHTML = '';
+                progSelect.disabled = !deptId;
+                progSelect.appendChild(new Option('Select Program', ''));
+                if (deptId) {
+                    allOptions.forEach(opt => {
+                        if (opt.value && opt.getAttribute('data-dept') == deptId) {
+                            progSelect.appendChild(opt.cloneNode(true));
+                        }
+                    });
+                }
+            });
+        });
+
+
         document.getElementById('addStudentForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const form = this;

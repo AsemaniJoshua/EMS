@@ -66,7 +66,6 @@ CREATE TABLE students (
     password_hash VARCHAR(255) NOT NULL,
     date_of_birth DATE,
     gender ENUM('male', 'female'),
-    address TEXT,
     status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
     level_id INT NOT NULL,
     program_id INT NOT NULL,

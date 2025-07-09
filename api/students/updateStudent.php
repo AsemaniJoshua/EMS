@@ -17,10 +17,7 @@ if (empty($data)) {
 }
 
 // Validate required fields
-$required = [
-    'first_name', 'last_name', 'email', 'date_of_birth', 'gender', 'index_number',
-    'program_id', 'department_id', 'level_id', 'username', 'password', 'status'
-];
+$required = ['student_id', 'first_name', 'last_name', 'email', 'date_of_birth', 'gender', 'index_number', 'program_id', 'department_id', 'level_id', 'username', 'status'];
 foreach ($required as $field) {
     if (empty($data[$field])) {
         echo json_encode(['status' => 'error', 'message' => "Missing required field: $field"]);
@@ -29,6 +26,7 @@ foreach ($required as $field) {
 }
 
 // Sanitize input
+$student_id = intval($data['student_id']);
 $first_name = trim($data['first_name']);
 $last_name = trim($data['last_name']);
 $email = trim($data['email']);
@@ -40,19 +38,19 @@ $program_id = intval($data['program_id']);
 $department_id = intval($data['department_id']);
 $level_id = intval($data['level_id']);
 $username = trim($data['username']);
-$password = $data['password'];
+$password = isset($data['password']) ? $data['password'] : null;
 $status = $data['status'];
-$resetOnLogin = $data['resetOnLogin'];
-$send_notification = $data['send_notification']; 
+$resetOnLogin = isset($data['resetOnLogin']) ? 1 : 0;
+$send_notification = isset($data['send_notification']) ? 1 : 0;
 
 // Validate email
-if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid email address.']);
     exit;
 }
 
-// Validate password length
-if (strlen($password) < 8) {
+// Validate password length if provided
+if ($password && strlen($password) < 8) {
     echo json_encode(['status' => 'error', 'message' => 'Password must be at least 8 characters.']);
     exit;
 }
@@ -62,53 +60,76 @@ $db = new Database();
 $conn = $db->getConnection();
 
 try {
-    // Check for duplicate username, email, or index_number
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM students WHERE username = :username OR email = :email OR index_number = :index_number");
+    // Check for duplicate username, email, or index_number (excluding the current student)
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM students WHERE (username = :username OR email = :email OR index_number = :index_number) AND student_id != :student_id");
     $stmt->execute([
         ':username' => $username,
         ':email' => $email,
-        ':index_number' => $index_number
+        ':index_number' => $index_number,
+        ':student_id' => $student_id
     ]);
     if ($stmt->fetchColumn() > 0) {
         echo json_encode(['status' => 'error', 'message' => 'Username, email, or index number already exists.']);
         exit;
     }
 
-    // Hash password
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    // Update student data
+    $query = "UPDATE students SET 
+                first_name = :first_name, 
+                last_name = :last_name, 
+                email = :email, 
+                phone_number = :phone_number, 
+                date_of_birth = :date_of_birth, 
+                gender = :gender, 
+                index_number = :index_number, 
+                program_id = :program_id, 
+                department_id = :department_id, 
+                level_id = :level_id, 
+                username = :username, 
+                status = :status, 
+                resetOnLogin = :resetOnLogin, 
+                updated_at = NOW()";
 
-    // Insert student
-    $stmt = $conn->prepare(
-        "INSERT INTO students 
-            (first_name, last_name, email, phone_number, date_of_birth, gender, index_number, program_id, department_id, level_id, username, password_hash, status, resetOnLogin ,created_at) 
-         VALUES 
-            (:first_name, :last_name, :email, :phone_number, :date_of_birth, :gender, :index_number, :program_id, :department_id, :level_id, :username, :password_hash, :status, :resetOnLogin, NOW())"
-    );
-    $stmt->execute([
+    // Include password update if provided
+    if ($password) {
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        $query .= ", password_hash = :password_hash";
+    }
+
+    $query .= " WHERE student_id = :student_id";
+
+    $stmt = $conn->prepare($query);
+
+    $params = [
         ':first_name' => $first_name,
         ':last_name' => $last_name,
         ':email' => $email,
         ':phone_number' => $phone_number,
         ':date_of_birth' => $date_of_birth,
         ':gender' => $gender,
-       
         ':index_number' => $index_number,
         ':program_id' => $program_id,
         ':department_id' => $department_id,
         ':level_id' => $level_id,
         ':username' => $username,
-        ':password_hash' => $password_hash,
         ':status' => $status,
-        ':resetOnLogin' => $resetOnLogin
-    ]);
+        ':resetOnLogin' => $resetOnLogin,
+        ':student_id' => $student_id
+    ];
 
-    if($send_notification === 'on') {
-        // Send notification logic here (e.g., email)
-        // This is a placeholder, implement actual notification logic as needed
-        // mail($email, "Welcome to EMS", "Your account has been created successfully.");
+    if ($password) {
+        $params[':password_hash'] = $password_hash;
     }
 
-    echo json_encode(['status' => 'success', 'message' => 'Student added successfully!']);
+    $stmt->execute($params);
+
+    if ($send_notification) {
+        // Send notification logic here (e.g., email)
+        // This is a placeholder, implement actual notification logic as needed
+        // mail($email, "Profile Updated", "Your profile has been updated successfully.");
+    }
+
+    echo json_encode(['status' => 'success', 'message' => 'Student updated successfully!']);
 } catch (PDOException $e) {
     echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
 }
