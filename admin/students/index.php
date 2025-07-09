@@ -522,34 +522,62 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         function deleteStudent(studentId, studentName) {
+    Swal.fire({
+        title: 'Delete Student',
+        html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading notification
             Swal.fire({
-                title: 'Delete Student',
-                html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, delete',
-                cancelButtonText: 'Cancel',
-                focusCancel: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Toast.fire({
-                        icon: 'info',
-                        title: 'Processing deletion...'
-                    });
-                    // TODO: Implement AJAX delete endpoint for students
-                    setTimeout(() => {
-                        Toast.fire({
-                            icon: 'success',
-                            title: 'Student deleted successfully!'
-                        });
-                        // Optionally remove row from table
-                        // location.reload();
-                    }, 1000);
+                title: 'Deleting...',
+                text: 'Please wait while the student is being deleted.',
+                icon: 'info',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
+
+            // Send delete request
+            axios.post('/api/students/deleteStudent.php', { student_id: studentId })
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: response.data.message
+                        });
+
+                        // Remove the student row from the table
+                        const row = document.querySelector(`button[onclick="deleteStudent(${studentId}, '${studentName}')"]`).closest('tr');
+                        if (row) row.remove();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while deleting the student. Please try again later.'
+                    });
+                    console.error(error);
+                });
         }
+    });
+}
 
         // Real-time search
         document.getElementById('searchName').addEventListener('input', function() {
