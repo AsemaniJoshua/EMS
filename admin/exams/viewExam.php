@@ -21,9 +21,11 @@ $conn = $db->getConnection();
 $stmt = $conn->prepare(
     "SELECT e.exam_id, e.title, e.exam_code, e.description, e.duration_minutes, e.pass_mark, e.start_datetime, e.end_datetime, 
             e.status, e.randomize, e.show_results, e.anti_cheating, e.created_at, 
-            c.title AS course_title, d.name AS department_name, t.first_name AS teacher_first_name, t.last_name AS teacher_last_name
+            c.title AS course_title, p.name AS program_name, d.name AS department_name, 
+            t.first_name AS teacher_first_name, t.last_name AS teacher_last_name
      FROM exams e
      JOIN courses c ON e.course_id = c.course_id
+     JOIN programs p ON c.program_id = p.program_id
      JOIN departments d ON e.department_id = d.department_id
      JOIN teachers t ON e.teacher_id = t.teacher_id
      WHERE e.exam_id = :exam_id"
@@ -36,7 +38,7 @@ if (!$exam) {
     exit;
 }
 
-// Fetch questions for the exam
+// Fetch questions and choices for the exam
 $questions = [];
 $stmt = $conn->prepare(
     "SELECT q.question_id, q.question_text 
@@ -45,9 +47,27 @@ $stmt = $conn->prepare(
      ORDER BY q.sequence_number ASC"
 );
 $stmt->execute([':exam_id' => $examId]);
-while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $questions[] = $row;
+while ($question = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $choicesStmt = $conn->prepare(
+        "SELECT choice_id, choice_text, is_correct 
+         FROM choices 
+         WHERE question_id = :question_id"
+    );
+    $choicesStmt->execute([':question_id' => $question['question_id']]);
+    $question['choices'] = $choicesStmt->fetchAll(PDO::FETCH_ASSOC);
+    $questions[] = $question;
 }
+
+// Fetch registered students for the exam
+$registeredStudents = [];
+$stmt = $conn->prepare(
+    "SELECT s.student_id, s.first_name, s.last_name, s.index_number, s.email, s.status 
+     FROM exam_registrations er
+     JOIN students s ON er.student_id = s.student_id
+     WHERE er.exam_id = :exam_id"
+);
+$stmt->execute([':exam_id' => $examId]);
+$registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -67,37 +87,23 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     <?php renderAdminSidebar($currentPage); ?>
     <?php renderAdminHeader(); ?>
 
-    <!-- Main content -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
 
             <!-- Page Header -->
-            <div class="mb-6">
-                <div class="flex items-center mb-4">
+            <div class="mb-6 flex items-center justify-between">
+                <div>
                     <button onclick="window.location.href='index.php'" class="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl"><?php echo htmlspecialchars($exam['title']); ?></h1>
-                        <p class="mt-1 text-sm text-gray-500">Exam Code: <?php echo htmlspecialchars($exam['exam_code']); ?></p>
-                    </div>
+                    <span class="text-2xl font-bold text-gray-900 sm:text-3xl"><?php echo htmlspecialchars($exam['title']); ?></span>
+                    <span class="ml-2 text-sm text-gray-500">Exam Code: <?php echo htmlspecialchars($exam['exam_code']); ?></span>
                 </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="mb-6 flex justify-end space-x-3">
-                <button onclick="editExam(<?php echo $examId; ?>)" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                    <i class="fas fa-edit mr-2"></i>
-                    Edit Exam
-                </button>
-                <button onclick="publishExam(<?php echo $examId; ?>)" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
-                    <i class="fas fa-paper-plane mr-2"></i>
-                    Publish Exam
-                </button>
-                <button onclick="deleteExam(<?php echo $examId; ?>)" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                    <i class="fas fa-trash mr-2"></i>
-                    Delete Exam
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"><i class="fas fa-edit mr-1"></i>Edit</button>
+                    <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fas fa-paper-plane mr-1"></i>Publish</button>
+                    <button onclick="deleteExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash mr-1"></i>Delete</button>
+                </div>
             </div>
 
             <!-- Exam Details -->
@@ -111,9 +117,10 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <h4 class="text-sm font-medium text-gray-500">Basic Information</h4>
                             <ul class="mt-2 text-sm text-gray-700 space-y-2">
                                 <li><strong>Course:</strong> <?php echo htmlspecialchars($exam['course_title']); ?></li>
+                                <li><strong>Program:</strong> <?php echo htmlspecialchars($exam['program_name']); ?></li>
                                 <li><strong>Department:</strong> <?php echo htmlspecialchars($exam['department_name']); ?></li>
                                 <li><strong>Teacher:</strong> <?php echo htmlspecialchars($exam['teacher_first_name'] . ' ' . $exam['teacher_last_name']); ?></li>
-                                <li><strong>Status:</strong> 
+                                <li><strong>Status:</strong>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $exam['status'] === 'Approved' ? 'bg-emerald-100 text-emerald-800' : ($exam['status'] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'); ?>">
                                         <?php echo ucfirst($exam['status']); ?>
                                     </span>
@@ -133,10 +140,40 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </div>
             </div>
 
-            <!-- Questions Section -->
+            <!-- Registered Students -->
+            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden mb-6">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900">Registered Students</h3>
+                </div>
+                <div class="p-6">
+                    <?php if (count($registeredStudents) > 0): ?>
+                        <ul class="space-y-4">
+                            <?php foreach ($registeredStudents as $student): ?>
+                                <li class="border border-gray-200 rounded-lg p-4 flex justify-between items-center">
+                                    <span class="text-sm text-gray-700">
+                                        <?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?>
+                                        (<?php echo htmlspecialchars($student['index_number']); ?>)
+                                    </span>
+                                    <span class="text-sm text-gray-500"><?php echo htmlspecialchars($student['email']); ?></span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $student['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'; ?>">
+                                        <?php echo ucfirst($student['status']); ?>
+                                    </span>
+                                    <button onclick="deleteRegisteredStudent(<?php echo $examId; ?>, <?php echo $student['student_id']; ?>)" class="ml-4 text-red-600 hover:text-red-800 transition-colors" title="Remove Student">
+                                        <i class="fas fa-user-minus"></i>
+                                    </button>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p class="text-sm text-gray-500">No students have registered for this exam yet.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Questions and Choices -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-gray-900">Questions</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Exam Questions</h3>
                     <button onclick="addQuestion(<?php echo $examId; ?>)" class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
                         <i class="fas fa-plus mr-2"></i>
                         Add Question
@@ -144,23 +181,39 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </div>
                 <div class="p-6">
                     <?php if (count($questions) > 0): ?>
-                        <ul class="space-y-4">
+                        <ul class="space-y-6">
                             <?php foreach ($questions as $question): ?>
-                                <li class="border border-gray-200 rounded-lg p-4 flex justify-between items-center">
-                                    <span class="text-sm text-gray-700"><?php echo htmlspecialchars($question['question_text']); ?></span>
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="editQuestion(<?php echo $question['question_id']; ?>)" class="text-blue-600 hover:text-blue-800 transition-colors">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="deleteQuestion(<?php echo $question['question_id']; ?>)" class="text-red-600 hover:text-red-800 transition-colors">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                <li class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($question['question_text']); ?></h4>
+                                        <div class="flex gap-2">
+                                            <button onclick="editQuestion(<?php echo $question['question_id']; ?>)" class="text-blue-600 hover:text-blue-800 transition-colors" title="Edit Question">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="deleteQuestion(<?php echo $question['question_id']; ?>)" class="text-red-600 hover:text-red-800 transition-colors" title="Delete Question">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
+                                    <ul class="space-y-2">
+                                        <?php foreach ($question['choices'] as $choice): ?>
+                                            <li class="flex items-center text-sm text-gray-700 <?php echo $choice['is_correct'] ? 'font-bold text-emerald-600' : ''; ?>">
+                                                <?php echo htmlspecialchars($choice['choice_text']); ?>
+                                                <?php if ($choice['is_correct']): ?>
+                                                    <span class="ml-2 text-xs text-emerald-600">(Correct Answer)</span>
+                                                <?php endif; ?>
+                                                <button onclick="deleteOption(<?php echo $choice['choice_id']; ?>)" class="ml-3 text-red-500 hover:text-red-700" title="Delete Option">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                    <button onclick="addOption(<?php echo $question['question_id']; ?>)" class="mt-2 text-xs text-emerald-600 hover:underline"><i class="fas fa-plus mr-1"></i>Add Option</button>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     <?php else: ?>
-                        <p class="text-sm text-gray-500">No questions added to this exam yet.</p>
+                        <p class="text-sm text-gray-500">No questions have been added to this exam yet.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -260,9 +313,64 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 }
             });
         }
+
+        function addOption(questionId) {
+            window.location.href = `addOption.php?question_id=${questionId}`;
+        }
+
+        function deleteOption(choiceId) {
+            Swal.fire({
+                title: 'Delete Option',
+                text: 'Are you sure you want to delete this option?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.post('/api/exams/deleteOption.php', { choice_id: choiceId })
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire('Deleted!', response.data.message, 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                Swal.fire('Error!', response.data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error!', 'An error occurred while deleting the option.', 'error');
+                        });
+                }
+            });
+        }
+
+        function deleteRegisteredStudent(examId, studentId) {
+            Swal.fire({
+                title: 'Remove Student',
+                text: 'Are you sure you want to remove this student from the exam?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, remove'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.post('/api/exams/deleteRegisteredStudent.php', { exam_id: examId, student_id: studentId })
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire('Removed!', response.data.message, 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                Swal.fire('Error!', response.data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error!', 'An error occurred while removing the student.', 'error');
+                        });
+                }
+            });
+        }
     </script>
 </body>
-
 </html>
-
-
