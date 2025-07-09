@@ -55,7 +55,7 @@ function renderAdminSidebar($currentPage)
 ?>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed left-0 top-0 min-h-screen lg:h-screen h-[100dvh] w-60 bg-white shadow-2xl z-100 flex flex-col overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full">
+    <aside id="sidebar" class="fixed left-0 top-0 min-h-screen lg:h-screen h-[100dvh] w-60 bg-white shadow-sm z-100 flex flex-col overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full">
         <!-- Header -->
         <div class="p-5 border-b border-emerald-100 flex items-center justify-between bg-white">
             <div class="flex items-center gap-3">

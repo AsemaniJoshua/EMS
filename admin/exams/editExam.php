@@ -200,6 +200,10 @@ $exam = [
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Total Score (%) *</label>
+                                    <input type="number" name="totalScore" min="1" max="100" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 60">
+                                </div>
+                                <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score (%) *</label>
                                     <input type="number" name="passingScore" min="1" max="100" required value="<?php echo $exam['passMark']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 60">
                                 </div>
@@ -333,7 +337,7 @@ $exam = [
                 if (result.isConfirmed) {
                     // In a real app, you'd send a delete request to the server
                     console.log('Deleting exam:', examId);
-                    
+
                     Swal.fire({
                         title: 'Deleted!',
                         text: 'Exam deleted successfully!',
@@ -357,7 +361,7 @@ $exam = [
                 info: 'info',
                 warning: 'warning'
             };
-            
+
             Swal.fire({
                 title: '',
                 text: message,

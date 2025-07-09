@@ -1,5 +1,23 @@
--- SQL Schema for Online Exam Management System (Simplified & Relational)
--- This schema is designed to be simple, relational, and efficient for an online exam management system.
+SET FOREIGN_KEY_CHECKS = 0; -- Temporarily disable foreign key checks
+
+-- Core Tables (no external FKs)
+CREATE TABLE departments (
+    department_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
+);
+
+CREATE TABLE levels (
+    level_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE semesters (
+    semester_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    start_date DATE,
+    end_date DATE
+);
 
 CREATE TABLE admins (
     admin_id INT PRIMARY KEY,
@@ -9,26 +27,14 @@ CREATE TABLE admins (
     last_name VARCHAR(50),
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
 );
 
-CREATE TABLE students (
-    student_id INT PRIMARY KEY,
-    index_number VARCHAR(50) NOT NULL UNIQUE,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    email VARCHAR(100) NOT NULL UNIQUE,
-    phone_number VARCHAR(20),
-    password_hash VARCHAR(255) NOT NULL,
-    date_of_birth DATE,
-    gender ENUM('male', 'female'),
-    status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
-    program_id INT NOT NULL,
+-- Tables with FKs to core tables
+CREATE TABLE programs (
+    program_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
     department_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(program_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
@@ -43,35 +49,33 @@ CREATE TABLE teachers (
     password_hash VARCHAR(255) NOT NULL,
     department_id INT NOT NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
+    resetOnLogin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
-CREATE TABLE departments (
-    department_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT
-);
-
-CREATE TABLE programs (
-    program_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
+CREATE TABLE students (
+    student_id INT PRIMARY KEY,
+    index_number VARCHAR(50) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    password_hash VARCHAR(255) NOT NULL,
+    date_of_birth DATE,
+    gender ENUM('male', 'female'),
+    status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
+    level_id INT NOT NULL,
+    program_id INT NOT NULL,
     department_id INT NOT NULL,
+    resetOnLogin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (level_id) REFERENCES levels(level_id) ,
+    FOREIGN KEY (program_id) REFERENCES programs(program_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
-);
-
-CREATE TABLE levels (
-    level_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
-CREATE TABLE semesters (
-    semester_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    start_date DATE,
-    end_date DATE
 );
 
 CREATE TABLE courses (
@@ -89,6 +93,7 @@ CREATE TABLE courses (
     FOREIGN KEY (semester_id) REFERENCES semesters(semester_id)
 );
 
+-- Tables with FKs to previous tables
 CREATE TABLE exams (
     exam_id INT AUTO_INCREMENT PRIMARY KEY,
     exam_code VARCHAR(50) NOT NULL UNIQUE,
@@ -102,6 +107,7 @@ CREATE TABLE exams (
     status ENUM('Pending', 'Approved', 'Rejected', 'Draft', 'Completed') DEFAULT 'Pending',
     duration_minutes INT NOT NULL,
     pass_mark DECIMAL(5,2) DEFAULT 50.00,
+    total_marks INT NOT NULL, -- Added column
     start_datetime DATETIME,
     end_datetime DATETIME,
     max_attempts INT DEFAULT 1,
@@ -135,15 +141,17 @@ CREATE TABLE choices (
     FOREIGN KEY (question_id) REFERENCES questions(question_id)
 );
 
+-- Note: Modified FOREIGN KEY for student_id to reference 'students' table
 CREATE TABLE exam_registrations (
     registration_id INT AUTO_INCREMENT PRIMARY KEY,
     exam_id INT NOT NULL,
     student_id INT NOT NULL,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (exam_id) REFERENCES exams(exam_id),
-    FOREIGN KEY (student_id) REFERENCES users(user_id)
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
 );
 
+-- Tables dependent on exam_registrations, questions, choices
 CREATE TABLE student_answers (
     answer_id INT AUTO_INCREMENT PRIMARY KEY,
     registration_id INT NOT NULL,
@@ -167,6 +175,18 @@ CREATE TABLE results (
     FOREIGN KEY (registration_id) REFERENCES exam_registrations(registration_id)
 );
 
+-- Note: Modified FOREIGN KEY for user_id to reference 'students' table
+CREATE TABLE notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- Assuming this refers to a student for simplicity, given no 'users' table
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    seen BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES students(student_id)
+);
+
+SET FOREIGN_KEY_CHECKS = 1; -- Re-enable foreign key checks
+
 -- Option 2: Real-time view for live calculated results (hybrid logic)
 -- Useful for instant scoring preview before storing permanent result
 CREATE VIEW live_results AS
@@ -180,14 +200,18 @@ FROM student_answers sa
 JOIN choices c ON sa.choice_id = c.choice_id
 GROUP BY sa.registration_id;
 
--- Best practice: Use the 'live_results' view for real-time display immediately after exam,
--- then store the result in the 'results' table to preserve history and improve performance.
+CREATE TABLE teacher_courses (
+    teacher_course_id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NOT NULL,
+    course_id INT NOT NULL,
+    assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+   
 
-CREATE TABLE notifications (
-    notification_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    seen BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    CONSTRAINT fk_teacher
+        FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_course
+        FOREIGN KEY (course_id) REFERENCES courses(course_id)
+        ON DELETE CASCADE
 );

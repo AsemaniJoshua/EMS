@@ -52,7 +52,7 @@ function renderAdminHeader()
                             aria-haspopup="true">
                             <span class="sr-only">Open user menu</span>
                             <div class="hidden md:block text-right pr-1">
-                                <p class="text-sm font-medium text-gray-800">Admin User</p>
+                                <p class="text-sm font-medium text-gray-800"><?php echo $_SESSION['admin_name']?></p>
                                 <p class="text-xs text-gray-500">Administrator</p>
                             </div>
                             <img

@@ -62,21 +62,7 @@ $pageTitle = "Create New Exam";
                                 <input type="text" name="examCode" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., MATH101-FINAL-2023">
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                                <select name="subjectId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="">Select Subject</option>
-                                    <option value="1">Mathematics</option>
-                                    <option value="2">Physics</option>
-                                    <option value="3">Chemistry</option>
-                                    <option value="4">Biology</option>
-                                    <option value="5">Computer Science</option>
-                                    <option value="6">English</option>
-                                    <option value="7">History</option>
-                                    <option value="8">Geography</option>
-                                </select>
-                            </div>
-
+                    
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
                                 <select name="departmentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -162,6 +148,11 @@ $pageTitle = "Create New Exam";
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
                                 <input type="number" name="duration" min="15" max="240" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Total Score (%) *</label>
+                                <input type="number" name="totalScore" min="1" max="100" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 60">
                             </div>
 
                             <div>
