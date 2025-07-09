@@ -1,9 +1,57 @@
 <?php
+include_once __DIR__ . '/../../api/login/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'exams';
-?>
 
+// Database connection
+$db = new Database();
+$conn = $db->getConnection();
+
+// Fetch stats
+$totalExams = 0;
+$activeExams = 0;
+$pendingExams = 0;
+$averageScore = 0.0;
+
+// Total exams
+$stmt = $conn->query("SELECT COUNT(*) as count FROM exams");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalExams = $row['count'];
+}
+
+// Active exams
+$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Approved' AND NOW() BETWEEN start_datetime AND end_datetime");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $activeExams = $row['count'];
+}
+
+// Pending exams
+$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Pending'");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $pendingExams = $row['count'];
+}
+
+// Average score
+$stmt = $conn->query("SELECT AVG(score_percentage) as avg_score FROM results");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $averageScore = $row['avg_score'] ? round($row['avg_score'], 1) : 0.0;
+}
+
+// Fetch exams for the table
+$exams = [];
+$stmt = $conn->query(
+    "SELECT e.exam_id, e.title, e.status, e.start_datetime, e.end_datetime, c.title AS course_title, d.name AS department_name
+     FROM exams e
+     JOIN courses c ON e.course_id = c.course_id
+     JOIN departments d ON e.department_id = d.department_id
+     ORDER BY e.start_datetime DESC"
+);
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $exams[] = $row;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -30,7 +78,6 @@ $currentPage = 'exams';
                     <p class="mt-1 text-sm text-gray-500">Create, configure and monitor all examination activities</p>
                 </div>
                 <div class="mt-4 md:mt-0">
-                    <!-- Change the button to a direct link instead of opening the modal -->
                     <a href="createExam.php" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                         <i class="fas fa-plus mr-2 -ml-1"></i>
                         Create New Exam
@@ -51,11 +98,7 @@ $currentPage = 'exams';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Total Exams</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">86</div>
-                                        <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+8</span>
-                                            <span class="ml-1 text-gray-500">this month</span>
-                                        </div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo $totalExams; ?></div>
                                     </dd>
                                 </dl>
                             </div>
@@ -74,11 +117,7 @@ $currentPage = 'exams';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Active Now</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">3</div>
-                                        <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-blue-600 font-medium">Currently</span>
-                                            <span class="ml-1 text-gray-500">in progress</span>
-                                        </div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo $activeExams; ?></div>
                                     </dd>
                                 </dl>
                             </div>
@@ -97,11 +136,7 @@ $currentPage = 'exams';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Pending Approval</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">12</div>
-                                        <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-yellow-600 font-medium">Awaiting</span>
-                                            <span class="ml-1 text-gray-500">review</span>
-                                        </div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo $pendingExams; ?></div>
                                     </dd>
                                 </dl>
                             </div>
@@ -120,11 +155,7 @@ $currentPage = 'exams';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Average Score</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">72.4%</div>
-                                        <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+3.2%</span>
-                                            <span class="ml-1 text-gray-500">vs last term</span>
-                                        </div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo $averageScore; ?>%</div>
                                     </dd>
                                 </dl>
                             </div>
@@ -133,445 +164,68 @@ $currentPage = 'exams';
                 </div>
             </div>
 
-            <!-- Tab Navigation -->
-            <div class="mb-6">
-                <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-12"> <button id="tab-upcoming" class="tab-button border-emerald-500 text-emerald-600 whitespace-nowrap pb-4 px-2 border-b-2 font-medium text-sm mx-4">
-                            Upcoming & Draft
-                        </button>
-                        <button id="tab-active" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-2 border-b-2 font-medium text-sm mx-4">
-                            Active
-                        </button>
-                        <button id="tab-past" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-2 border-b-2 font-medium text-sm mx-4">
-                            Completed
-                        </button>
-                    </nav>
+            <!-- Exams Table -->
+            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-900">All Exams</h3>
                 </div>
-            </div>
-
-            <!-- Search and Filter Bar -->
-            <div class="bg-white shadow-sm rounded-xl border border-gray-100 mb-6">
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                        <div class="relative col-span-2">
-                            <input type="text" id="searchExam" placeholder="Search exams..."
-                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-search text-gray-400"></i>
-                            </div>
-                        </div>
-                        <select id="filterSubject" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <option value="">All Subjects</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                        </select>
-                        <button onclick="filterExams()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium">
-                            <i class="fas fa-filter mr-2"></i>
-                            Filter
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Content -->
-            <div id="tab-content">
-                <!-- Upcoming & Draft Exams Tab -->
-                <div id="content-upcoming" class="tab-content bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">Upcoming & Draft Exams</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Title</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Title</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <?php foreach ($exams as $exam): ?>
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">Final Mathematics Exam</div>
+                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Mathematics
-                                        </span>
+                                        <div class="text-sm text-gray-900"><?php echo htmlspecialchars($exam['course_title']); ?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Dec 15, 2023</div>
-                                        <div class="text-xs text-gray-500">09:00 - 11:00</div>
+                                        <div class="text-sm text-gray-900"><?php echo htmlspecialchars($exam['department_name']); ?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                            Ready
+                                        <div class="text-sm text-gray-900"><?php echo date('M d, Y H:i', strtotime($exam['start_datetime'])); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?php echo date('M d, Y H:i', strtotime($exam['end_datetime'])); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $exam['status'] === 'Approved' ? 'bg-emerald-100 text-emerald-800' : ($exam['status'] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'); ?>">
+                                            <?php echo ucfirst($exam['status']); ?>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex items-center space-x-2">
-                                            <button onclick="viewExam(1)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
+                                            <a href="viewExam.php?id=<?php echo $exam['exam_id']; ?>" class="text-emerald-600 hover:text-emerald-900 transition-colors" title="View">
                                                 <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button onclick="editExam(1)" class="text-blue-600 hover:text-blue-900 transition-colors">
+                                            </a>
+                                            <a href="editExam.php?id=<?php echo $exam['exam_id']; ?>" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteExam(1)" class="text-red-600 hover:text-red-900 transition-colors">
+                                            </a>
+                                            <button onclick="deleteExam(<?php echo $exam['exam_id']; ?>, '<?php echo htmlspecialchars($exam['title']); ?>')" class="text-red-600 hover:text-red-900 transition-colors border-0 bg-transparent p-0" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">Physics Mid-Term</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                            Physics
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Dec 18, 2023</div>
-                                        <div class="text-xs text-gray-500">13:00 - 15:00</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            Draft
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="viewExam(2)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button onclick="editExam(2)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteExam(2)" class="text-red-600 hover:text-red-900 transition-colors">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Active Exams Tab -->
-                <div id="content-active" class="hidden tab-content bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">Active Exams</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Title</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Remaining</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">Chemistry Test</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Chemistry
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-orange-600">45 minutes</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">28/30 students</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="monitorExam(1)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                                <i class="fas fa-desktop"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Completed Exams Tab -->
-                <div id="content-past" class="hidden tab-content bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-900">Completed Exams</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Title</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Score</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">English Literature Final</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            English
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Nov 10, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">76.3%</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="viewResults(1)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
-                                                <i class="fas fa-chart-bar"></i>
-                                            </button>
-                                            <button onclick="downloadReport(1)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">Biology Mid-Term</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Biology
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Oct 25, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">82.7%</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="viewResults(2)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
-                                                <i class="fas fa-chart-bar"></i>
-                                            </button>
-                                            <button onclick="downloadReport(2)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-gray-700">
-                                Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">74</span> exams
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                    Previous
-                                </button>
-                                <button class="px-3 py-1 text-sm text-white bg-emerald-600 border border-emerald-600 rounded-md">
-                                    1
-                                </button>
-                                <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                    2
-                                </button>
-                                <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                    3
-                                </button>
-                                <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </main>
-
-    <script>
-        // Tab functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabs = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-
-            // Set the first tab as active by default
-            if (tabs.length > 0) {
-                tabs.forEach(t => {
-                    t.classList.remove('border-emerald-500', 'text-emerald-600');
-                    t.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                });
-                tabs[0].classList.add('border-emerald-500', 'text-emerald-600');
-                tabs[0].classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                });
-                const firstContentId = tabs[0].id.replace('tab-', 'content-');
-                document.getElementById(firstContentId).classList.remove('hidden');
-            }
-
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Remove active state from all tabs
-                    tabs.forEach(t => {
-                        t.classList.remove('border-emerald-500', 'text-emerald-600');
-                        t.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                    });
-
-                    // Add active state to clicked tab
-                    tab.classList.add('border-emerald-500', 'text-emerald-600');
-                    tab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-
-                    // Hide all tab contents
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                    });
-
-                    // Show the corresponding content
-                    const contentId = tab.id.replace('tab-', 'content-');
-                    document.getElementById(contentId).classList.remove('hidden');
-                });
-            });
-        });
-
-        // Modal functionality
-        function openCreateExamModal() {
-            document.getElementById('examModalTitle').textContent = 'Create New Exam';
-            document.getElementById('examForm').reset();
-            document.getElementById('examModal').classList.remove('hidden');
-        }
-
-        function editExam(id) {
-            document.getElementById('examModalTitle').textContent = 'Edit Exam';
-
-            // In a real app, you'd fetch the exam data and populate the form
-            // For now, we'll just show the modal with empty fields
-            document.getElementById('examForm').reset();
-            document.getElementById('examModal').classList.remove('hidden');
-
-            // Show notification for demonstration
-            showNotification('Fetching exam details...', 'info');
-        }
-
-        function closeExamModal() {
-            document.getElementById('examModal').classList.add('hidden');
-        }
-
-        // Form submission
-        document.getElementById('examForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Get form data
-            const formData = new FormData(this);
-
-            // In a real app, you'd send this data to the server
-            console.log('Form data:', Object.fromEntries(formData));
-
-            // Close modal and show success message
-            closeExamModal();
-            showNotification('Exam saved successfully!', 'success');
-        });
-
-        // Action functions
-        function viewExam(id) {
-            showNotification('Viewing exam details...', 'info');
-            // In a real app, you'd redirect to the exam view page
-        }
-
-        function monitorExam(id) {
-            showNotification('Opening exam monitoring panel...', 'info');
-            // In a real app, you'd open the monitoring interface
-        }
-
-        function deleteExam(id) {
-            if (confirm('Are you sure you want to delete this exam?')) {
-                showNotification('Exam deleted successfully!', 'success');
-                // In a real app, you'd send a delete request to the server
-            }
-        }
-
-        function viewResults(id) {
-            showNotification('Loading exam results...', 'info');
-            // In a real app, you'd redirect to the results page
-        }
-
-        function downloadReport(id) {
-            showNotification('Generating report for download...', 'info');
-            // In a real app, you'd trigger the report download
-        }
-
-        // Filter functionality
-        function filterExams() {
-            const searchTerm = document.getElementById('searchExam').value.toLowerCase();
-            const filterSubject = document.getElementById('filterSubject').value;
-
-            showNotification('Applying filters...', 'info');
-            // In a real app, you'd filter the table data based on the search term and filters
-        }
-
-        // Real-time search
-        document.getElementById('searchExam').addEventListener('input', function() {
-            if (this.value.length > 2 || this.value.length === 0) {
-                filterExams();
-            }
-        });
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
-        }
-    </script>
 </body>
 
 </html>
