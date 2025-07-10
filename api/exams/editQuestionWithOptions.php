@@ -1,6 +1,5 @@
 <?php
 header('Content-Type: application/json');
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
 require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -14,7 +13,7 @@ if (!isset($data['question_id'], $data['question_text'], $data['choices']) || !i
     exit;
 }
 
-$question_id = intval($data['question_id']);
+$question_id = $data['question_id'];
 $question_text = trim($data['question_text']);
 $choices = $data['choices'];
 
@@ -51,16 +50,22 @@ $conn = $db->getConnection();
 try {
     $conn->beginTransaction();
 
+    // Check if question exists 
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM questions WHERE question_id = :question_id");
+    $stmt->execute([':question_id' => $question_id]);
+    $questionExists = $stmt->fetchColumn() > 0;
+
+    if(!$questionExists) {
+        throw new Exception('Question not found - ID: ' . $question_id);
+    }
+    
     // Update question text
     $stmt = $conn->prepare("UPDATE questions SET question_text = :question_text WHERE question_id = :question_id");
     $stmt->execute([
         ':question_text' => $question_text,
         ':question_id' => $question_id
     ]);
-
-    if ($stmt->rowCount() === 0) {
-        throw new Exception('Question not found');
-    }
+        
 
     // Delete existing choices
     $stmt = $conn->prepare("DELETE FROM choices WHERE question_id = :question_id");
@@ -68,7 +73,7 @@ try {
 
     // Insert new choices
     $choiceStmt = $conn->prepare("INSERT INTO choices (question_id, choice_text, is_correct) 
-                                 VALUES (:question_id, :choice_text, :is_correct)");
+                                VALUES (:question_id, :choice_text, :is_correct)");
 
     foreach ($choices as $choice) {
         $choiceStmt->execute([
@@ -77,6 +82,7 @@ try {
             ':is_correct' => $choice['is_correct'] ? 1 : 0
         ]);
     }
+    
 
     $conn->commit();
     echo json_encode(['status' => 'success', 'message' => 'Question and choices updated successfully.']);

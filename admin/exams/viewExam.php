@@ -100,9 +100,35 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <span class="ml-2 text-sm text-gray-500">Exam Code: <?php echo htmlspecialchars($exam['exam_code']); ?></span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"><i class="fas fa-edit mr-1"></i>Edit</button>
-                    <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fas fa-paper-plane mr-1"></i>Publish</button>
-                    <button onclick="deleteExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash mr-1"></i>Delete</button>
+                    <?php if ($exam['status'] !== 'Completed'): ?>
+                        <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+
+                        <?php if ($exam['status'] === 'Approved'): ?>
+                            <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-yellow-600 text-white hover:bg-yellow-700">
+                                <i class="fas fa-undo mr-1"></i>Unpublish
+                            </button>
+                        <?php else: ?>
+                            <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
+                                <i class="fas fa-paper-plane mr-1"></i>Publish
+                            </button>
+                        <?php endif; ?>
+
+                        <button onclick="deleteExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    <?php else: ?>
+                        <button disabled class="px-3 py-2 rounded-lg bg-gray-400 text-white cursor-not-allowed">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+                        <button disabled class="px-3 py-2 rounded-lg bg-gray-400 text-white cursor-not-allowed">
+                            <i class="fas fa-paper-plane mr-1"></i>Publish
+                        </button>
+                        <button disabled class="px-3 py-2 rounded-lg bg-gray-400 text-white cursor-not-allowed">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -177,7 +203,7 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button onclick="toggleQuestionForm()" class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
                         <i class="fas fa-plus mr-2"></i>
                         Add Question
-                    </button>updat3
+                    </button>
                 </div>
                 <div id="questionForm" class="hidden mx-6 mt-6 bg-gray-50 p-4 border rounded-lg">
                     <form id="newQuestionForm">
@@ -202,7 +228,7 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </button>
                     </form>
                 </div>
-                
+
                 <div class="p-6">
                     <?php if (count($questions) > 0): ?>
                         <ul class="space-y-6">
@@ -277,7 +303,367 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </main>
 
-    <script src="./scripts/viewExam.js"></script>
+    <script>
+        // Display error message if redirected from editExam.php with error parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_GET['error']) && $_GET['error'] === 'completed'): ?>
+                Swal.fire({
+                    title: 'Cannot Edit',
+                    text: 'Completed exams cannot be edited.',
+                    icon: 'error'
+                });
+            <?php endif; ?>
+        });
+
+        function editExam(examId) {
+            // Check if exam is completed
+            const currentStatus = '<?php echo $exam['status']; ?>';
+            if (currentStatus === 'Completed') {
+                Swal.fire({
+                    title: 'Cannot Edit',
+                    text: 'Completed exams cannot be edited.',
+                    icon: 'error'
+                });
+                return;
+            }
+
+            window.location.href = `editExam.php?id=${examId}`;
+        }
+
+        function publishExam(examId) {
+            // Get current status from the page
+            const currentStatus = '<?php echo $exam['status']; ?>';
+            const isPublishing = currentStatus !== 'Approved';
+
+            Swal.fire({
+                title: isPublishing ? 'Publish Exam' : 'Unpublish Exam',
+                text: isPublishing ?
+                    'Are you sure you want to publish this exam? Once published, students will be able to see it.' : 'Are you sure you want to unpublish this exam? Students will not be able to see it until published again.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: isPublishing ? '#3085d6' : '#f59e0b',
+                cancelButtonColor: '#d33',
+                confirmButtonText: isPublishing ? 'Yes, publish it!' : 'Yes, unpublish it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading indicator
+                    Swal.fire({
+                        title: isPublishing ? 'Publishing...' : 'Unpublishing...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    axios.post('../../api/exams/publishExam.php', {
+                            examId: examId
+                        })
+                        .then(response => {
+                            Swal.close();
+
+                            if (response.data.success || response.data.status === 'success') {
+                                Swal.fire({
+                                    title: isPublishing ? 'Published!' : 'Unpublished!',
+                                    text: response.data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error!', response.data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.close();
+
+                            const errorMsg = error.response && error.response.data && error.response.data.message ?
+                                error.response.data.message :
+                                'An error occurred while ' + (isPublishing ? 'publishing' : 'unpublishing') + ' the exam.';
+
+                            Swal.fire('Error!', errorMsg, 'error');
+                        });
+                }
+            });
+        }
+
+
+        function deleteExam(examId) {
+            // Check if exam is completed
+            const currentStatus = '<?php echo $exam['status']; ?>';
+            if (currentStatus === 'Completed') {
+                Swal.fire({
+                    title: 'Cannot Delete',
+                    text: 'Completed exams cannot be deleted.',
+                    icon: 'error'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Delete Exam',
+                text: 'Are you sure you want to delete this exam? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading indicator
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    axios.post('../../api/exams/deleteExam.php', {
+                            examId: examId
+                        })
+                        .then(response => {
+                            Swal.close();
+
+                            if (response.data.success || response.data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: response.data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.href = 'index.php';
+                                });
+                            } else {
+                                Swal.fire('Error!', response.data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.close();
+
+                            const errorMsg = error.response && error.response.data && error.response.data.message ?
+                                error.response.data.message :
+                                'An error occurred while deleting the exam.';
+
+                            Swal.fire('Error!', errorMsg, 'error');
+                        });
+                }
+            });
+        }
+
+        // Question management functions
+        let choiceCount = 0;
+
+        function toggleQuestionForm() {
+            const form = document.getElementById('questionForm');
+            const isHidden = form.classList.contains('hidden');
+
+            form.classList.toggle('hidden');
+
+            if (isHidden) {
+                // Clear the form first
+                document.getElementById('newQuestionForm').reset();
+                document.getElementById('choicesContainer').innerHTML = '';
+                choiceCount = 0;
+
+                // Add at least two choice fields by default
+                addChoiceField();
+                addChoiceField();
+            }
+        }
+
+        function addChoiceField(text = '', isCorrect = false) {
+            const container = document.getElementById('choicesContainer');
+            const choiceId = `choice-${choiceCount++}`;
+
+            const html = `
+                <div class="flex gap-2 items-center">
+                    <input type="text" name="choices[]" value="${text}" placeholder="Choice text" class="flex-1 border rounded p-1" required />
+                    <label class="flex items-center gap-1 text-sm">
+                        <input type="radio" name="correct_choice" value="${choiceCount - 1}" ${isCorrect ? 'checked' : ''} required />
+                        Correct
+                    </label>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-red-500"><i class="fas fa-trash-alt"></i></button>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function addEditChoiceField(form, text = '', isCorrect = false) {
+            const container = form.querySelector('.edit-choices-container');
+            const inputs = container.querySelectorAll('input[name="choices[]"]');
+            const index = inputs.length;
+
+            const html = `
+                <div class="flex gap-2 items-center">
+                    <input type="text" name="choices[]" value="${text}" placeholder="Choice text" class="flex-1 border rounded p-1" required />
+                    <label class="flex items-center gap-1 text-sm">
+                        <input type="radio" name="correct_choice" value="${index}" ${isCorrect ? 'checked' : ''} required />
+                        Correct
+                    </label>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-red-500"><i class="fas fa-trash-alt"></i></button>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        // Initialize question form submission
+        document.getElementById('newQuestionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const questionText = form.question_text.value.trim();
+            const choiceInputs = form.querySelectorAll('input[name="choices[]"]');
+            const correctIndex = form.querySelector('input[name="correct_choice"]:checked')?.value;
+
+            if (!questionText || choiceInputs.length < 2 || correctIndex === undefined) {
+                alert("Please enter a question, at least two choices, and select the correct one.");
+                return;
+            }
+
+            const choices = Array.from(choiceInputs).map((input, i) => ({
+                choice_text: input.value.trim(),
+                is_correct: parseInt(correctIndex) === i
+            }));
+
+            axios.post('/api/exams/addQuestionWithOptions.php', {
+                exam_id: <?php echo $examId; ?>,
+                question_text: questionText,
+                choices
+            }).then(response => {
+                if (response.data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Question added successfully!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    Swal.fire('Error', response.data.message || "Error occurred", 'error');
+                }
+            }).catch(() => {
+                Swal.fire('Error', "Server error occurred", 'error');
+            });
+        });
+
+        // Toggle the edit form for a question
+        function toggleEditForm(questionId) {
+            const questionItem = document.getElementById(`question-${questionId}`);
+            const displaySection = questionItem.querySelector('.question-display');
+            const editSection = questionItem.querySelector('.question-edit-form');
+
+            displaySection.classList.toggle('hidden');
+            editSection.classList.toggle('hidden');
+        }
+
+        // Update an existing question
+        function updateQuestion(e, questionId) {
+            e.preventDefault();
+
+            const form = e.target;
+            const questionText = form.question_text.value.trim();
+            const choiceInputs = form.querySelectorAll('input[name="choices[]"]');
+            const correctIndex = form.querySelector('input[name="correct_choice"]:checked')?.value;
+
+            if (!questionText || choiceInputs.length < 2 || correctIndex === undefined) {
+                alert("Please enter a question, at least two choices, and select the correct one.");
+                return false;
+            }
+
+            const choices = Array.from(choiceInputs).map((input, i) => ({
+                choice_text: input.value.trim(),
+                is_correct: parseInt(correctIndex) === i
+            }));
+
+            axios.post('/api/exams/editQuestionWithOptions.php', {
+                question_id: questionId,
+                question_text: questionText,
+                choices
+            }).then(response => {
+                if (response.data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Question updated successfully!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    Swal.fire('Error', response.data.message || "Error occurred", 'error');
+                }
+            }).catch(() => {
+                Swal.fire('Error', "Server error occurred", 'error');
+            });
+
+            return false;
+        }
+
+        function deleteQuestion(questionId) {
+            Swal.fire({
+                title: 'Delete Question',
+                text: 'Are you sure you want to delete this question? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.post('/api/exams/deleteQuestion.php', {
+                            question_id: questionId
+                        })
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire('Deleted!', response.data.message, 'success');
+                                setTimeout(() => window.location.reload(), 1500);
+                            } else {
+                                Swal.fire('Error!', response.data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error!', 'An error occurred while deleting the question.', 'error');
+                        });
+                }
+            });
+        }
+
+        function deleteRegisteredStudent(examId, studentId) {
+            Swal.fire({
+                title: 'Remove Student',
+                text: 'Are you sure you want to remove this student from the exam?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, remove'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.post('/api/exams/deleteRegisteredStudent.php', {
+                            exam_id: examId,
+                            student_id: studentId
+                        })
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire('Removed!', response.data.message, 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                Swal.fire('Error!', response.data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error!', 'An error occurred while removing the student.', 'error');
+                        });
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,24 @@
+###
+POST http://app.ems.com/api/exams/editQuestionWithOptions.php
+Content-Type: application/json
+
+{
+    "question_id": 10,
+    "question_text": "This is a new question",
+    "choices": [
+        {
+            "choice_text": "Mahama",
+            "is_correct": false
+        },
+        {
+            "choice_text": "Nana Adu",
+            "is_correct": false
+        },
+        {
+            "choice_text": "Rudith",
+            "is_correct": true
+        }
+    ]
+}
+
+###
