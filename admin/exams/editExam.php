@@ -514,21 +514,181 @@ $teachers = $teacherStmt->fetchAll(PDO::FETCH_ASSOC);
         document.querySelector('select[name="departmentId"]').addEventListener('change', function() {
             const departmentId = this.value;
             if (departmentId) {
-                // In a real implementation, you would fetch programs and courses for this department
-                // and update the dropdowns accordingly
-                console.log('Department changed to:', departmentId);
-                // Example: fetchProgramsByDepartment(departmentId);
+                // Show confirmation if user is changing department and already has a program/course selected
+                const programSelect = document.querySelector('select[name="programId"]');
+                const courseSelect = document.querySelector('select[name="courseId"]');
+
+                if (programSelect.value || (courseSelect.value && courseSelect.value !== '')) {
+                    // Show confirmation before changing
+                    if (!confirm('Changing the department will reset your program and course selections. Continue?')) {
+                        // User cancelled, revert to previous department
+                        this.value = this.getAttribute('data-previous-value') || '';
+                        return;
+                    }
+                }
+
+                // Store current value for potential revert
+                this.setAttribute('data-previous-value', departmentId);
+
+                // Show loading indicator for program dropdown
+                programSelect.disabled = true;
+                programSelect.innerHTML = '<option value="">Loading programs...</option>';
+
+                // Show loading indicator for course dropdown
+                courseSelect.disabled = true;
+                courseSelect.innerHTML = '<option value="">Select Program First</option>';
+
+                console.log('Fetching programs for department:', departmentId);
+
+                // Fetch programs for the selected department
+                axios.get('../../api/exams/getProgramsByDepartment.php', {
+                        params: {
+                            departmentId: departmentId
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.success) {
+                            const programs = response.data.programs;
+
+                            // Populate programs dropdown
+                            programSelect.innerHTML = '<option value="">Select Program</option>';
+                            programs.forEach(program => {
+                                const option = document.createElement('option');
+                                option.value = program.program_id;
+                                option.textContent = program.name;
+                                programSelect.appendChild(option);
+                            });
+
+                            // If we have the original program ID and it's in the new list, select it
+                            const originalProgramId = '<?php echo $exam['programId']; ?>';
+                            if (originalProgramId) {
+                                const exists = Array.from(programSelect.options).some(option => option.value === originalProgramId);
+                                if (exists) {
+                                    console.log('Found original program ID in new options, setting value and triggering change');
+                                    programSelect.value = originalProgramId;
+                                    // Trigger change event to load courses
+                                    const event = new Event('change');
+                                    programSelect.dispatchEvent(event);
+                                } else {
+                                    console.log('Original program ID not found in new options');
+                                    // If the original program is not in the list, we should still update courses dropdown
+                                    // with whatever program is now selected (if any)
+                                    if (programSelect.value) {
+                                        programSelect.dispatchEvent(new Event('change'));
+                                    }
+                                }
+                            }
+                        } else {
+                            showNotification('Failed to load programs: ' + response.data.message, 'error');
+                            programSelect.innerHTML = '<option value="">Select Program</option>';
+                        }
+                        programSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching programs:', error);
+                        showNotification('Failed to load programs', 'error');
+                        programSelect.innerHTML = '<option value="">Select Program</option>';
+                        programSelect.disabled = false;
+                    });
             }
         });
 
         // Populate related courses when program changes
         document.querySelector('select[name="programId"]').addEventListener('change', function() {
             const programId = this.value;
+            const departmentId = document.querySelector('select[name="departmentId"]').value;
+
+            // Get the course select element
+            const courseSelect = document.querySelector('select[name="courseId"]');
+
             if (programId) {
-                // In a real implementation, you would fetch courses for this program
-                // and update the dropdown accordingly
-                console.log('Program changed to:', programId);
-                // Example: fetchCoursesByProgram(programId);
+                // Show loading indicator
+                courseSelect.disabled = true;
+                courseSelect.innerHTML = '<option value="">Loading courses...</option>';
+
+                console.log('Fetching courses for program:', programId, 'and department:', departmentId);
+
+                // Fetch courses for the selected program and department
+                axios.get('../../api/exams/getCoursesByProgram.php', {
+                        params: {
+                            programId: programId,
+                            departmentId: departmentId
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.success) {
+                            const courses = response.data.courses;
+                            console.log('Received', courses.length, 'courses');
+
+                            // Populate courses dropdown
+                            courseSelect.innerHTML = '<option value="">Select Course</option>';
+                            courses.forEach(course => {
+                                const option = document.createElement('option');
+                                option.value = course.course_id;
+                                option.textContent = `${course.code} - ${course.title}`;
+                                courseSelect.appendChild(option);
+                            });
+
+                            // If we have the original course ID and it's in the new list, select it
+                            const originalCourseId = '<?php echo $exam['courseId']; ?>';
+                            if (originalCourseId) {
+                                const exists = Array.from(courseSelect.options).some(option => option.value === originalCourseId);
+                                if (exists) {
+                                    console.log('Found original course ID in new options, setting value:', originalCourseId);
+                                    courseSelect.value = originalCourseId;
+                                } else {
+                                    console.log('Original course ID not found in new course options:', originalCourseId);
+                                    // If there's only one course option besides the default, select it automatically
+                                    if (courseSelect.options.length === 2) {
+                                        console.log('Only one course available, selecting it automatically');
+                                        courseSelect.selectedIndex = 1; // Select the first non-default option
+                                    }
+                                }
+                            }
+                        } else {
+                            showNotification('Failed to load courses: ' + response.data.message, 'error');
+                            courseSelect.innerHTML = '<option value="">Select Course</option>';
+                        }
+                        courseSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching courses:', error);
+                        showNotification('Failed to load courses', 'error');
+                        courseSelect.innerHTML = '<option value="">Select Course</option>';
+                        courseSelect.disabled = false;
+                    });
+            } else {
+                // If no program selected, clear and disable courses dropdown
+                courseSelect.innerHTML = '<option value="">Select Program First</option>';
+                courseSelect.disabled = true;
+            }
+        });
+
+        // Initialize cascading dropdowns on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // If we have department and program values selected, trigger their change events
+            const departmentSelect = document.querySelector('select[name="departmentId"]');
+            const programSelect = document.querySelector('select[name="programId"]');
+            const courseSelect = document.querySelector('select[name="courseId"]');
+
+            // Store original values before triggering cascading events
+            const originalDepartmentId = departmentSelect.value;
+            const originalProgramId = programSelect.value;
+            const originalCourseId = courseSelect.value;
+
+            console.log('Original values on load:', {
+                departmentId: originalDepartmentId,
+                programId: originalProgramId,
+                courseId: originalCourseId
+            });
+
+            if (originalDepartmentId) {
+                // First, trigger department change event to load programs
+                departmentSelect.dispatchEvent(new Event('change'));
+
+                // We don't need to manually trigger program change because
+                // the department's change handler will do this when it restores 
+                // the original program value and triggers its change event
             }
         });
     </script>
