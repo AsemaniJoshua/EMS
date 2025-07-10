@@ -6,6 +6,7 @@ module.exports = {
     './admin/**/*.php',
     './index.php',
   ],
+  
   theme: {
     extend: {
       colors: {
