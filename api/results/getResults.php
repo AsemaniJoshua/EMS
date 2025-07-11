@@ -82,9 +82,9 @@ try {
         $whereClause = 'WHERE ' . implode(' AND ', $filters);
     }
 
-    // Count total results for pagination
+    // Count total exams for pagination (not individual results)
     $countQuery = "
-        SELECT COUNT(r.result_id) as total 
+        SELECT COUNT(DISTINCT e.exam_id) as total 
         FROM results r
         JOIN exam_registrations er ON r.registration_id = er.registration_id
         JOIN students s ON er.student_id = s.student_id
@@ -103,26 +103,27 @@ try {
     $totalResults = $countStmt->fetchColumn();
     $totalPages = ceil($totalResults / $resultsPerPage);
 
-    // Fetch the results
+    // Fetch exams with result stats (grouped by exam)
     $query = "
         SELECT 
-            r.result_id,
-            r.total_questions,
-            r.correct_answers,
-            r.incorrect_answers,
-            r.score_percentage,
-            DATE_FORMAT(r.completed_at, '%M %d, %Y %H:%i') as completed_at,
-            s.student_id,
-            CONCAT(s.first_name, ' ', s.last_name) as student_name,
-            s.index_number,
             e.exam_id,
             e.title as exam_title,
             e.exam_code,
             c.course_id,
             c.code as course_code,
             c.title as course_title,
+            d.department_id,
             d.name as department_name,
-            p.name as program_name
+            p.program_id,
+            p.name as program_name,
+            e.start_datetime AS date,
+            COUNT(r.result_id) as total_students,
+            MIN(r.score_percentage) as min_score,
+            MAX(r.score_percentage) as max_score,
+            AVG(r.score_percentage) as avg_score,
+            SUM(CASE WHEN r.score_percentage >= 50 THEN 1 ELSE 0 END) as pass_count,
+            SUM(CASE WHEN r.score_percentage < 50 THEN 1 ELSE 0 END) as fail_count,
+            MAX(r.completed_at) as last_completed
         FROM results r
         JOIN exam_registrations er ON r.registration_id = er.registration_id
         JOIN students s ON er.student_id = s.student_id
@@ -131,7 +132,8 @@ try {
         JOIN departments d ON e.department_id = d.department_id
         JOIN programs p ON e.program_id = p.program_id
         $whereClause
-        ORDER BY r.completed_at DESC
+        GROUP BY e.exam_id
+        ORDER BY last_completed DESC
         LIMIT :offset, :limit
     ";
 

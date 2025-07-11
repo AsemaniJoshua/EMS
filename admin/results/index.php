@@ -275,23 +275,23 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </div>
             </div>
 
-            <!-- Results Table -->
+            <!-- Exams Results Table -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-gray-900">All Results</h3>
-                    <span id="resultCount" class="text-sm text-gray-500">Loading results...</span>
+                    <h3 class="text-lg font-semibold text-gray-900">Exam Results</h3>
+                    <span id="resultCount" class="text-sm text-gray-500">Loading exams...</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct/Total</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Score</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pass Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Submission</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -301,7 +301,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 <td colspan="8" class="px-6 py-4 text-center">
                                     <div class="flex justify-center items-center">
                                         <i class="fas fa-spinner fa-spin mr-2 text-emerald-500"></i>
-                                        <span class="text-gray-500">Loading results...</span>
+                                        <span class="text-gray-500">Loading exam results...</span>
                                     </div>
                                 </td>
                             </tr>
@@ -311,7 +311,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 <!-- Pagination -->
                 <div class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between items-center">
                     <div class="text-sm text-gray-500" id="paginationInfo">
-                        Showing <span id="firstResult">0</span> to <span id="lastResult">0</span> of <span id="totalResults">0</span> results
+                        Showing <span id="firstResult">0</span> to <span id="lastResult">0</span> of <span id="totalResults">0</span> exams
                     </div>
                     <div class="flex space-x-2">
                         <button id="prevPage" class="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -324,12 +324,31 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </div>
             </div>
 
-            <!-- Result Details Modal (hidden by default) -->
+            <!-- Exam Details Modal (hidden by default) -->
+            <div id="examResultsModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full h-[90vh] overflow-hidden flex flex-col">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900" id="examResultsTitle">Exam Results</h3>
+                        <button id="closeExamModal" class="text-gray-400 hover:text-gray-500">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 overflow-y-auto flex-grow" id="examResultsContent">
+                        <!-- Modal content will be populated dynamically -->
+                        <div class="flex justify-center items-center h-full">
+                            <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl mr-3"></i>
+                            <span>Loading exam results...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Result Detail Modal (hidden by default) -->
             <div id="resultModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
                 <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">Result Details</h3>
-                        <button id="closeModal" class="text-gray-400 hover:text-gray-500">
+                        <h3 class="text-lg font-semibold text-gray-900">Student Result Details</h3>
+                        <button id="closeResultModal" class="text-gray-400 hover:text-gray-500">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -347,14 +366,15 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             let currentPage = 1;
             const resultsPerPage = 20;
             let totalResults = 0;
+            let currentExamId = null;
 
             // Load results on page load
-            fetchResults();
+            fetchExamResults();
 
             // Set up event listeners
             document.getElementById('filterButton').addEventListener('click', function() {
                 currentPage = 1; // Reset to first page when applying new filters
-                fetchResults();
+                fetchExamResults();
             });
 
             document.getElementById('exportResultsBtn').addEventListener('click', exportResults);
@@ -362,20 +382,30 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             document.getElementById('prevPage').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
-                    fetchResults();
+                    fetchExamResults();
                 }
             });
             document.getElementById('nextPage').addEventListener('click', function() {
                 currentPage++;
-                fetchResults();
+                fetchExamResults();
             });
 
-            // Close modal when clicking the close button
-            document.getElementById('closeModal').addEventListener('click', function() {
+            // Close modal event listeners
+            document.getElementById('closeExamModal').addEventListener('click', function() {
+                document.getElementById('examResultsModal').classList.add('hidden');
+            });
+
+            document.getElementById('closeResultModal').addEventListener('click', function() {
                 document.getElementById('resultModal').classList.add('hidden');
             });
 
-            // Also close modal when clicking outside of it
+            // Close modals when clicking outside
+            document.getElementById('examResultsModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+
             document.getElementById('resultModal').addEventListener('click', function(event) {
                 if (event.target === this) {
                     this.classList.add('hidden');
@@ -460,16 +490,16 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             });
 
             /**
-             * Fetches results from the server based on current filters and pagination
+             * Fetches exam results from the server based on current filters and pagination
              */
-            function fetchResults() {
+            function fetchExamResults() {
                 const resultsTable = document.getElementById('resultsTable');
                 resultsTable.innerHTML = `
                 <tr>
                     <td colspan="8" class="px-6 py-4 text-center">
                         <div class="flex justify-center items-center">
                             <i class="fas fa-spinner fa-spin mr-2 text-emerald-500"></i>
-                            <span class="text-gray-500">Loading results...</span>
+                            <span class="text-gray-500">Loading exam results...</span>
                         </div>
                     </td>
                 </tr>
@@ -493,23 +523,23 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     })
                     .then(data => {
                         if (data.success) {
-                            populateResults(data.results);
+                            populateExamResults(data.results);
                             updatePagination(data.pagination);
                         } else {
-                            showNotification(data.message || 'Failed to load results', 'error');
+                            showNotification(data.message || 'Failed to load exam results', 'error');
                             resultsTable.innerHTML = `
                         <tr>
                             <td colspan="8" class="px-6 py-4 text-center text-red-500">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
-                                Error: ${data.message || 'Failed to load results'}
+                                Error: ${data.message || 'Failed to load exam results'}
                             </td>
                         </tr>
                     `;
                         }
                     })
                     .catch(error => {
-                        console.error('Error fetching results:', error);
-                        showNotification('Failed to load results. Please try again.', 'error');
+                        console.error('Error fetching exam results:', error);
+                        showNotification('Failed to load exam results. Please try again.', 'error');
                         resultsTable.innerHTML = `
                     <tr>
                         <td colspan="8" class="px-6 py-4 text-center text-red-500">
@@ -522,9 +552,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             }
 
             /**
-             * Populates the results table with data
+             * Populates the exams results table with data
              */
-            function populateResults(results) {
+            function populateExamResults(results) {
                 const resultsTable = document.getElementById('resultsTable');
                 resultsTable.innerHTML = '';
 
@@ -532,47 +562,60 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     resultsTable.innerHTML = `
                     <tr>
                         <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                            No results found matching the filter criteria
+                            No exam results found matching the filter criteria
                         </td>
                     </tr>
                 `;
                     return;
                 }
 
-                results.forEach(result => {
+                results.forEach(exam => {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-gray-50 transition-colors';
 
-                    const passStatus = result.score_percentage >= 50;
+                    const passRate = exam.pass_count > 0 ?
+                        Math.round((exam.pass_count / exam.total_students) * 100) : 0;
+
+                    const passRateClass = passRate >= 70 ? 'text-emerald-600' :
+                        passRate >= 50 ? 'text-yellow-600' : 'text-red-600';
 
                     row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${result.student_name}</div>
-                        <div class="text-sm text-gray-500">${result.index_number}</div>
+                        <div class="text-sm font-medium text-gray-900">${escapeHtml(exam.exam_title)}</div>
+                        <div class="text-sm text-gray-500">Code: ${escapeHtml(exam.exam_code)}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${result.exam_title}</div>
-                        <div class="text-sm text-gray-500">${result.exam_code}</div>
+                        <div class="text-sm text-gray-900">${escapeHtml(exam.course_code)}</div>
+                        <div class="text-sm text-gray-500">${escapeHtml(exam.course_title)}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${result.course_code}</div>
-                        <div class="text-sm text-gray-500">${result.course_title}</div>
+                        <div class="text-sm text-gray-900">${escapeHtml(exam.department_name)}</div>
+                        <div class="text-sm text-gray-500">${escapeHtml(exam.program_name)}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${result.completed_at}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${passStatus ? 'text-emerald-600' : 'text-red-600'}">
-                        ${result.score_percentage.toFixed(1)}%
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        ${exam.total_students}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                        ${parseFloat(exam.avg_score).toFixed(1)}%
+                        <div class="text-xs text-gray-500 font-normal">
+                            Range: ${parseFloat(exam.min_score).toFixed(1)}% - ${parseFloat(exam.max_score).toFixed(1)}%
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${passRateClass}">
+                        ${passRate}%
+                        <div class="text-xs text-gray-500 font-normal">
+                            ${exam.pass_count} passed, ${exam.fail_count} failed
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${result.correct_answers}/${result.total_questions}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${passStatus ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${passStatus ? 'Passed' : 'Failed'}
-                        </span>
+                        ${exam.last_completed ? formatDate(exam.last_completed) : 'N/A'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-blue-600 hover:text-blue-900" onclick="viewResultDetails(${result.result_id})">
-                            <i class="fas fa-eye mr-1"></i> View
+                        <button class="text-blue-600 hover:text-blue-900 mr-2" onclick="viewExamResults(${exam.exam_id})">
+                            <i class="fas fa-list-alt mr-1"></i> Details
+                        </button>
+                        <button class="text-green-600 hover:text-green-900" onclick="exportExamResults(${exam.exam_id})">
+                            <i class="fas fa-file-export mr-1"></i> Export
                         </button>
                     </td>
                 `;
@@ -585,7 +628,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
              * Updates the pagination controls and info
              */
             function updatePagination(pagination) {
-                document.getElementById('resultCount').textContent = `${pagination.total_results} results found`;
+                document.getElementById('resultCount').textContent = `${pagination.total_results} exams found`;
                 document.getElementById('firstResult').textContent = pagination.first_result;
                 document.getElementById('lastResult').textContent = pagination.last_result;
                 document.getElementById('totalResults').textContent = pagination.total_results;
@@ -598,10 +641,387 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 currentPage = pagination.current_page;
                 totalResults = pagination.total_results;
             }
+
+            /**
+             * Format date to a more readable format
+             */
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                return date.toLocaleDateString('en-US', options);
+            }
+
+            /**
+             * Escape HTML to prevent XSS
+             */
+            function escapeHtml(text) {
+                if (!text) return '';
+                return text
+                    .toString()
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
         });
 
         /**
-         * Views the details of a specific result
+         * Views detailed results for a specific exam
+         */
+        function viewExamResults(examId) {
+            const modal = document.getElementById('examResultsModal');
+            const modalContent = document.getElementById('examResultsContent');
+            const modalTitle = document.getElementById('examResultsTitle');
+
+            // Show loading indicator
+            modalContent.innerHTML = `
+                <div class="flex justify-center items-center py-8">
+                    <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl mr-3"></i>
+                    <span>Loading exam results...</span>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+
+            // Store the current exam ID
+            currentExamId = examId;
+
+            // Fetch exam results
+            fetch(`../../api/results/getExamResults.php?exam_id=${examId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        renderExamResults(data);
+                    } else {
+                        modalContent.innerHTML = `
+                            <div class="text-center py-8 text-red-500">
+                                <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                                <p>${data.message || 'Failed to load exam results'}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching exam results:', error);
+                    modalContent.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                            <p>Could not load exam results. Please try again later.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        /**
+         * Renders the detailed exam results in the modal
+         */
+        function renderExamResults(data) {
+            const modalContent = document.getElementById('examResultsContent');
+            const modalTitle = document.getElementById('examResultsTitle');
+            const exam = data.exam;
+            const stats = data.statistics;
+            const results = data.results;
+            const distribution = data.distribution;
+
+            // Update modal title
+            modalTitle.textContent = `Results: ${exam.title} (${exam.exam_code})`;
+
+            // Format the content - start with exam info and statistics
+            let content = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Exam Information -->
+                    <div class="lg:col-span-2">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900">Exam Information</h3>
+                        <div class="bg-white rounded-lg border border-gray-200 p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <div class="mb-2"><span class="font-medium">Title:</span> ${escapeHtml(exam.title)}</div>
+                                    <div class="mb-2"><span class="font-medium">Code:</span> ${escapeHtml(exam.exam_code)}</div>
+                                    <div class="mb-2"><span class="font-medium">Course:</span> ${escapeHtml(exam.course_code)} - ${escapeHtml(exam.course_title)}</div>
+                                    <div class="mb-2"><span class="font-medium">Department:</span> ${escapeHtml(exam.department_name)}</div>
+                                </div>
+                                <div>
+                                    <div class="mb-2"><span class="font-medium">Program:</span> ${escapeHtml(exam.program_name)}</div>
+                                    <div class="mb-2"><span class="font-medium">Date:</span> ${exam.date || 'N/A'}</div>
+                                    <div class="mb-2"><span class="font-medium">Duration:</span> ${exam.duration || 'N/A'} minutes</div>
+                                    <div class="mb-2"><span class="font-medium">Questions:</span> ${exam.total_questions || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Statistics -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900">Key Statistics</h3>
+                        <div class="bg-white rounded-lg border border-gray-200 p-4">
+                            <div class="mb-2">
+                                <span class="font-medium">Registered Students:</span> 
+                                <span class="text-blue-600 font-semibold">${exam.registered_students}</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-medium">Completed Exams:</span> 
+                                <span class="text-blue-600 font-semibold">${exam.submitted_results}</span> 
+                                (${exam.registered_students > 0 ? Math.round((exam.submitted_results / exam.registered_students) * 100) : 0}%)
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-medium">Average Score:</span> 
+                                <span class="font-semibold">${parseFloat(stats.avg_score).toFixed(1)}%</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-medium">Score Range:</span> 
+                                <span>${parseFloat(stats.min_score).toFixed(1)}% - ${parseFloat(stats.max_score).toFixed(1)}%</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-medium">Pass Rate:</span> 
+                                <span class="font-semibold ${stats.pass_rate >= 70 ? 'text-emerald-600' : stats.pass_rate >= 50 ? 'text-yellow-600' : 'text-red-600'}">${parseFloat(stats.pass_rate).toFixed(1)}%</span>
+                                <span>(${stats.pass_count} passed, ${stats.fail_count} failed)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Score Distribution -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900">Score Distribution</h3>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="flex flex-wrap">
+                            ${renderScoreDistribution(distribution)}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Student Results Search and Filter -->
+                <div class="mb-6 bg-white rounded-lg border border-gray-200 p-4">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900">Filter Student Results</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+                            <input type="text" id="studentSearch" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Name or ID">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Score Range</label>
+                            <div class="flex items-center">
+                                <input type="number" id="scoreMin" class="w-full px-3 py-2 border border-gray-300 rounded-md" min="0" max="100" value="0">
+                                <span class="mx-2">-</span>
+                                <input type="number" id="scoreMax" class="w-full px-3 py-2 border border-gray-300 rounded-md" min="0" max="100" value="100">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="">All Results</option>
+                                <option value="pass">Passed</option>
+                                <option value="fail">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button id="applyFilters" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="filterStudentResults()">
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Student Results Table -->
+                <h3 class="text-lg font-semibold mb-4 text-gray-900">Student Results (${results.length})</h3>
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct/Total</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Completed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentResultsTable">
+                                ${renderStudentResultsRows(results)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors duration-200" onclick="document.getElementById('examResultsModal').classList.add('hidden')">
+                        Close
+                    </button>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200" onclick="exportExamResults(${exam.exam_id})">
+                        <i class="fas fa-file-export mr-2"></i>Export Results
+                    </button>
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors duration-200" onclick="generateExamReport(${exam.exam_id})">
+                        <i class="fas fa-chart-bar mr-2"></i>Generate Report
+                    </button>
+                </div>
+            `;
+
+            // Set the content and initialize filters
+            modalContent.innerHTML = content;
+
+            // Store results for filtering
+            modalContent.dataset.results = JSON.stringify(results);
+
+            // Add filter event listeners
+            document.getElementById('applyFilters').addEventListener('click', filterStudentResults);
+            document.getElementById('studentSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    filterStudentResults();
+                }
+            });
+        }
+
+        /**
+         * Renders the score distribution chart
+         */
+        function renderScoreDistribution(distribution) {
+            if (!distribution || distribution.length === 0) {
+                return '<div class="w-full text-center py-4 text-gray-500">No data available</div>';
+            }
+
+            // Find the max count for scaling
+            const maxCount = Math.max(...distribution.map(d => d.count));
+
+            let html = '<div class="w-full flex flex-col items-center">';
+            html += '<div class="w-full flex justify-between">';
+
+            // Sort ranges for display
+            const sortedDist = [...distribution].sort((a, b) => {
+                // Extract the lower number from the range and sort in ascending order
+                const aNum = parseInt(a.range_label.split('-')[0]);
+                const bNum = parseInt(b.range_label.split('-')[0]);
+                return bNum - aNum; // Sort in descending order
+            });
+
+            sortedDist.forEach(range => {
+                const heightPercentage = (range.count / maxCount) * 100;
+                const colorClass = range.range_label === '90-100' || range.range_label === '80-89' || range.range_label === '70-79' ?
+                    'bg-emerald-500' :
+                    range.range_label === '60-69' || range.range_label === '50-59' ?
+                    'bg-blue-500' :
+                    'bg-red-500';
+
+                html += `
+                    <div class="mx-1 flex flex-col items-center" style="min-width: 40px;">
+                        <div class="text-xs mb-1 text-gray-600">${range.count}</div>
+                        <div class="${colorClass} rounded-t w-8" style="height: ${Math.max(heightPercentage, 5)}%; min-height: 10px;"></div>
+                        <div class="text-xs mt-1">${range.range_label}%</div>
+                    </div>
+                `;
+            });
+
+            html += '</div></div>';
+            return html;
+        }
+
+        /**
+         * Renders the student results table rows
+         */
+        function renderStudentResultsRows(results) {
+            if (!results || results.length === 0) {
+                return `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            No student results found
+                        </td>
+                    </tr>
+                `;
+            }
+
+            let html = '';
+            results.forEach(result => {
+                const isPassed = result.score_percentage >= 50;
+                const statusClass = isPassed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(result.student_name)}</div>
+                            <div class="text-xs text-gray-500">${escapeHtml(result.index_number)}</div>
+                            ${result.email ? `<div class="text-xs text-gray-500">${escapeHtml(result.email)}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${escapeHtml(result.program_name)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-semibold ${isPassed ? 'text-emerald-600' : 'text-red-600'}">
+                            ${parseFloat(result.score_percentage).toFixed(1)}%
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${result.correct_answers}/${result.total_questions}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                ${isPassed ? 'Passed' : 'Failed'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${result.completed_at}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900 mr-2" onclick="viewResultDetails(${result.result_id})">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </button>
+                            <button class="text-green-600 hover:text-green-900" onclick="printResultDetails(${result.result_id})">
+                                <i class="fas fa-print mr-1"></i> Print
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            return html;
+        }
+
+        /**
+         * Filters the student results based on user input
+         */
+        function filterStudentResults() {
+            const modalContent = document.getElementById('examResultsContent');
+            const studentSearch = document.getElementById('studentSearch').value.toLowerCase();
+            const scoreMin = parseFloat(document.getElementById('scoreMin').value) || 0;
+            const scoreMax = parseFloat(document.getElementById('scoreMax').value) || 100;
+            const status = document.getElementById('statusFilter').value;
+
+            // Get the stored results
+            const results = JSON.parse(modalContent.dataset.results || '[]');
+
+            // Apply filters
+            const filteredResults = results.filter(result => {
+                // Student name/ID filter
+                const studentMatches = !studentSearch ||
+                    result.student_name.toLowerCase().includes(studentSearch) ||
+                    result.index_number.toLowerCase().includes(studentSearch);
+
+                // Score range filter
+                const scoreMatches = result.score_percentage >= scoreMin &&
+                    result.score_percentage <= scoreMax;
+
+                // Status filter
+                const statusMatches = !status ||
+                    (status === 'pass' && result.score_percentage >= 50) ||
+                    (status === 'fail' && result.score_percentage < 50);
+
+                return studentMatches && scoreMatches && statusMatches;
+            });
+
+            // Update the table
+            document.getElementById('studentResultsTable').innerHTML = renderStudentResultsRows(filteredResults);
+        }
+
+        /**
+         * Views the details of a specific student result
          */
         function viewResultDetails(resultId) {
             const modal = document.getElementById('resultModal');
@@ -609,10 +1029,10 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
             // Show loading indicator
             modalContent.innerHTML = `
-            <div class="flex justify-center items-center py-8">
-                <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl"></i>
-            </div>
-        `;
+                <div class="flex justify-center items-center py-8">
+                    <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl"></i>
+                </div>
+            `;
             modal.classList.remove('hidden');
 
             // Fetch result details
@@ -626,85 +1046,85 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         renderResultDetails(data.result, data.questions);
                     } else {
                         modalContent.innerHTML = `
-                        <div class="text-center py-8 text-red-500">
-                            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
-                            <p>${data.message || 'Failed to load result details'}</p>
-                        </div>
-                    `;
+                            <div class="text-center py-8 text-red-500">
+                                <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                                <p>${data.message || 'Failed to load result details'}</p>
+                            </div>
+                        `;
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching result details:', error);
                     modalContent.innerHTML = `
-                    <div class="text-center py-8 text-red-500">
-                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
-                        <p>Could not load result details. Please try again later.</p>
-                    </div>
-                `;
+                        <div class="text-center py-8 text-red-500">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                            <p>Could not load result details. Please try again later.</p>
+                        </div>
+                    `;
                 });
         }
 
         /**
-         * Renders the details of a specific result in the modal
+         * Renders the details of a specific student result in the modal
          */
         function renderResultDetails(result, questions) {
             const modalContent = document.getElementById('modalContent');
 
             // Format the content
             let content = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div>
-                    <h4 class="text-lg font-semibold mb-4 text-gray-900">Exam Information</h4>
-                    <div class="space-y-2">
-                        <div><span class="font-medium">Exam:</span> ${result.exam_title}</div>
-                        <div><span class="font-medium">Code:</span> ${result.exam_code}</div>
-                        <div><span class="font-medium">Course:</span> ${result.course_code} - ${result.course_title}</div>
-                        <div><span class="font-medium">Department:</span> ${result.department_name}</div>
-                        <div><span class="font-medium">Date Completed:</span> ${result.completed_at}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-gray-900">Exam Information</h4>
+                        <div class="space-y-2">
+                            <div><span class="font-medium">Exam:</span> ${escapeHtml(result.exam_title)}</div>
+                            <div><span class="font-medium">Code:</span> ${escapeHtml(result.exam_code)}</div>
+                            <div><span class="font-medium">Course:</span> ${escapeHtml(result.course_code)} - ${escapeHtml(result.course_title)}</div>
+                            <div><span class="font-medium">Department:</span> ${escapeHtml(result.department_name)}</div>
+                            <div><span class="font-medium">Date Completed:</span> ${result.completed_at}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-gray-900">Student Information</h4>
+                        <div class="space-y-2">
+                            <div><span class="font-medium">Name:</span> ${escapeHtml(result.student_name)}</div>
+                            <div><span class="font-medium">ID:</span> ${escapeHtml(result.index_number)}</div>
+                            <div><span class="font-medium">Program:</span> ${escapeHtml(result.program_name)}</div>
+                            <div><span class="font-medium">Score:</span> <span class="font-semibold ${result.score_percentage >= 50 ? 'text-emerald-600' : 'text-red-600'}">${result.score_percentage.toFixed(1)}%</span></div>
+                            <div><span class="font-medium">Status:</span> <span class="px-2 py-1 text-xs font-semibold rounded-full ${result.score_percentage >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${result.score_percentage >= 50 ? 'Passed' : 'Failed'}</span></div>
+                        </div>
                     </div>
                 </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4 text-gray-900">Student Information</h4>
-                    <div class="space-y-2">
-                        <div><span class="font-medium">Name:</span> ${result.student_name}</div>
-                        <div><span class="font-medium">ID:</span> ${result.index_number}</div>
-                        <div><span class="font-medium">Program:</span> ${result.program_name}</div>
-                        <div><span class="font-medium">Score:</span> <span class="font-semibold ${result.score_percentage >= 50 ? 'text-emerald-600' : 'text-red-600'}">${result.score_percentage.toFixed(1)}%</span></div>
-                        <div><span class="font-medium">Status:</span> <span class="px-2 py-1 text-xs font-semibold rounded-full ${result.score_percentage >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${result.score_percentage >= 50 ? 'Passed' : 'Failed'}</span></div>
-                    </div>
-                </div>
-            </div>
-        `;
+            `;
 
             // Add questions and answers if available
             if (questions && questions.length > 0) {
                 content += `
-                <h4 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h4>
-                <div class="space-y-6">
-            `;
+                    <h4 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h4>
+                    <div class="space-y-6">
+                `;
 
                 questions.forEach((question, index) => {
                     const isCorrect = question.is_correct;
                     content += `
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="font-medium text-gray-900 mb-2">Question ${index + 1}: ${question.question_text}</div>
-                        <div class="ml-4">
-                            <div class="font-medium mt-2">Student's Answer:</div>
-                            <div class="flex items-center ml-2 mt-1">
-                                <span class="mr-2 ${isCorrect ? 'text-emerald-500' : 'text-red-500'}">
-                                    <i class="fas fa-${isCorrect ? 'check-circle' : 'times-circle'}"></i>
-                                </span>
-                                <span>${question.student_answer}</span>
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="font-medium text-gray-900 mb-2">Question ${index + 1}: ${escapeHtml(question.question_text)}</div>
+                            <div class="ml-4">
+                                <div class="font-medium mt-2">Student's Answer:</div>
+                                <div class="flex items-center ml-2 mt-1">
+                                    <span class="mr-2 ${isCorrect ? 'text-emerald-500' : 'text-red-500'}">
+                                        <i class="fas fa-${isCorrect ? 'check-circle' : 'times-circle'}"></i>
+                                    </span>
+                                    <span>${escapeHtml(question.student_answer)}</span>
+                                </div>
+                                
+                                ${!isCorrect ? `
+                                    <div class="font-medium mt-2 text-emerald-600">Correct Answer:</div>
+                                    <div class="ml-2 mt-1 text-emerald-600">${escapeHtml(question.correct_answer)}</div>
+                                ` : ''}
                             </div>
-                            
-                            ${!isCorrect ? `
-                                <div class="font-medium mt-2 text-emerald-600">Correct Answer:</div>
-                                <div class="ml-2 mt-1 text-emerald-600">${question.correct_answer}</div>
-                            ` : ''}
                         </div>
-                    </div>
-                `;
+                    `;
                 });
 
                 content += `</div>`;
@@ -712,15 +1132,15 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
             // Add actions buttons
             content += `
-            <div class="mt-8 flex justify-end space-x-4">
-                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" onclick="document.getElementById('resultModal').classList.add('hidden')">
-                    Close
-                </button>
-                <button class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" onclick="printResultDetails(${result.result_id})">
-                    <i class="fas fa-print mr-2"></i>Print
-                </button>
-            </div>
-        `;
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors duration-200" onclick="document.getElementById('resultModal').classList.add('hidden')">
+                        Close
+                    </button>
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors duration-200" onclick="printResultDetails(${result.result_id})">
+                        <i class="fas fa-print mr-2"></i>Print
+                    </button>
+                </div>
+            `;
 
             modalContent.innerHTML = content;
         }
@@ -734,7 +1154,59 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         /**
-         * Exports the filtered results to CSV
+         * Exports results for a specific exam
+         */
+        function exportExamResults(examId) {
+            // Get filter values if in exam results modal
+            let queryParams = new URLSearchParams();
+            queryParams.append('exam_id', examId);
+
+            if (document.getElementById('examResultsContent').contains(document.getElementById('studentSearch'))) {
+                const studentSearch = document.getElementById('studentSearch').value;
+                const scoreMin = document.getElementById('scoreMin').value;
+                const scoreMax = document.getElementById('scoreMax').value;
+                const status = document.getElementById('statusFilter').value;
+
+                if (studentSearch) queryParams.append('student', studentSearch);
+                if (scoreMin) queryParams.append('score_min', scoreMin);
+                if (scoreMax) queryParams.append('score_max', scoreMax);
+                if (status) queryParams.append('status', status);
+            }
+
+            // Open the export endpoint in a new tab (will trigger download)
+            window.open(`../../api/results/exportResults.php?${queryParams.toString()}`, '_blank');
+
+            showNotification('Exporting exam results...', 'info');
+        }
+
+        /**
+         * Generates a comprehensive report for a specific exam
+         */
+        function generateExamReport(examId) {
+            // Get filter values if in exam results modal
+            let queryParams = new URLSearchParams();
+            queryParams.append('exam_id', examId);
+
+            if (document.getElementById('examResultsContent').contains(document.getElementById('studentSearch'))) {
+                const studentSearch = document.getElementById('studentSearch').value;
+                const scoreMin = document.getElementById('scoreMin').value;
+                const scoreMax = document.getElementById('scoreMax').value;
+                const status = document.getElementById('statusFilter').value;
+
+                if (studentSearch) queryParams.append('student', studentSearch);
+                if (scoreMin) queryParams.append('score_min', scoreMin);
+                if (scoreMax) queryParams.append('score_max', scoreMax);
+                if (status) queryParams.append('status', status);
+            }
+
+            // Open the report generator in a new tab
+            window.open(`../../api/results/generateReport.php?${queryParams.toString()}`, '_blank');
+
+            showNotification('Generating exam report...', 'info');
+        }
+
+        /**
+         * Exports the filtered results to CSV (all exams)
          */
         function exportResults() {
             const form = document.getElementById('filterForm');
@@ -750,7 +1222,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         /**
-         * Generates a comprehensive report
+         * Generates a comprehensive report (all exams)
          */
         function generateReport() {
             const form = document.getElementById('filterForm');
@@ -778,6 +1250,19 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 timer: 3000,
                 timerProgressBar: true
             });
+        }
+
+        /**
+         * Utility function to escape HTML special characters
+         */
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return unsafe;
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
