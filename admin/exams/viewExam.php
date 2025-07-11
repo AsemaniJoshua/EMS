@@ -76,11 +76,11 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> - EMS Admin</title>
+    <title><?php echo $pageTitle; ?> - EMS Admin </title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"> </script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -106,7 +106,7 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </button>
 
                         <?php if ($exam['status'] === 'Approved'): ?>
-                            <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-yellow-600 text-white hover:bg-yellow-700">
+                            <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-orange-600 text-white hover:bg-yellow-700">
                                 <i class="fas fa-undo mr-1"></i>Unpublish
                             </button>
                         <?php else: ?>
