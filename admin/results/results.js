@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize variables for pagination
     let currentPage = 1;
-    const resultsPerPage = 20;
+    const resultsPerPage = 50;
     let totalResults = 0;
 
     // Load results on page load
