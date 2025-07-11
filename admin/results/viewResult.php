@@ -111,11 +111,11 @@ try {
 
 <body class="bg-gray-50 min-h-screen">
     <?php include_once __DIR__ . '/../components/adminHeader.php'; ?>
-    
+
     <main class="flex">
         <!-- Sidebar -->
         <?php include_once __DIR__ . '/../components/adminSidebar.php'; ?>
-        
+
         <!-- Main content -->
         <div class="flex-grow p-6">
             <div class="flex justify-between items-center mb-6">
@@ -147,7 +147,7 @@ try {
                             <div><span class="font-medium">Date Completed:</span> <?php echo htmlspecialchars($resultData['completed_at']); ?></div>
                         </div>
                     </div>
-                    
+
                     <!-- Student Information -->
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-gray-900">Student Information</h3>
@@ -156,16 +156,16 @@ try {
                             <div><span class="font-medium">ID:</span> <?php echo htmlspecialchars($resultData['index_number']); ?></div>
                             <div><span class="font-medium">Program:</span> <?php echo htmlspecialchars($resultData['program_name']); ?></div>
                             <?php if (!empty($resultData['email'])): ?>
-                            <div><span class="font-medium">Email:</span> <?php echo htmlspecialchars($resultData['email']); ?></div>
+                                <div><span class="font-medium">Email:</span> <?php echo htmlspecialchars($resultData['email']); ?></div>
                             <?php endif; ?>
                             <div>
-                                <span class="font-medium">Score:</span> 
+                                <span class="font-medium">Score:</span>
                                 <span class="font-semibold <?php echo $resultData['score_percentage'] >= 50 ? 'text-emerald-600' : 'text-red-600'; ?>">
                                     <?php echo number_format($resultData['score_percentage'], 1); ?>%
                                 </span>
                             </div>
                             <div>
-                                <span class="font-medium">Status:</span> 
+                                <span class="font-medium">Status:</span>
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full <?php echo $resultData['score_percentage'] >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
                                     <?php echo $resultData['score_percentage'] >= 50 ? 'Passed' : 'Failed'; ?>
                                 </span>
@@ -199,30 +199,30 @@ try {
 
             <!-- Questions & Answers -->
             <?php if (!empty($questions)): ?>
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h3>
-                <div class="space-y-6">
-                    <?php foreach ($questions as $index => $question): ?>
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="font-medium text-gray-900 mb-3">Question <?php echo $index + 1; ?>: <?php echo htmlspecialchars($question['question_text']); ?></div>
-                        <div class="ml-4">
-                            <div class="font-medium mt-2">Student's Answer:</div>
-                            <div class="flex items-center ml-2 mt-1">
-                                <span class="mr-2 <?php echo $question['is_correct'] ? 'text-emerald-500' : 'text-red-500'; ?>">
-                                    <i class="fas fa-<?php echo $question['is_correct'] ? 'check-circle' : 'times-circle'; ?>"></i>
-                                </span>
-                                <span><?php echo htmlspecialchars($question['student_answer']); ?></span>
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h3>
+                    <div class="space-y-6">
+                        <?php foreach ($questions as $index => $question): ?>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="font-medium text-gray-900 mb-3">Question <?php echo $index + 1; ?>: <?php echo htmlspecialchars($question['question_text']); ?></div>
+                                <div class="ml-4">
+                                    <div class="font-medium mt-2">Student's Answer:</div>
+                                    <div class="flex items-center ml-2 mt-1">
+                                        <span class="mr-2 <?php echo $question['is_correct'] ? 'text-emerald-500' : 'text-red-500'; ?>">
+                                            <i class="fas fa-<?php echo $question['is_correct'] ? 'check-circle' : 'times-circle'; ?>"></i>
+                                        </span>
+                                        <span><?php echo htmlspecialchars($question['student_answer']); ?></span>
+                                    </div>
+
+                                    <?php if (!$question['is_correct']): ?>
+                                        <div class="font-medium mt-2 text-emerald-600">Correct Answer:</div>
+                                        <div class="ml-2 mt-1 text-emerald-600"><?php echo htmlspecialchars($question['correct_answer']); ?></div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                            
-                            <?php if (!$question['is_correct']): ?>
-                            <div class="font-medium mt-2 text-emerald-600">Correct Answer:</div>
-                            <div class="ml-2 mt-1 text-emerald-600"><?php echo htmlspecialchars($question['correct_answer']); ?></div>
-                            <?php endif; ?>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
-            </div>
             <?php endif; ?>
         </div>
     </main>
@@ -231,10 +231,10 @@ try {
         // Set up the chart
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('resultChart').getContext('2d');
-            
+
             const correctAnswers = <?php echo $resultData['correct_answers']; ?>;
             const incorrectAnswers = <?php echo $resultData['incorrect_answers']; ?>;
-            
+
             const chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -243,7 +243,7 @@ try {
                         data: [correctAnswers, incorrectAnswers],
                         backgroundColor: [
                             '#10B981', // emerald-500
-                            '#EF4444'  // red-500
+                            '#EF4444' // red-500
                         ],
                         hoverOffset: 4
                     }]

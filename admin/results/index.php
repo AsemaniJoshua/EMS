@@ -229,7 +229,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <select id="filterStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 <option value="">All Results</option>
                                 <option value="pass">Passed (≥50%)</option>
-                                <option value="fail">Failed (<50%)</option>
+                                <option value="fail">Failed (<50%)< /option>
                             </select>
                         </div>
 
@@ -612,7 +612,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     .replace(/"/g, "&quot;")
                     .replace(/'/g, "&#039;");
             }
-        });        /**
+        });
+        /**
          * Redirects to the detailed exam results page
          */
         function viewExamResults(examId) {
@@ -1050,4 +1051,5 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
     </script>
 </body>
+
 </html>
