@@ -453,9 +453,9 @@ foreach ($questionPerformance as $index => $question) {
                                         <?php echo $result['completed_at']; ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button class="text-blue-600 hover:text-blue-900 mr-3" onclick="viewResultDetails(<?php echo $result['result_id']; ?>)">
+                                        <a href="viewResult.php?id=<?php echo $result['result_id']; ?>" class="text-blue-600 hover:text-blue-900 mr-3">
                                             <i class="fas fa-eye mr-1"></i> View
-                                        </button>
+                                        </a>
                                         <button class="text-green-600 hover:text-green-900" onclick="printResultDetails(<?php echo $result['result_id']; ?>)">
                                             <i class="fas fa-print mr-1"></i> Print
                                         </button>
@@ -730,24 +730,14 @@ foreach ($questionPerformance as $index => $question) {
          * Views the details of a specific result
          */
         function viewResultDetails(resultId) {
-            const modalContent = document.getElementById('modalContent');
+            // Redirect to the result details page
+            window.location.href = `viewResult.php?id=${resultId}`;
+        }
 
-            // Show loading indicator
-            modalContent.innerHTML = `
-                <div class="flex justify-center items-center py-8">
-                    <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl"></i>
-                </div>
-            `;
-            resultModal.classList.remove('hidden');
-
-            // Fetch result details
-            fetch(`../../api/results/getResultDetails.php?result_id=${resultId}`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
+        /**
+         * Old modal-based function - removed in favor of a dedicated page
+         */
+        function viewResultDetailsOld(resultId) {
                         renderResultDetails(data.result, data.questions);
                     } else {
                         modalContent.innerHTML = `

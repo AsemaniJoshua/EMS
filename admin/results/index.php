@@ -323,20 +323,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
             <!-- No longer need the exam results modal since we use a dedicated page -->
 
-            <!-- Student Result Detail Modal (hidden by default) -->
-            <div id="resultModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">Student Result Details</h3>
-                        <button id="closeResultModal" class="text-gray-400 hover:text-gray-500">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="p-6" id="modalContent">
-                        <!-- Modal content will be populated dynamically -->
-                    </div>
-                </div>
-            </div>
+            <!-- Result modals removed in favor of dedicated pages -->
         </div>
     </main>
 
@@ -368,16 +355,6 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             document.getElementById('nextPage').addEventListener('click', function() {
                 currentPage++;
                 fetchExamResults();
-            });            // Close result modal event listener
-            document.getElementById('closeResultModal').addEventListener('click', function() {
-                document.getElementById('resultModal').classList.add('hidden');
-            });
-            
-            // Close modal when clicking outside
-            document.getElementById('resultModal').addEventListener('click', function(event) {
-                if (event.target === this) {
-                    this.classList.add('hidden');
-                }
             });
 
             // Set up cascading dropdown filters (department -> program -> course)
