@@ -99,7 +99,7 @@ function renderAdminSidebar($currentPage)
     </aside>
 
     <!-- Mobile overlay -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 lg:hidden hidden"></div>
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/5 backdrop-blur-xs z-50 lg:hidden hidden"></div>
 
     <!-- Mobile menu button -->
     <button

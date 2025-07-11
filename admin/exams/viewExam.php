@@ -76,11 +76,11 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> - EMS Admin</title>
+    <title><?php echo $pageTitle; ?> - EMS Admin </title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"> </script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -100,9 +100,35 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <span class="ml-2 text-sm text-gray-500">Exam Code: <?php echo htmlspecialchars($exam['exam_code']); ?></span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"><i class="fas fa-edit mr-1"></i>Edit</button>
-                    <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fas fa-paper-plane mr-1"></i>Publish</button>
-                    <button onclick="deleteExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash mr-1"></i>Delete</button>
+                    <?php if ($exam['status'] !== 'Completed'): ?>
+                        <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+
+                        <?php if ($exam['status'] === 'Approved'): ?>
+                            <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-orange-600 text-white hover:bg-yellow-700">
+                                <i class="fas fa-undo mr-1"></i>Unpublish
+                            </button>
+                        <?php else: ?>
+                            <button onclick="publishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
+                                <i class="fas fa-paper-plane mr-1"></i>Publish
+                            </button>
+                        <?php endif; ?>
+
+                        <button onclick="deleteExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    <?php else: ?>
+                        <button disabled class="px-3 py-2 rounded-lg bg-gray-400 text-white cursor-not-allowed">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+                        <button disabled class="px-3 py-2 rounded-lg bg-gray-400 text-white cursor-not-allowed">
+                            <i class="fas fa-paper-plane mr-1"></i>Publish
+                        </button>
+                        <button disabled class="px-3 py-2 rounded-lg bg-gray-400 text-white cursor-not-allowed">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -174,41 +200,98 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                     <h3 class="text-lg font-semibold text-gray-900">Exam Questions</h3>
-                    <button onclick="addQuestion(<?php echo $examId; ?>)" class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                    <button onclick="toggleQuestionForm()" class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
                         <i class="fas fa-plus mr-2"></i>
                         Add Question
                     </button>
                 </div>
+                <div id="questionForm" class="hidden mx-6 mt-6 bg-gray-50 p-4 border rounded-lg">
+                    <form id="newQuestionForm">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                        <textarea name="question_text" class="w-full border rounded p-2 mb-4" rows="3" required></textarea>
+
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Choices</label>
+                            <div id="choicesContainer" class="space-y-2">
+                                <!-- Choice inputs will go here -->
+                            </div>
+                            <button type="button" onclick="addChoiceField()" class="text-xs text-emerald-600 hover:underline mt-2">
+                                <i class="fas fa-plus mr-1"></i>Add Option
+                            </button>
+                        </div>
+
+                        <button type="submit" class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700">
+                            Submit Question
+                        </button>
+                        <button type="button" onclick="toggleQuestionForm()" class="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 ml-2">
+                            Cancel
+                        </button>
+                    </form>
+                </div>
+
                 <div class="p-6">
                     <?php if (count($questions) > 0): ?>
                         <ul class="space-y-6">
                             <?php foreach ($questions as $question): ?>
-                                <li class="border border-gray-200 rounded-lg p-4">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <h4 class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($question['question_text']); ?></h4>
-                                        <div class="flex gap-2">
-                                            <button onclick="editQuestion(<?php echo $question['question_id']; ?>)" class="text-blue-600 hover:text-blue-800 transition-colors" title="Edit Question">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="deleteQuestion(<?php echo $question['question_id']; ?>)" class="text-red-600 hover:text-red-800 transition-colors" title="Delete Question">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <ul class="space-y-2">
-                                        <?php foreach ($question['choices'] as $choice): ?>
-                                            <li class="flex items-center text-sm text-gray-700 <?php echo $choice['is_correct'] ? 'font-bold text-emerald-600' : ''; ?>">
-                                                <?php echo htmlspecialchars($choice['choice_text']); ?>
-                                                <?php if ($choice['is_correct']): ?>
-                                                    <span class="ml-2 text-xs text-emerald-600">(Correct Answer)</span>
-                                                <?php endif; ?>
-                                                <button onclick="deleteOption(<?php echo $choice['choice_id']; ?>)" class="ml-3 text-red-500 hover:text-red-700" title="Delete Option">
-                                                    <i class="fas fa-times"></i>
+                                <li class="border border-gray-200 rounded-lg p-4" id="question-<?php echo $question['question_id']; ?>">
+                                    <div class="question-display">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($question['question_text']); ?></h4>
+                                            <div class="flex gap-2">
+                                                <button onclick="toggleEditForm(<?php echo $question['question_id']; ?>)" class="text-blue-600 hover:text-blue-800 transition-colors" title="Edit Question">
+                                                    <i class="fas fa-edit"></i>
                                                 </button>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                    <button onclick="addOption(<?php echo $question['question_id']; ?>)" class="mt-2 text-xs text-emerald-600 hover:underline"><i class="fas fa-plus mr-1"></i>Add Option</button>
+                                                <button onclick="deleteQuestion(<?php echo $question['question_id']; ?>)" class="text-red-600 hover:text-red-800 transition-colors" title="Delete Question">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <ul class="space-y-2">
+                                            <?php foreach ($question['choices'] as $choice): ?>
+                                                <li class="flex items-center justify-between text-sm text-gray-700 <?php echo $choice['is_correct'] ? 'font-bold text-emerald-600' : ''; ?>">
+                                                    <span>
+                                                        <?php echo htmlspecialchars($choice['choice_text']); ?>
+                                                        <?php if ($choice['is_correct']): ?>
+                                                            <span class="ml-2 text-xs text-emerald-600">(Correct Answer)</span>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+
+                                    <div class="question-edit-form hidden mt-4">
+                                        <form onsubmit="return updateQuestion(event, <?php echo $question['question_id']; ?>)">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                                            <textarea name="question_text" class="w-full border rounded p-2 mb-4" rows="3" required><?php echo htmlspecialchars($question['question_text']); ?></textarea>
+
+                                            <div class="mb-2">
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Choices</label>
+                                                <div class="edit-choices-container space-y-2">
+                                                    <?php foreach ($question['choices'] as $index => $choice): ?>
+                                                        <div class="flex gap-2 items-center">
+                                                            <input type="text" name="choices[]" value="<?php echo htmlspecialchars($choice['choice_text']); ?>" class="flex-1 border rounded p-1" required />
+                                                            <label class="flex items-center gap-1 text-sm">
+                                                                <input type="radio" name="correct_choice" value="<?php echo $index; ?>" <?php echo $choice['is_correct'] ? 'checked' : ''; ?> required />
+                                                                Correct
+                                                            </label>
+                                                            <button type="button" onclick="this.parentElement.remove()" class="text-red-500"><i class="fas fa-trash-alt"></i></button>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <button type="button" onclick="addEditChoiceField(this.closest('form'))" class="text-xs text-emerald-600 hover:underline mt-2">
+                                                    <i class="fas fa-plus mr-1"></i>Add Option
+                                                </button>
+                                            </div>
+
+                                            <button type="submit" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                                Save Changes
+                                            </button>
+                                            <button type="button" onclick="toggleEditForm(<?php echo $question['question_id']; ?>)" class="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 ml-2">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </div>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -221,38 +304,104 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <script>
+        // Display error message if redirected from editExam.php with error parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_GET['error']) && $_GET['error'] === 'completed'): ?>
+                Swal.fire({
+                    title: 'Cannot Edit',
+                    text: 'Completed exams cannot be edited.',
+                    icon: 'error'
+                });
+            <?php endif; ?>
+        });
+
         function editExam(examId) {
+            // Check if exam is completed
+            const currentStatus = '<?php echo $exam['status']; ?>';
+            if (currentStatus === 'Completed') {
+                Swal.fire({
+                    title: 'Cannot Edit',
+                    text: 'Completed exams cannot be edited.',
+                    icon: 'error'
+                });
+                return;
+            }
+
             window.location.href = `editExam.php?id=${examId}`;
         }
 
         function publishExam(examId) {
+            // Get current status from the page
+            const currentStatus = '<?php echo $exam['status']; ?>';
+            const isPublishing = currentStatus !== 'Approved';
+
             Swal.fire({
-                title: 'Publish Exam',
-                text: 'Are you sure you want to publish this exam? Once published, students will be able to see it.',
+                title: isPublishing ? 'Publish Exam' : 'Unpublish Exam',
+                text: isPublishing ?
+                    'Are you sure you want to publish this exam? Once published, students will be able to see it.' : 'Are you sure you want to unpublish this exam? Students will not be able to see it until published again.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: isPublishing ? '#3085d6' : '#f59e0b',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, publish it!'
+                confirmButtonText: isPublishing ? 'Yes, publish it!' : 'Yes, unpublish it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/exams/publishExam.php', { exam_id: examId })
+                    // Show loading indicator
+                    Swal.fire({
+                        title: isPublishing ? 'Publishing...' : 'Unpublishing...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    axios.post('../../api/exams/publishExam.php', {
+                            examId: examId
+                        })
                         .then(response => {
-                            if (response.data.status === 'success') {
-                                Swal.fire('Published!', response.data.message, 'success');
-                                setTimeout(() => window.location.reload(), 1500);
+                            Swal.close();
+
+                            if (response.data.success || response.data.status === 'success') {
+                                Swal.fire({
+                                    title: isPublishing ? 'Published!' : 'Unpublished!',
+                                    text: response.data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.reload();
+                                });
                             } else {
                                 Swal.fire('Error!', response.data.message, 'error');
                             }
                         })
                         .catch(error => {
-                            Swal.fire('Error!', 'An error occurred while publishing the exam.', 'error');
+                            Swal.close();
+
+                            const errorMsg = error.response && error.response.data && error.response.data.message ?
+                                error.response.data.message :
+                                'An error occurred while ' + (isPublishing ? 'publishing' : 'unpublishing') + ' the exam.';
+
+                            Swal.fire('Error!', errorMsg, 'error');
                         });
                 }
             });
         }
 
+
         function deleteExam(examId) {
+            // Check if exam is completed
+            const currentStatus = '<?php echo $exam['status']; ?>';
+            if (currentStatus === 'Completed') {
+                Swal.fire({
+                    title: 'Cannot Delete',
+                    text: 'Completed exams cannot be deleted.',
+                    icon: 'error'
+                });
+                return;
+            }
+
             Swal.fire({
                 title: 'Delete Exam',
                 text: 'Are you sure you want to delete this exam? This action cannot be undone.',
@@ -263,28 +412,197 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/exams/deleteExam.php', { exam_id: examId })
+                    // Show loading indicator
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    axios.post('../../api/exams/deleteExam.php', {
+                            examId: examId
+                        })
                         .then(response => {
-                            if (response.data.status === 'success') {
-                                Swal.fire('Deleted!', response.data.message, 'success');
-                                setTimeout(() => window.location.href = 'index.php', 1500);
+                            Swal.close();
+
+                            if (response.data.success || response.data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: response.data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.href = 'index.php';
+                                });
                             } else {
                                 Swal.fire('Error!', response.data.message, 'error');
                             }
                         })
                         .catch(error => {
-                            Swal.fire('Error!', 'An error occurred while deleting the exam.', 'error');
+                            Swal.close();
+
+                            const errorMsg = error.response && error.response.data && error.response.data.message ?
+                                error.response.data.message :
+                                'An error occurred while deleting the exam.';
+
+                            Swal.fire('Error!', errorMsg, 'error');
                         });
                 }
             });
         }
 
-        function addQuestion(examId) {
-            window.location.href = `addQuestion.php?exam_id=${examId}`;
+        // Question management functions
+        let choiceCount = 0;
+
+        function toggleQuestionForm() {
+            const form = document.getElementById('questionForm');
+            const isHidden = form.classList.contains('hidden');
+
+            form.classList.toggle('hidden');
+
+            if (isHidden) {
+                // Clear the form first
+                document.getElementById('newQuestionForm').reset();
+                document.getElementById('choicesContainer').innerHTML = '';
+                choiceCount = 0;
+
+                // Add at least two choice fields by default
+                addChoiceField();
+                addChoiceField();
+            }
         }
 
-        function editQuestion(questionId) {
-            window.location.href = `editQuestion.php?id=${questionId}`;
+        function addChoiceField(text = '', isCorrect = false) {
+            const container = document.getElementById('choicesContainer');
+            const choiceId = `choice-${choiceCount++}`;
+
+            const html = `
+                <div class="flex gap-2 items-center">
+                    <input type="text" name="choices[]" value="${text}" placeholder="Choice text" class="flex-1 border rounded p-1" required />
+                    <label class="flex items-center gap-1 text-sm">
+                        <input type="radio" name="correct_choice" value="${choiceCount - 1}" ${isCorrect ? 'checked' : ''} required />
+                        Correct
+                    </label>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-red-500"><i class="fas fa-trash-alt"></i></button>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function addEditChoiceField(form, text = '', isCorrect = false) {
+            const container = form.querySelector('.edit-choices-container');
+            const inputs = container.querySelectorAll('input[name="choices[]"]');
+            const index = inputs.length;
+
+            const html = `
+                <div class="flex gap-2 items-center">
+                    <input type="text" name="choices[]" value="${text}" placeholder="Choice text" class="flex-1 border rounded p-1" required />
+                    <label class="flex items-center gap-1 text-sm">
+                        <input type="radio" name="correct_choice" value="${index}" ${isCorrect ? 'checked' : ''} required />
+                        Correct
+                    </label>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-red-500"><i class="fas fa-trash-alt"></i></button>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        // Initialize question form submission
+        document.getElementById('newQuestionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const questionText = form.question_text.value.trim();
+            const choiceInputs = form.querySelectorAll('input[name="choices[]"]');
+            const correctIndex = form.querySelector('input[name="correct_choice"]:checked')?.value;
+
+            if (!questionText || choiceInputs.length < 2 || correctIndex === undefined) {
+                alert("Please enter a question, at least two choices, and select the correct one.");
+                return;
+            }
+
+            const choices = Array.from(choiceInputs).map((input, i) => ({
+                choice_text: input.value.trim(),
+                is_correct: parseInt(correctIndex) === i
+            }));
+
+            axios.post('/api/exams/addQuestionWithOptions.php', {
+                exam_id: <?php echo $examId; ?>,
+                question_text: questionText,
+                choices
+            }).then(response => {
+                if (response.data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Question added successfully!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    Swal.fire('Error', response.data.message || "Error occurred", 'error');
+                }
+            }).catch(() => {
+                Swal.fire('Error', "Server error occurred", 'error');
+            });
+        });
+
+        // Toggle the edit form for a question
+        function toggleEditForm(questionId) {
+            const questionItem = document.getElementById(`question-${questionId}`);
+            const displaySection = questionItem.querySelector('.question-display');
+            const editSection = questionItem.querySelector('.question-edit-form');
+
+            displaySection.classList.toggle('hidden');
+            editSection.classList.toggle('hidden');
+        }
+
+        // Update an existing question
+        function updateQuestion(e, questionId) {
+            e.preventDefault();
+
+            const form = e.target;
+            const questionText = form.question_text.value.trim();
+            const choiceInputs = form.querySelectorAll('input[name="choices[]"]');
+            const correctIndex = form.querySelector('input[name="correct_choice"]:checked')?.value;
+
+            if (!questionText || choiceInputs.length < 2 || correctIndex === undefined) {
+                alert("Please enter a question, at least two choices, and select the correct one.");
+                return false;
+            }
+
+            const choices = Array.from(choiceInputs).map((input, i) => ({
+                choice_text: input.value.trim(),
+                is_correct: parseInt(correctIndex) === i
+            }));
+
+            axios.post('/api/exams/editQuestionWithOptions.php', {
+                question_id: questionId,
+                question_text: questionText,
+                choices
+            }).then(response => {
+                if (response.data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Question updated successfully!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    Swal.fire('Error', response.data.message || "Error occurred", 'error');
+                }
+            }).catch(() => {
+                Swal.fire('Error', "Server error occurred", 'error');
+            });
+
+            return false;
         }
 
         function deleteQuestion(questionId) {
@@ -298,7 +616,9 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/exams/deleteQuestion.php', { question_id: questionId })
+                    axios.post('/api/exams/deleteQuestion.php', {
+                            question_id: questionId
+                        })
                         .then(response => {
                             if (response.data.status === 'success') {
                                 Swal.fire('Deleted!', response.data.message, 'success');
@@ -309,37 +629,6 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         })
                         .catch(error => {
                             Swal.fire('Error!', 'An error occurred while deleting the question.', 'error');
-                        });
-                }
-            });
-        }
-
-        function addOption(questionId) {
-            window.location.href = `addOption.php?question_id=${questionId}`;
-        }
-
-        function deleteOption(choiceId) {
-            Swal.fire({
-                title: 'Delete Option',
-                text: 'Are you sure you want to delete this option?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    axios.post('/api/exams/deleteOption.php', { choice_id: choiceId })
-                        .then(response => {
-                            if (response.data.status === 'success') {
-                                Swal.fire('Deleted!', response.data.message, 'success');
-                                setTimeout(() => window.location.reload(), 1000);
-                            } else {
-                                Swal.fire('Error!', response.data.message, 'error');
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire('Error!', 'An error occurred while deleting the option.', 'error');
                         });
                 }
             });
@@ -356,7 +645,10 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 confirmButtonText: 'Yes, remove'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/exams/deleteRegisteredStudent.php', { exam_id: examId, student_id: studentId })
+                    axios.post('/api/exams/deleteRegisteredStudent.php', {
+                            exam_id: examId,
+                            student_id: studentId
+                        })
                         .then(response => {
                             if (response.data.status === 'success') {
                                 Swal.fire('Removed!', response.data.message, 'success');
@@ -373,4 +665,5 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     </script>
 </body>
+
 </html>

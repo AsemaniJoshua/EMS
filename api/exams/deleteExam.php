@@ -3,15 +3,39 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
     exit;
 }
-$data = json_decode(file_get_contents('php://input'), true);
-if (!isset($data['exam_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Exam ID is required.']);
+
+// Get data from request (supports both form POST and JSON)
+$inputData = file_get_contents('php://input');
+if (!empty($inputData)) {
+    // Try to decode as JSON
+    $data = json_decode($inputData, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $data = null;
+    }
+}
+
+// If not JSON or JSON parsing failed, try POST data
+if (empty($data)) {
+    $data = $_POST;
+}
+
+// Check exam ID from either source
+$exam_id = 0;
+if (isset($data['exam_id'])) {
+    $exam_id = intval($data['exam_id']);
+} else if (isset($data['examId'])) {
+    $exam_id = intval($data['examId']);
+}
+
+if ($exam_id <= 0) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Valid exam ID is required.']);
     exit;
 }
-$exam_id = intval($data['exam_id']);
 
 $db = new Database();
 $conn = $db->getConnection();
@@ -52,8 +76,9 @@ try {
     $conn->prepare("DELETE FROM exams WHERE exam_id = ?")->execute([$exam_id]);
 
     $conn->commit();
-    echo json_encode(['status' => 'success', 'message' => 'Exam deleted successfully.']);
+    echo json_encode(['success' => true, 'message' => 'Exam deleted successfully.']);
 } catch (PDOException $e) {
     $conn->rollBack();
-    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
