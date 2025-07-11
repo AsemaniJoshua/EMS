@@ -891,9 +891,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             ${result.completed_at}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-blue-600 hover:text-blue-900 mr-2" onclick="viewResultDetails(${result.result_id})">
+                            <a href="viewResult.php?id=${result.result_id}" class="text-blue-600 hover:text-blue-900 mr-2">
                                 <i class="fas fa-eye mr-1"></i> View
-                            </button>
+                            </a>
                             <button class="text-green-600 hover:text-green-900" onclick="printResultDetails(${result.result_id})">
                                 <i class="fas fa-print mr-1"></i> Print
                             </button>
@@ -944,126 +944,12 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         /**
          * Views the details of a specific student result
          */
-        function viewResultDetails(resultId) {
-            const modal = document.getElementById('resultModal');
-            const modalContent = document.getElementById('modalContent');
-
-            // Show loading indicator
-            modalContent.innerHTML = `
-                <div class="flex justify-center items-center py-8">
-                    <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl"></i>
-                </div>
-            `;
-            modal.classList.remove('hidden');
-
-            // Fetch result details
-            fetch(`../../api/results/getResultDetails.php?result_id=${resultId}`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        renderResultDetails(data.result, data.questions);
-                    } else {
-                        modalContent.innerHTML = `
-                            <div class="text-center py-8 text-red-500">
-                                <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
-                                <p>${data.message || 'Failed to load result details'}</p>
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching result details:', error);
-                    modalContent.innerHTML = `
-                        <div class="text-center py-8 text-red-500">
-                            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
-                            <p>Could not load result details. Please try again later.</p>
-                        </div>
-                    `;
-                });
-        }
-
         /**
-         * Renders the details of a specific student result in the modal
+         * Redirects to the result details page
          */
-        function renderResultDetails(result, questions) {
-            const modalContent = document.getElementById('modalContent');
-
-            // Format the content
-            let content = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                        <h4 class="text-lg font-semibold mb-4 text-gray-900">Exam Information</h4>
-                        <div class="space-y-2">
-                            <div><span class="font-medium">Exam:</span> ${escapeHtml(result.exam_title)}</div>
-                            <div><span class="font-medium">Code:</span> ${escapeHtml(result.exam_code)}</div>
-                            <div><span class="font-medium">Course:</span> ${escapeHtml(result.course_code)} - ${escapeHtml(result.course_title)}</div>
-                            <div><span class="font-medium">Department:</span> ${escapeHtml(result.department_name)}</div>
-                            <div><span class="font-medium">Date Completed:</span> ${result.completed_at}</div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h4 class="text-lg font-semibold mb-4 text-gray-900">Student Information</h4>
-                        <div class="space-y-2">
-                            <div><span class="font-medium">Name:</span> ${escapeHtml(result.student_name)}</div>
-                            <div><span class="font-medium">ID:</span> ${escapeHtml(result.index_number)}</div>
-                            <div><span class="font-medium">Program:</span> ${escapeHtml(result.program_name)}</div>
-                            <div><span class="font-medium">Score:</span> <span class="font-semibold ${result.score_percentage >= 50 ? 'text-emerald-600' : 'text-red-600'}">${result.score_percentage.toFixed(1)}%</span></div>
-                            <div><span class="font-medium">Status:</span> <span class="px-2 py-1 text-xs font-semibold rounded-full ${result.score_percentage >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${result.score_percentage >= 50 ? 'Passed' : 'Failed'}</span></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Add questions and answers if available
-            if (questions && questions.length > 0) {
-                content += `
-                    <h4 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h4>
-                    <div class="space-y-6">
-                `;
-
-                questions.forEach((question, index) => {
-                    const isCorrect = question.is_correct;
-                    content += `
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="font-medium text-gray-900 mb-2">Question ${index + 1}: ${escapeHtml(question.question_text)}</div>
-                            <div class="ml-4">
-                                <div class="font-medium mt-2">Student's Answer:</div>
-                                <div class="flex items-center ml-2 mt-1">
-                                    <span class="mr-2 ${isCorrect ? 'text-emerald-500' : 'text-red-500'}">
-                                        <i class="fas fa-${isCorrect ? 'check-circle' : 'times-circle'}"></i>
-                                    </span>
-                                    <span>${escapeHtml(question.student_answer)}</span>
-                                </div>
-                                
-                                ${!isCorrect ? `
-                                    <div class="font-medium mt-2 text-emerald-600">Correct Answer:</div>
-                                    <div class="ml-2 mt-1 text-emerald-600">${escapeHtml(question.correct_answer)}</div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-
-                content += `</div>`;
-            }
-
-            // Add actions buttons
-            content += `
-                <div class="mt-8 flex justify-end space-x-4">
-                    <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors duration-200" onclick="document.getElementById('resultModal').classList.add('hidden')">
-                        Close
-                    </button>
-                    <button class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors duration-200" onclick="printResultDetails(${result.result_id})">
-                        <i class="fas fa-print mr-2"></i>Print
-                    </button>
-                </div>
-            `;
-
-            modalContent.innerHTML = content;
+        function viewResultDetails(resultId) {
+            // Redirect to the result details page
+            window.location.href = `viewResult.php?id=${resultId}`;
         }
 
         /**
@@ -1187,5 +1073,4 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
     </script>
 </body>
-
 </html>
