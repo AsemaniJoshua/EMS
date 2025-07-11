@@ -66,6 +66,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,10 +76,11 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
     <?php renderAdminSidebar($currentPage); ?>
     <?php renderAdminHeader(); ?>
-    
+
     <!-- Main content -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
@@ -95,7 +97,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <!-- Total Results -->
@@ -174,7 +176,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Filter Form -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
@@ -186,12 +188,12 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <label for="searchStudent" class="block text-sm font-medium text-gray-700 mb-1">Student</label>
                             <input type="text" id="searchStudent" name="student" placeholder="Student Name or ID" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         </div>
-                        
+
                         <div>
                             <label for="searchExam" class="block text-sm font-medium text-gray-700 mb-1">Exam</label>
                             <input type="text" id="searchExam" name="exam" placeholder="Exam Title or Code" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         </div>
-                        
+
                         <div>
                             <label for="filterDepartment" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
                             <select id="filterDepartment" name="department_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -201,7 +203,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label for="filterProgram" class="block text-sm font-medium text-gray-700 mb-1">Program</label>
                             <select id="filterProgram" name="program_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -211,7 +213,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label for="filterCourse" class="block text-sm font-medium text-gray-700 mb-1">Course</label>
                             <select id="filterCourse" name="course_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -221,26 +223,26 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label for="filterStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                             <select id="filterStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 <option value="">All Results</option>
                                 <option value="pass">Passed (≥50%)</option>
-                                <option value="fail">Failed (<50%)</option>
+                                <option value="fail">Failed (<50%)< /option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label for="filterDate" class="block text-sm font-medium text-gray-700 mb-1">Date (From)</label>
                             <input type="date" id="filterDateFrom" name="date_from" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         </div>
-                        
+
                         <div>
                             <label for="filterDate" class="block text-sm font-medium text-gray-700 mb-1">Date (To)</label>
                             <input type="date" id="filterDateTo" name="date_to" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         </div>
-                        
+
                         <div class="flex items-end">
                             <button type="button" id="filterButton" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 w-full flex items-center justify-center">
                                 <i class="fas fa-filter mr-2"></i>
@@ -250,7 +252,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </form>
                 </div>
             </div>
-            
+
             <!-- Action Buttons -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
@@ -272,7 +274,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Results Table -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
@@ -321,7 +323,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Result Details Modal (hidden by default) -->
             <div id="resultModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
                 <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -338,129 +340,131 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             </div>
         </div>
     </main>
-    
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize variables for pagination
-        let currentPage = 1;
-        const resultsPerPage = 20;
-        let totalResults = 0;
-        
-        // Load results on page load
-        fetchResults();
-        
-        // Set up event listeners
-        document.getElementById('filterButton').addEventListener('click', function() {
-            currentPage = 1; // Reset to first page when applying new filters
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables for pagination
+            let currentPage = 1;
+            const resultsPerPage = 20;
+            let totalResults = 0;
+
+            // Load results on page load
             fetchResults();
-        });
-        
-        document.getElementById('exportResultsBtn').addEventListener('click', exportResults);
-        document.getElementById('generateReportBtn').addEventListener('click', generateReport);
-        document.getElementById('prevPage').addEventListener('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
+
+            // Set up event listeners
+            document.getElementById('filterButton').addEventListener('click', function() {
+                currentPage = 1; // Reset to first page when applying new filters
                 fetchResults();
-            }
-        });
-        document.getElementById('nextPage').addEventListener('click', function() {
-            currentPage++;
-            fetchResults();
-        });
-        
-        // Close modal when clicking the close button
-        document.getElementById('closeModal').addEventListener('click', function() {
-            document.getElementById('resultModal').classList.add('hidden');
-        });
-        
-        // Also close modal when clicking outside of it
-        document.getElementById('resultModal').addEventListener('click', function(event) {
-            if (event.target === this) {
-                this.classList.add('hidden');
-            }
-        });
-        
-        // Set up cascading dropdown filters (department -> program -> course)
-        document.getElementById('filterDepartment').addEventListener('change', function() {
-            const departmentId = this.value;
-            const programSelect = document.getElementById('filterProgram');
-            const courseSelect = document.getElementById('filterCourse');
-            
-            // Reset program and course dropdowns
-            programSelect.innerHTML = '<option value="">All Programs</option>';
-            courseSelect.innerHTML = '<option value="">All Courses</option>';
-            
-            if (departmentId) {
-                // Fetch programs for the selected department
-                programSelect.disabled = true;
-                
-                axios.get('../../api/exams/getProgramsByDepartment.php', {
-                    params: { departmentId: departmentId }
-                })
-                .then(response => {
-                    if (response.data.success) {
-                        const programs = response.data.programs;
-                        programs.forEach(program => {
-                            const option = document.createElement('option');
-                            option.value = program.program_id;
-                            option.textContent = program.name;
-                            programSelect.appendChild(option);
+            });
+
+            document.getElementById('exportResultsBtn').addEventListener('click', exportResults);
+            document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+            document.getElementById('prevPage').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    fetchResults();
+                }
+            });
+            document.getElementById('nextPage').addEventListener('click', function() {
+                currentPage++;
+                fetchResults();
+            });
+
+            // Close modal when clicking the close button
+            document.getElementById('closeModal').addEventListener('click', function() {
+                document.getElementById('resultModal').classList.add('hidden');
+            });
+
+            // Also close modal when clicking outside of it
+            document.getElementById('resultModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+
+            // Set up cascading dropdown filters (department -> program -> course)
+            document.getElementById('filterDepartment').addEventListener('change', function() {
+                const departmentId = this.value;
+                const programSelect = document.getElementById('filterProgram');
+                const courseSelect = document.getElementById('filterCourse');
+
+                // Reset program and course dropdowns
+                programSelect.innerHTML = '<option value="">All Programs</option>';
+                courseSelect.innerHTML = '<option value="">All Courses</option>';
+
+                if (departmentId) {
+                    // Fetch programs for the selected department
+                    programSelect.disabled = true;
+
+                    axios.get('../../api/exams/getProgramsByDepartment.php', {
+                            params: {
+                                departmentId: departmentId
+                            }
+                        })
+                        .then(response => {
+                            if (response.data.success) {
+                                const programs = response.data.programs;
+                                programs.forEach(program => {
+                                    const option = document.createElement('option');
+                                    option.value = program.program_id;
+                                    option.textContent = program.name;
+                                    programSelect.appendChild(option);
+                                });
+                            }
+                            programSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching programs:', error);
+                            showNotification('Failed to load programs', 'error');
+                            programSelect.disabled = false;
                         });
-                    }
-                    programSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Error fetching programs:', error);
-                    showNotification('Failed to load programs', 'error');
-                    programSelect.disabled = false;
-                });
-            }
-        });
-        
-        document.getElementById('filterProgram').addEventListener('change', function() {
-            const programId = this.value;
-            const departmentId = document.getElementById('filterDepartment').value;
-            const courseSelect = document.getElementById('filterCourse');
-            
-            // Reset course dropdown
-            courseSelect.innerHTML = '<option value="">All Courses</option>';
-            
-            if (programId) {
-                // Fetch courses for the selected program
-                courseSelect.disabled = true;
-                
-                axios.get('../../api/exams/getCoursesByProgram.php', {
-                    params: { 
-                        programId: programId,
-                        departmentId: departmentId 
-                    }
-                })
-                .then(response => {
-                    if (response.data.success) {
-                        const courses = response.data.courses;
-                        courses.forEach(course => {
-                            const option = document.createElement('option');
-                            option.value = course.course_id;
-                            option.textContent = `${course.code} - ${course.title}`;
-                            courseSelect.appendChild(option);
+                }
+            });
+
+            document.getElementById('filterProgram').addEventListener('change', function() {
+                const programId = this.value;
+                const departmentId = document.getElementById('filterDepartment').value;
+                const courseSelect = document.getElementById('filterCourse');
+
+                // Reset course dropdown
+                courseSelect.innerHTML = '<option value="">All Courses</option>';
+
+                if (programId) {
+                    // Fetch courses for the selected program
+                    courseSelect.disabled = true;
+
+                    axios.get('../../api/exams/getCoursesByProgram.php', {
+                            params: {
+                                programId: programId,
+                                departmentId: departmentId
+                            }
+                        })
+                        .then(response => {
+                            if (response.data.success) {
+                                const courses = response.data.courses;
+                                courses.forEach(course => {
+                                    const option = document.createElement('option');
+                                    option.value = course.course_id;
+                                    option.textContent = `${course.code} - ${course.title}`;
+                                    courseSelect.appendChild(option);
+                                });
+                            }
+                            courseSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching courses:', error);
+                            showNotification('Failed to load courses', 'error');
+                            courseSelect.disabled = false;
                         });
-                    }
-                    courseSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Error fetching courses:', error);
-                    showNotification('Failed to load courses', 'error');
-                    courseSelect.disabled = false;
-                });
-            }
-        });
-        
-        /**
-         * Fetches results from the server based on current filters and pagination
-         */
-        function fetchResults() {
-            const resultsTable = document.getElementById('resultsTable');
-            resultsTable.innerHTML = `
+                }
+            });
+
+            /**
+             * Fetches results from the server based on current filters and pagination
+             */
+            function fetchResults() {
+                const resultsTable = document.getElementById('resultsTable');
+                resultsTable.innerHTML = `
                 <tr>
                     <td colspan="8" class="px-6 py-4 text-center">
                         <div class="flex justify-center items-center">
@@ -470,30 +474,30 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </td>
                 </tr>
             `;
-            
-            const form = document.getElementById('filterForm');
-            const formData = new FormData(form);
-            formData.append('page', currentPage);
-            formData.append('resultsPerPage', resultsPerPage);
-            
-            // Send fetch request
-            fetch('../../api/results/getResults.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    populateResults(data.results);
-                    updatePagination(data.pagination);
-                } else {
-                    showNotification(data.message || 'Failed to load results', 'error');
-                    resultsTable.innerHTML = `
+
+                const form = document.getElementById('filterForm');
+                const formData = new FormData(form);
+                formData.append('page', currentPage);
+                formData.append('resultsPerPage', resultsPerPage);
+
+                // Send fetch request
+                fetch('../../api/results/getResults.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            populateResults(data.results);
+                            updatePagination(data.pagination);
+                        } else {
+                            showNotification(data.message || 'Failed to load results', 'error');
+                            resultsTable.innerHTML = `
                         <tr>
                             <td colspan="8" class="px-6 py-4 text-center text-red-500">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -501,12 +505,12 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             </td>
                         </tr>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching results:', error);
-                showNotification('Failed to load results. Please try again.', 'error');
-                resultsTable.innerHTML = `
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching results:', error);
+                        showNotification('Failed to load results. Please try again.', 'error');
+                        resultsTable.innerHTML = `
                     <tr>
                         <td colspan="8" class="px-6 py-4 text-center text-red-500">
                             <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -514,34 +518,34 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </td>
                     </tr>
                 `;
-            });
-        }
-        
-        /**
-         * Populates the results table with data
-         */
-        function populateResults(results) {
-            const resultsTable = document.getElementById('resultsTable');
-            resultsTable.innerHTML = '';
-            
-            if (results.length === 0) {
-                resultsTable.innerHTML = `
+                    });
+            }
+
+            /**
+             * Populates the results table with data
+             */
+            function populateResults(results) {
+                const resultsTable = document.getElementById('resultsTable');
+                resultsTable.innerHTML = '';
+
+                if (results.length === 0) {
+                    resultsTable.innerHTML = `
                     <tr>
                         <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                             No results found matching the filter criteria
                         </td>
                     </tr>
                 `;
-                return;
-            }
-            
-            results.forEach(result => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors';
-                
-                const passStatus = result.score_percentage >= 50;
-                
-                row.innerHTML = `
+                    return;
+                }
+
+                results.forEach(result => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+
+                    const passStatus = result.score_percentage >= 50;
+
+                    row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${result.student_name}</div>
                         <div class="text-sm text-gray-500">${result.index_number}</div>
@@ -572,82 +576,82 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </button>
                     </td>
                 `;
-                
-                resultsTable.appendChild(row);
-            });
-        }
-        
+
+                    resultsTable.appendChild(row);
+                });
+            }
+
+            /**
+             * Updates the pagination controls and info
+             */
+            function updatePagination(pagination) {
+                document.getElementById('resultCount').textContent = `${pagination.total_results} results found`;
+                document.getElementById('firstResult').textContent = pagination.first_result;
+                document.getElementById('lastResult').textContent = pagination.last_result;
+                document.getElementById('totalResults').textContent = pagination.total_results;
+
+                // Update button states
+                document.getElementById('prevPage').disabled = pagination.current_page <= 1;
+                document.getElementById('nextPage').disabled = pagination.current_page >= pagination.total_pages;
+
+                // Update current page reference
+                currentPage = pagination.current_page;
+                totalResults = pagination.total_results;
+            }
+        });
+
         /**
-         * Updates the pagination controls and info
+         * Views the details of a specific result
          */
-        function updatePagination(pagination) {
-            document.getElementById('resultCount').textContent = `${pagination.total_results} results found`;
-            document.getElementById('firstResult').textContent = pagination.first_result;
-            document.getElementById('lastResult').textContent = pagination.last_result;
-            document.getElementById('totalResults').textContent = pagination.total_results;
-            
-            // Update button states
-            document.getElementById('prevPage').disabled = pagination.current_page <= 1;
-            document.getElementById('nextPage').disabled = pagination.current_page >= pagination.total_pages;
-            
-            // Update current page reference
-            currentPage = pagination.current_page;
-            totalResults = pagination.total_results;
-        }
-    });
-    
-    /**
-     * Views the details of a specific result
-     */
-    function viewResultDetails(resultId) {
-        const modal = document.getElementById('resultModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        // Show loading indicator
-        modalContent.innerHTML = `
+        function viewResultDetails(resultId) {
+            const modal = document.getElementById('resultModal');
+            const modalContent = document.getElementById('modalContent');
+
+            // Show loading indicator
+            modalContent.innerHTML = `
             <div class="flex justify-center items-center py-8">
                 <i class="fas fa-spinner fa-spin text-emerald-500 text-2xl"></i>
             </div>
         `;
-        modal.classList.remove('hidden');
-        
-        // Fetch result details
-        fetch(`../../api/results/getResultDetails.php?result_id=${resultId}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    renderResultDetails(data.result, data.questions);
-                } else {
-                    modalContent.innerHTML = `
+            modal.classList.remove('hidden');
+
+            // Fetch result details
+            fetch(`../../api/results/getResultDetails.php?result_id=${resultId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        renderResultDetails(data.result, data.questions);
+                    } else {
+                        modalContent.innerHTML = `
                         <div class="text-center py-8 text-red-500">
                             <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
                             <p>${data.message || 'Failed to load result details'}</p>
                         </div>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching result details:', error);
-                modalContent.innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching result details:', error);
+                    modalContent.innerHTML = `
                     <div class="text-center py-8 text-red-500">
                         <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
                         <p>Could not load result details. Please try again later.</p>
                     </div>
                 `;
-            });
-    }
-    
-    /**
-     * Renders the details of a specific result in the modal
-     */
-    function renderResultDetails(result, questions) {
-        const modalContent = document.getElementById('modalContent');
-        
-        // Format the content
-        let content = `
+                });
+        }
+
+        /**
+         * Renders the details of a specific result in the modal
+         */
+        function renderResultDetails(result, questions) {
+            const modalContent = document.getElementById('modalContent');
+
+            // Format the content
+            let content = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                     <h4 class="text-lg font-semibold mb-4 text-gray-900">Exam Information</h4>
@@ -672,17 +676,17 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </div>
             </div>
         `;
-        
-        // Add questions and answers if available
-        if (questions && questions.length > 0) {
-            content += `
+
+            // Add questions and answers if available
+            if (questions && questions.length > 0) {
+                content += `
                 <h4 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h4>
                 <div class="space-y-6">
             `;
-            
-            questions.forEach((question, index) => {
-                const isCorrect = question.is_correct;
-                content += `
+
+                questions.forEach((question, index) => {
+                    const isCorrect = question.is_correct;
+                    content += `
                     <div class="border border-gray-200 rounded-lg p-4">
                         <div class="font-medium text-gray-900 mb-2">Question ${index + 1}: ${question.question_text}</div>
                         <div class="ml-4">
@@ -701,13 +705,13 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
                 `;
-            });
-            
-            content += `</div>`;
-        }
-        
-        // Add actions buttons
-        content += `
+                });
+
+                content += `</div>`;
+            }
+
+            // Add actions buttons
+            content += `
             <div class="mt-8 flex justify-end space-x-4">
                 <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" onclick="document.getElementById('resultModal').classList.add('hidden')">
                     Close
@@ -717,64 +721,65 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </button>
             </div>
         `;
-        
-        modalContent.innerHTML = content;
-    }
-    
-    /**
-     * Prints the result details
-     */
-    function printResultDetails(resultId) {
-        // Open a new window with print-friendly version
-        window.open(`../../api/results/printResult.php?result_id=${resultId}`, '_blank');
-    }
-    
-    /**
-     * Exports the filtered results to CSV
-     */
-    function exportResults() {
-        const form = document.getElementById('filterForm');
-        const formData = new FormData(form);
-        
-        // Build the query string
-        const queryString = new URLSearchParams(formData).toString();
-        
-        // Open the export endpoint in a new tab (will trigger download)
-        window.open(`../../api/results/exportResults.php?${queryString}`, '_blank');
-        
-        showNotification('Exporting results...', 'info');
-    }
-    
-    /**
-     * Generates a comprehensive report
-     */
-    function generateReport() {
-        const form = document.getElementById('filterForm');
-        const formData = new FormData(form);
-        
-        // Build the query string
-        const queryString = new URLSearchParams(formData).toString();
-        
-        // Open the report generator in a new tab
-        window.open(`../../api/results/generateReport.php?${queryString}`, '_blank');
-        
-        showNotification('Generating report...', 'info');
-    }
-    
-    /**
-     * Shows a toast notification
-     */
-    function showNotification(message, type = 'info') {
-        Swal.fire({
-            text: message,
-            icon: type,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
-    }
+
+            modalContent.innerHTML = content;
+        }
+
+        /**
+         * Prints the result details
+         */
+        function printResultDetails(resultId) {
+            // Open a new window with print-friendly version
+            window.open(`../../api/results/printResult.php?result_id=${resultId}`, '_blank');
+        }
+
+        /**
+         * Exports the filtered results to CSV
+         */
+        function exportResults() {
+            const form = document.getElementById('filterForm');
+            const formData = new FormData(form);
+
+            // Build the query string
+            const queryString = new URLSearchParams(formData).toString();
+
+            // Open the export endpoint in a new tab (will trigger download)
+            window.open(`../../api/results/exportResults.php?${queryString}`, '_blank');
+
+            showNotification('Exporting results...', 'info');
+        }
+
+        /**
+         * Generates a comprehensive report
+         */
+        function generateReport() {
+            const form = document.getElementById('filterForm');
+            const formData = new FormData(form);
+
+            // Build the query string
+            const queryString = new URLSearchParams(formData).toString();
+
+            // Open the report generator in a new tab
+            window.open(`../../api/results/generateReport.php?${queryString}`, '_blank');
+
+            showNotification('Generating report...', 'info');
+        }
+
+        /**
+         * Shows a toast notification
+         */
+        function showNotification(message, type = 'info') {
+            Swal.fire({
+                text: message,
+                icon: type,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
     </script>
 </body>
-</html> 
+
+</html>

@@ -27,11 +27,11 @@ try {
     // Initialize database connection
     $db = new Database();
     $conn = $db->getConnection();
-    
+
     // Build filters from request parameters
     $filters = [];
     $params = [];
-    
+
     // Student filter (name or ID)
     if (!empty($_REQUEST['student'])) {
         $student = '%' . $_REQUEST['student'] . '%';
@@ -89,7 +89,7 @@ try {
     if (!empty($filters)) {
         $whereClause = 'WHERE ' . implode(' AND ', $filters);
     }
-    
+
     // Fetch the results (without pagination)
     $query = "
         SELECT 
@@ -116,13 +116,13 @@ try {
         $whereClause
         ORDER BY r.completed_at DESC
     ";
-    
+
     $stmt = $conn->prepare($query);
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
     $stmt->execute();
-    
+
     // Fetch and write each row to the CSV file
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, [
@@ -140,7 +140,6 @@ try {
             $row['completed_at']
         ]);
     }
-    
 } catch (Exception $e) {
     // In case of error, write an error message to the CSV
     fputcsv($output, ['Error: ' . $e->getMessage()]);

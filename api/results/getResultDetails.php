@@ -15,7 +15,7 @@ try {
     // Initialize database connection
     $db = new Database();
     $conn = $db->getConnection();
-    
+
     // Fetch result details
     $query = "
         SELECT 
@@ -46,18 +46,18 @@ try {
         JOIN programs p ON e.program_id = p.program_id
         WHERE r.result_id = :result_id
     ";
-    
+
     $stmt = $conn->prepare($query);
     $stmt->bindValue(':result_id', $resultId, PDO::PARAM_INT);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$result) {
         http_response_code(404); // Not Found
         echo json_encode(['success' => false, 'message' => 'Result not found.']);
         exit();
     }
-    
+
     // Fetch questions and student answers
     $query = "
         SELECT 
@@ -76,19 +76,18 @@ try {
         WHERE r.result_id = :result_id
         ORDER BY q.sequence_number
     ";
-    
+
     $stmt = $conn->prepare($query);
     $stmt->bindValue(':result_id', $resultId, PDO::PARAM_INT);
     $stmt->execute();
     $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Return the data
     echo json_encode([
         'success' => true,
         'result' => $result,
         'questions' => $questions
     ]);
-    
 } catch (Exception $e) {
     http_response_code(500); // Internal Server Error
     echo json_encode([

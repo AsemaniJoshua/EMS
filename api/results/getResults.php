@@ -94,7 +94,7 @@ try {
         JOIN programs p ON e.program_id = p.program_id
         $whereClause
     ";
-    
+
     $countStmt = $conn->prepare($countQuery);
     foreach ($params as $key => $value) {
         $countStmt->bindValue($key, $value);
@@ -134,7 +134,7 @@ try {
         ORDER BY r.completed_at DESC
         LIMIT :offset, :limit
     ";
-    
+
     $stmt = $conn->prepare($query);
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
@@ -143,11 +143,11 @@ try {
     $stmt->bindValue(':limit', $resultsPerPage, PDO::PARAM_INT);
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Prepare pagination info
     $firstResult = $totalResults > 0 ? $offset + 1 : 0;
     $lastResult = min($offset + $resultsPerPage, $totalResults);
-    
+
     // Return results
     echo json_encode([
         'success' => true,
@@ -161,7 +161,6 @@ try {
             'last_result' => $lastResult
         ]
     ]);
-    
 } catch (Exception $e) {
     http_response_code(500); // Internal Server Error
     echo json_encode([
