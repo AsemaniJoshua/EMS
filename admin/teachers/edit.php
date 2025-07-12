@@ -1,32 +1,43 @@
 <?php
+include_once __DIR__ . '/../../api/login/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+include_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'teachers';
 $pageTitle = "Edit Teacher";
 
-// In a real implementation, you would fetch the teacher data from the database based on the ID
-// This is just mock data for the UI
-$teacherId = isset($_GET['id']) ? intval($_GET['id']) : 1;
-$teacher = [
-    'id' => $teacherId,
-    'firstName' => 'John',
-    'lastName' => 'Smith',
-    'email' => 'john.smith@school.edu',
-    'phoneNumber' => '+1 (555) 123-4567',
-    'staffId' => 'TCH001',
-    'departmentId' => 1, // Mathematics
-    'status' => 'active',
-    'username' => 'jsmith',
-    'joinDate' => '2021-09-01',
-    'title' => 'Dr.',
-    'qualifications' => [
-        'PhD in Mathematics, Stanford University',
-        'MSc in Applied Mathematics, MIT',
-        'BSc in Mathematics, University of Michigan'
-    ]
-];
-?>
+// Fetch teacher data from DB
+$teacherId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$teacher = null;
 
+if ($teacherId > 0) {
+    $db = new Database();
+    $conn = $db->getConnection();
+
+    // Fetch teacher data
+    $stmt = $conn->prepare(
+        "SELECT t.*, d.name AS department_name 
+         FROM teachers t 
+         JOIN departments d ON t.department_id = d.department_id 
+         WHERE t.teacher_id = ?"
+    );
+    $stmt->execute([$teacherId]);
+    $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Fetch departments for dropdown
+$departments = [];
+$stmt = $conn->query("SELECT department_id, name FROM departments ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $departments[] = $row;
+}
+
+if (!$teacher) {
+    // Redirect to teachers list if teacher not found
+    header("Location: index.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -36,6 +47,8 @@ $teacher = [
     <title><?php echo $pageTitle; ?> - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -54,14 +67,14 @@ $teacher = [
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Edit Teacher</h1>
-                        <p class="mt-1 text-sm text-gray-500">Update information for <?php echo $teacher['title'] . ' ' . $teacher['firstName'] . ' ' . $teacher['lastName']; ?></p>
+                        <p class="mt-1 text-sm text-gray-500">Update information for <?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></p>
                     </div>
                 </div>
             </div>
 
             <!-- Form Actions - Top -->
             <div class="mb-6 flex justify-end space-x-3">
-                <button onclick="window.location.href='view.php?id=<?php echo $teacher['id']; ?>'" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                <button onclick="window.location.href='view.php?id=<?php echo $teacher['teacher_id']; ?>'" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
                     <i class="fas fa-eye mr-2"></i>
                     View Profile
                 </button>
@@ -78,8 +91,8 @@ $teacher = [
                 </div>
 
                 <form id="editTeacherForm" class="p-6 space-y-8">
-                    <input type="hidden" name="teacherId" value="<?php echo $teacher['id']; ?>">
-                    
+                    <input type="hidden" name="teacherId" value="<?php echo $teacher['teacher_id']; ?>">
+
                     <!-- Personal Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -87,37 +100,26 @@ $teacher = [
                             Personal Information
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                                <select name="title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="Dr." <?php echo $teacher['title'] === 'Dr.' ? 'selected' : ''; ?>>Dr.</option>
-                                    <option value="Prof." <?php echo $teacher['title'] === 'Prof.' ? 'selected' : ''; ?>>Prof.</option>
-                                    <option value="Mr." <?php echo $teacher['title'] === 'Mr.' ? 'selected' : ''; ?>>Mr.</option>
-                                    <option value="Ms." <?php echo $teacher['title'] === 'Ms.' ? 'selected' : ''; ?>>Ms.</option>
-                                    <option value="Mrs." <?php echo $teacher['title'] === 'Mrs.' ? 'selected' : ''; ?>>Mrs.</option>
-                                </select>
-                            </div>
-                            
                             <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                                    <input type="text" name="firstName" value="<?php echo $teacher['firstName']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter first name">
+                                    <input type="text" name="firstName" value="<?php echo htmlspecialchars($teacher['first_name']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter first name">
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                                    <input type="text" name="lastName" value="<?php echo $teacher['lastName']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter last name">
+                                    <input type="text" name="lastName" value="<?php echo htmlspecialchars($teacher['last_name']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter last name">
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                                <input type="email" name="email" value="<?php echo $teacher['email']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter email address">
+                                <input type="email" name="email" value="<?php echo htmlspecialchars($teacher['email']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter email address">
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" name="phoneNumber" value="<?php echo $teacher['phoneNumber']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter phone number">
+                                <input type="tel" name="phoneNumber" value="<?php echo htmlspecialchars($teacher['phone_number']); ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter phone number">
                             </div>
                         </div>
                     </div>
@@ -131,25 +133,19 @@ $teacher = [
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Staff ID *</label>
-                                <input type="text" name="staffId" value="<?php echo $teacher['staffId']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., TCH001">
+                                <input type="text" name="staffId" value="<?php echo htmlspecialchars($teacher['staff_id']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., TCH001">
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
                                 <select name="departmentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                     <option value="">Select Department</option>
-                                    <option value="1" <?php echo $teacher['departmentId'] === 1 ? 'selected' : ''; ?>>Mathematics</option>
-                                    <option value="2" <?php echo $teacher['departmentId'] === 2 ? 'selected' : ''; ?>>Science</option>
-                                    <option value="3" <?php echo $teacher['departmentId'] === 3 ? 'selected' : ''; ?>>English</option>
-                                    <option value="4" <?php echo $teacher['departmentId'] === 4 ? 'selected' : ''; ?>>History</option>
-                                    <option value="5" <?php echo $teacher['departmentId'] === 5 ? 'selected' : ''; ?>>Computer Science</option>
-                                    <option value="6" <?php echo $teacher['departmentId'] === 6 ? 'selected' : ''; ?>>Physical Education</option>
+                                    <?php foreach ($departments as $dept): ?>
+                                        <option value="<?php echo $dept['department_id']; ?>" <?php echo $teacher['department_id'] == $dept['department_id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($dept['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Join Date</label>
-                                <input type="date" name="joinDate" value="<?php echo $teacher['joinDate']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                             </div>
 
                             <div>
@@ -174,26 +170,6 @@ $teacher = [
                         </div>
                     </div>
 
-                    <!-- Qualifications Section -->
-                    <div class="border-b border-gray-100 pb-8">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                            <i class="fas fa-graduation-cap mr-2 text-purple-600"></i>
-                            Qualifications
-                        </h3>
-                        <div id="qualifications-container">
-                            <?php foreach ($teacher['qualifications'] as $index => $qualification): ?>
-                                <div class="qualification-item flex items-center mb-3">
-                                    <input type="text" name="qualifications[]" value="<?php echo $qualification; ?>" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., PhD in Mathematics, Stanford University">
-                                    <button type="button" class="ml-2 p-2 text-gray-500 hover:text-red-500 focus:outline-none remove-qualification">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <button type="button" id="add-qualification" class="mt-2 inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
-                            <i class="fas fa-plus mr-1"></i> Add Qualification
-                        </button>
-                    </div>
 
                     <!-- Account Information Section -->
                     <div class="border-b border-gray-100 pb-8">
@@ -204,14 +180,14 @@ $teacher = [
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Username *</label>
-                                <input type="text" name="username" value="<?php echo $teacher['username']; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter username">
+                                <input type="text" name="username" value="<?php echo htmlspecialchars($teacher['username']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="Enter username">
                             </div>
                         </div>
-                        
+
                         <div class="mt-6">
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Change Password</h4>
                             <p class="text-sm text-gray-500 mb-4">Leave blank to keep current password</p>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
@@ -253,13 +229,13 @@ $teacher = [
                                     <p class="text-gray-500">Send an email to the teacher notifying them of these changes.</p>
                                 </div>
                             </div>
-                            
+
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
-                                    <input id="reset_password" name="reset_password" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                    <input id="resetOnLogin" name="resetOnLogin" type="checkbox" class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
                                 </div>
                                 <div class="ml-3 text-sm">
-                                    <label for="reset_password" class="font-medium text-gray-700">Force password reset on next login</label>
+                                    <label for="resetOnLogin" class="font-medium text-gray-700">Force password reset on next login</label>
                                     <p class="text-gray-500">The teacher will be required to set a new password when they next log in.</p>
                                 </div>
                             </div>
@@ -272,7 +248,7 @@ $teacher = [
                             <i class="fas fa-times mr-2"></i>
                             Cancel
                         </button>
-                        <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
+                        <button type="submit" id="submitBtn" class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
                             <i class="fas fa-save mr-2"></i>
                             Save Changes
                         </button>
@@ -284,6 +260,19 @@ $teacher = [
     </main>
 
     <script>
+        // Toast notifications system
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
         // Toggle password visibility
         function togglePassword(fieldName) {
             const passwordField = document.querySelector(`input[name="${fieldName}"]`);
@@ -300,119 +289,99 @@ $teacher = [
             }
         }
 
-        // Handle qualifications
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add qualification
-            document.getElementById('add-qualification').addEventListener('click', function() {
-                const container = document.getElementById('qualifications-container');
-                const div = document.createElement('div');
-                div.className = 'qualification-item flex items-center mb-3';
-                div.innerHTML = `
-                    <input type="text" name="qualifications[]" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., PhD in Mathematics, Stanford University">
-                    <button type="button" class="ml-2 p-2 text-gray-500 hover:text-red-500 focus:outline-none remove-qualification">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                container.appendChild(div);
-                
-                // Add event listener to the newly created remove button
-                div.querySelector('.remove-qualification').addEventListener('click', function() {
-                    container.removeChild(div);
+        // Form submission
+        document.getElementById('editTeacherForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Disable button and show loading spinner
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span>Saving...</span>';
+
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // Validate required fields
+            const requiredFields = ['firstName', 'lastName', 'email', 'staffId', 'departmentId', 'username'];
+            for (let field of requiredFields) {
+                if (!data[field]) {
+                    const fieldName = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    Toast.fire({
+                        icon: 'error',
+                        title: `Please fill in the ${fieldName} field.`
+                    });
+
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+                    return;
+                }
+            }
+
+            // Check if passwords match if changing password
+            if (data.password && data.password !== data.confirmPassword) {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Passwords do not match!'
                 });
-            });
 
-            // Remove qualification (for existing buttons)
-            document.querySelectorAll('.remove-qualification').forEach(button => {
-                button.addEventListener('click', function() {
-                    this.closest('.qualification-item').remove();
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+                return;
+            }
+
+            // Validate password strength if changing password
+            if (data.password && data.password.length < 8) {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Password must be at least 8 characters long.'
                 });
-            });
 
-            // Form submission
-            document.getElementById('editTeacherForm').addEventListener('submit', function(e) {
-                e.preventDefault();
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+                return;
+            }
 
-                // Get form data
-                const formData = new FormData(this);
-                const teacherData = {};
-                
-                // Convert FormData to object
-                for (let [key, value] of formData.entries()) {
-                    if (key === 'qualifications[]') {
-                        if (!teacherData.qualifications) {
-                            teacherData.qualifications = [];
-                        }
-                        teacherData.qualifications.push(value);
+            // Send the update request to the server
+            axios.post('/api/teachers/updateTeacher.php', data)
+                .then(function(response) {
+                    if (response.data.status === 'success') {
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Teacher information updated successfully!'
+                        });
+
+                        // Redirect back to view page after a short delay
+                        setTimeout(() => {
+                            window.location.href = `view.php?id=${data.teacherId}`;
+                        }, 2000);
                     } else {
-                        teacherData[key] = value;
+                        Toast.fire({
+                            icon: 'error',
+                            title: response.data.message || 'An error occurred during the update.'
+                        });
+
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
                     }
-                }
+                })
+                .catch(function(error) {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Server error. Please try again.'
+                    });
+                    console.error(error);
 
-                // Validate required fields
-                const requiredFields = ['firstName', 'lastName', 'email', 'staffId', 'departmentId', 'username'];
-                for (let field of requiredFields) {
-                    if (!teacherData[field]) {
-                        const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
-                        showNotification(`Please fill in the ${fieldName} field.`, 'error');
-                        return;
-                    }
-                }
-
-                // Check if passwords match if changing password
-                if (teacherData.password && teacherData.password !== teacherData.confirmPassword) {
-                    showNotification('Passwords do not match!', 'error');
-                    return;
-                }
-
-                // Validate password strength if changing password
-                if (teacherData.password && teacherData.password.length < 8) {
-                    showNotification('Password must be at least 8 characters long.', 'error');
-                    return;
-                }
-
-                // Here you would typically send the data to your backend
-                console.log('Updating teacher:', teacherData);
-                
-                // Show success message
-                showNotification('Teacher information updated successfully!', 'success');
-                
-                // Redirect back to view page after a short delay
-                setTimeout(() => {
-                    window.location.href = `view.php?id=${teacherData.teacherId}`;
-                }, 2000);
-            });
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+                });
         });
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
-        }
     </script>
 </body>
 

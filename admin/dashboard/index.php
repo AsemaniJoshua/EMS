@@ -2,7 +2,55 @@
 include_once __DIR__ . '/../../api/login/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/config/database.php';
+
 $currentPage = 'dashboard';
+
+// Fetch dashboard stats from the database
+$db = new Database();
+$conn = $db->getConnection();
+
+// Total Students
+$totalStudents = 0;
+$stmt = $conn->query('SELECT COUNT(*) as count FROM students');
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalStudents = $row['count'];
+}
+
+// Active Exams (status = 'Pending', 'Approved', 'Draft')
+$activeExams = 0;
+$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status IN ('Pending', 'Approved', 'Draft')");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $activeExams = $row['count'];
+}
+
+// Teachers
+$totalTeachers = 0;
+$stmt = $conn->query('SELECT COUNT(*) as count FROM teachers');
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalTeachers = $row['count'];
+}
+
+// Pending Reviews (exams with status = 'Pending')
+$pendingReviews = 0;
+$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Pending'");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $pendingReviews = $row['count'];
+}
+
+// Recent Activity (last 3 exams created)
+$recentActivity = [];
+$stmt = $conn->query("SELECT title, created_at FROM exams ORDER BY created_at DESC LIMIT 3");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $recentActivity[] = $row;
+}
+
+// Upcoming Exams (next 3 by start_datetime)
+$upcomingExams = [];
+$stmt = $conn->query("SELECT title, start_datetime, status FROM exams WHERE start_datetime >= NOW() ORDER BY start_datetime ASC LIMIT 3");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $upcomingExams[] = $row;
+}
 ?>
 
 <!DOCTYPE html>
@@ -51,10 +99,9 @@ $currentPage = 'dashboard';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Total Students</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">2,847</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalStudents); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+12%</span>
-                                            <span class="ml-1 text-gray-500">from last month</span>
+                                            <span class="ml-1 text-gray-500">number of registered students</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -74,10 +121,10 @@ $currentPage = 'dashboard';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Active Exams</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">15</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($activeExams); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">3 new</span>
-                                            <span class="ml-1 text-gray-500">this week</span>
+                                            <!-- <span class="text-emerald-600 font-medium">3 new</span> -->
+                                            <span class="ml-1 text-gray-500">total exams not completed</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -97,10 +144,10 @@ $currentPage = 'dashboard';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Teachers</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">124</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalTeachers); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+5</span>
-                                            <span class="ml-1 text-gray-500">new this month</span>
+                                            <!-- <span class="text-emerald-600 font-medium">+5</span> -->
+                                            <span class="ml-1 text-gray-500">all registered teachers</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -120,10 +167,9 @@ $currentPage = 'dashboard';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Pending Reviews</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">8</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($pendingReviews); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-orange-600 font-medium">Urgent</span>
-                                            <span class="ml-1 text-gray-500">requires attention</span>
+                                            <span class="text-orange-600 font-medium">Urgent </span><span class="text-gray-500">requires attention</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -143,15 +189,16 @@ $currentPage = 'dashboard';
                             <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">View all</a>
                         </div>
                         <ul class="divide-y divide-gray-100">
+                            <?php foreach ($recentActivity as $activity): ?>
                             <li class="px-6 py-4">
                                 <div class="flex items-start gap-4">
                                     <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-plus text-emerald-600 text-xs"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 mb-1">New exam "Mathematics Final" created</p>
+                                        <p class="text-sm font-medium text-gray-900 mb-1">New exam "<?php echo htmlspecialchars($activity['title']); ?>" created</p>
                                         <p class="text-xs text-gray-500 flex items-center">
-                                            <i class="fas fa-clock mr-1 text-gray-400"></i> 2 hours ago
+                                            <i class="fas fa-clock mr-1 text-gray-400"></i> <?php echo date('M d, Y H:i', strtotime($activity['created_at'])); ?>
                                         </p>
                                     </div>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
@@ -159,32 +206,7 @@ $currentPage = 'dashboard';
                                     </span>
                                 </div>
                             </li>
-                            <li class="px-6 py-4">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <i class="fas fa-user text-blue-600 text-xs"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 mb-1">15 students registered for Physics exam</p>
-                                        <p class="text-xs text-gray-500 flex items-center">
-                                            <i class="fas fa-clock mr-1 text-gray-400"></i> 4 hours ago
-                                        </p>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="px-6 py-4">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <i class="fas fa-check text-purple-600 text-xs"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 mb-1">Chemistry exam results published</p>
-                                        <p class="text-xs text-gray-500 flex items-center">
-                                            <i class="fas fa-clock mr-1 text-gray-400"></i> 1 day ago
-                                        </p>
-                                    </div>
-                                </div>
-                            </li>
+                            <?php endforeach; ?>
                         </ul>
                     </div>
                 </div>
@@ -197,54 +219,32 @@ $currentPage = 'dashboard';
                             <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">See all</a>
                         </div>
                         <ul class="divide-y divide-gray-100">
+                            <?php foreach ($upcomingExams as $exam): ?>
                             <li class="px-6 py-4">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-3">
-                                        <div class="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                                        <div class="flex-shrink-0 w-2.5 h-2.5 rounded-full <?php
+                                            if ($exam['status'] === 'Approved') echo 'bg-emerald-500';
+                                            elseif ($exam['status'] === 'Pending') echo 'bg-yellow-500';
+                                            else echo 'bg-blue-500';
+                                        ?>"></div>
                                         <div>
-                                            <p class="text-sm font-medium text-gray-900">Mathematics</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></p>
                                             <p class="text-xs text-gray-500 mt-0.5">
-                                                <i class="far fa-calendar-alt mr-1"></i> Dec 15, 2023
+                                                <i class="far fa-calendar-alt mr-1"></i> <?php echo date('M d, Y', strtotime($exam['start_datetime'])); ?>
                                             </p>
                                         </div>
                                     </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        Ready
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php
+                                        if ($exam['status'] === 'Approved') echo 'bg-emerald-100 text-emerald-800';
+                                        elseif ($exam['status'] === 'Pending') echo 'bg-yellow-100 text-yellow-800';
+                                        else echo 'bg-blue-100 text-blue-800';
+                                    ?>">
+                                        <?php echo $exam['status'] === 'Approved' ? 'Ready' : ($exam['status'] === 'Pending' ? 'Pending' : 'Draft'); ?>
                                     </span>
                                 </div>
                             </li>
-                            <li class="px-6 py-4">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-900">Physics</p>
-                                            <p class="text-xs text-gray-500 mt-0.5">
-                                                <i class="far fa-calendar-alt mr-1"></i> Dec 18, 2023
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        Pending
-                                    </span>
-                                </div>
-                            </li>
-                            <li class="px-6 py-4">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-900">Chemistry</p>
-                                            <p class="text-xs text-gray-500 mt-0.5">
-                                                <i class="far fa-calendar-alt mr-1"></i> Dec 20, 2023
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        Draft
-                                    </span>
-                                </div>
-                            </li>
+                            <?php endforeach; ?>
                         </ul>
                         <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
                             <a href="#" class="w-full inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-emerald-700 bg-white border border-emerald-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
