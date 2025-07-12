@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     fetchExams();
-    fetchApprovalStats();
+    // Stats are now loaded via PHP, no need for fetchApprovalStats()
 });
 
 function fetchExams(status = 'Pending') {
@@ -15,7 +15,7 @@ function fetchExams(status = 'Pending') {
         .then(data => {
             if (data.success) {
                 populateExams(data.exams || []);
-                updateStatCards(data.stats);
+                // Stats are now updated via PHP
             } else {
                 showNotification(data.message || 'Failed to load exams', 'error');
             }
@@ -25,20 +25,9 @@ function fetchExams(status = 'Pending') {
         });
 }
 
+// This function is no longer needed as stats are now loaded directly via PHP
 function fetchApprovalStats() {
-    fetch('../../api/exams/getApprovalList.php?status=all')
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                updateStatCards(data.stats);
-            }
-        })
-        .catch(error => {
-            console.error('Failed to load approval stats:', error);
-        });
+    // Left empty as stats are now handled server-side
 }
 
 function populateExams(exams) {
@@ -118,25 +107,8 @@ function populateExams(exams) {
 }
 
 function updateStatCards(stats) {
-    // Update the stats cards with actual data
-    if (stats) {
-        document.getElementById('pendingCount').textContent = stats.pending || 0;
-        document.getElementById('approvedCount').textContent = stats.approved_today || 0;
-        document.getElementById('approvedChange').textContent = stats.approved_change > 0 ?
-            `+${stats.approved_change} from yesterday` :
-            `${stats.approved_change} from yesterday`;
-
-        document.getElementById('rejectedCount').textContent = stats.rejected_today || 0;
-        document.getElementById('rejectedChange').textContent = stats.rejected_change > 0 ?
-            `+${stats.rejected_change} from yesterday` :
-            `${stats.rejected_change} from yesterday`;
-
-        document.getElementById('responseTime').textContent = stats.avg_response_hours ?
-            `${stats.avg_response_hours}h` : 'N/A';
-        document.getElementById('responseTimeDiff').textContent = stats.response_time_diff > 0 ?
-            `+${stats.response_time_diff}h change` :
-            `${-stats.response_time_diff}h improvement`;
-    }
+    // This function is no longer needed for stat cards as they are now updated directly via PHP
+    // We only need to update the approval count in the table
 }
 
 function approveExam(id) {

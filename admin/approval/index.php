@@ -8,76 +8,76 @@ $currentPage = 'approval';
 $pageTitle = "Exam Approvals";
 $breadcrumb = "Approvals";
 
-// Initialize database connection
+// Database connection
 $db = new Database();
 $conn = $db->getConnection();
 
-// Get pending approvals count
-$pendingCount = 0;
-$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Pending'");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $pendingCount = $row['count'];
-}
+// Get statistics for approval
+$pendingQuery = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Pending'");
+$row = $pendingQuery->fetch(PDO::FETCH_ASSOC);
+$pendingCount = $row['count'];
 
-// Get approvals today
-$approvedToday = 0;
-$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Approved' AND DATE(approved_at) = CURDATE()");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $approvedToday = $row['count'];
-}
+// Get today's approvals
+$today = date('Y-m-d');
+$approvedTodayQuery = $conn->prepare("SELECT COUNT(*) as count FROM exams WHERE status = 'Approved' AND DATE(approved_at) = :today");
+$approvedTodayQuery->bindParam(':today', $today);
+$approvedTodayQuery->execute();
+$row = $approvedTodayQuery->fetch(PDO::FETCH_ASSOC);
+$approvedToday = $row['count'];
 
-// Get yesterday's approvals for comparison
-$approvedYesterday = 0;
-$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Approved' AND DATE(approved_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $approvedYesterday = $row['count'];
-}
-$approvedChange = $approvedToday - $approvedYesterday;
+// Get yesterday's approvals
+$yesterday = date('Y-m-d', strtotime('-1 day'));
+$approvedYesterdayQuery = $conn->prepare("SELECT COUNT(*) as count FROM exams WHERE status = 'Approved' AND DATE(approved_at) = :yesterday");
+$approvedYesterdayQuery->bindParam(':yesterday', $yesterday);
+$approvedYesterdayQuery->execute();
+$row = $approvedYesterdayQuery->fetch(PDO::FETCH_ASSOC);
+$approvedYesterday = $row['count'];
 
-// Get rejections today
-$rejectedToday = 0;
-$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = CURDATE()");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $rejectedToday = $row['count'];
-}
+$approvedDiff = $approvedToday - $approvedYesterday;
+$approvedChange = $approvedDiff; // Alias for template compatibility
 
-// Get yesterday's rejections for comparison
-$rejectedYesterday = 0;
-$stmt = $conn->query("SELECT COUNT(*) as count FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $rejectedYesterday = $row['count'];
-}
-$rejectedChange = $rejectedToday - $rejectedYesterday;
+// Get today's rejections
+$rejectedTodayQuery = $conn->prepare("SELECT COUNT(*) as count FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = :today");
+$rejectedTodayQuery->bindParam(':today', $today);
+$rejectedTodayQuery->execute();
+$row = $rejectedTodayQuery->fetch(PDO::FETCH_ASSOC);
+$rejectedToday = $row['count'];
 
-// Calculate average response time (in hours)
-$avgResponseTime = 0;
-$stmt = $conn->query("
-    SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)) as avg_hours
-    FROM exams
-    WHERE status IN ('Approved', 'Rejected')
+// Get yesterday's rejections
+$rejectedYesterdayQuery = $conn->prepare("SELECT COUNT(*) FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = :yesterday");
+$rejectedYesterdayQuery->bindParam(':yesterday', $yesterday);
+$rejectedYesterdayQuery->execute();
+$row = $rejectedYesterdayQuery->fetch(PDO::FETCH_ASSOC);
+$rejectedYesterday = $row['count'];
+
+$rejectedDiff = $rejectedToday - $rejectedYesterday;
+$rejectedChange = $rejectedDiff; // Alias for template compatibility
+
+// Calculate average response time for the last 7 days
+$responseTimeQuery = $conn->query("
+    SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)), 1) as avg_hours 
+    FROM exams 
+    WHERE (status = 'Approved' OR status = 'Rejected') 
     AND approved_at IS NOT NULL
-    AND DATE(approved_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    AND approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
 ");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $avgResponseTime = $row['avg_hours'] ? round($row['avg_hours'], 1) : 0;
-}
+$row = $responseTimeQuery->fetch(PDO::FETCH_ASSOC);
+$avgResponseTime = $row['avg_hours'] ? $row['avg_hours'] : 0;
 
-// Calculate change in response time
-$prevAvgResponseTime = 0;
-$stmt = $conn->query("
-    SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)) as avg_hours
-    FROM exams
-    WHERE status IN ('Approved', 'Rejected')
+// Calculate previous week's average response time
+$prevWeekResponseTimeQuery = $conn->query("
+    SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)), 1) as avg_hours 
+    FROM exams 
+    WHERE (status = 'Approved' OR status = 'Rejected') 
     AND approved_at IS NOT NULL
-    AND DATE(approved_at) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
-    AND DATE(approved_at) < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    AND approved_at BETWEEN DATE_SUB(NOW(), INTERVAL 14 DAY) AND DATE_SUB(NOW(), INTERVAL 7 DAY)
 ");
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $prevAvgResponseTime = $row['avg_hours'] ? round($row['avg_hours'], 1) : 0;
-}
-$responseTimeDiff = $prevAvgResponseTime - $avgResponseTime;
+$row = $prevWeekResponseTimeQuery->fetch(PDO::FETCH_ASSOC);
+$prevWeekAvgResponseTime = $row['avg_hours'] ? $row['avg_hours'] : 0;
 
+$responseTimeDiff = $avgResponseTime - $prevWeekAvgResponseTime;
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -97,7 +97,7 @@ $responseTimeDiff = $prevAvgResponseTime - $avgResponseTime;
     <!-- Main content area -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
-            
+
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex items-center justify-between">
@@ -147,13 +147,13 @@ $responseTimeDiff = $prevAvgResponseTime - $avgResponseTime;
                                     <dd>
                                         <div class="text-xl font-semibold text-gray-900"><?php echo number_format($approvedToday); ?></div>
                                         <div class="text-sm text-gray-500">
-                                            <?php if ($approvedChange > 0): ?>
-                                                <span class="text-emerald-600">+<?php echo $approvedChange; ?></span>
-                                            <?php elseif ($approvedChange < 0): ?>
-                                                <span class="text-red-600"><?php echo $approvedChange; ?></span>
+                                            <?php if ($approvedDiff > 0): ?>
+                                                <span class="text-emerald-600">+<?php echo $approvedDiff; ?></span>
+                                            <?php elseif ($approvedDiff < 0): ?>
+                                                <span class="text-red-600"><?php echo $approvedDiff; ?></span>
                                             <?php else: ?>
                                                 <span>No change</span>
-                                            <?php endif; ?> 
+                                            <?php endif; ?>
                                             from yesterday
                                         </div>
                                     </dd>
@@ -173,8 +173,17 @@ $responseTimeDiff = $prevAvgResponseTime - $avgResponseTime;
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Rejected Today</dt>
                                     <dd>
-                                        <div id="rejectedCount" class="text-xl font-semibold text-gray-900">0</div>
-                                        <div id="rejectedChange" class="text-sm text-gray-500">0 from yesterday</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($rejectedToday); ?></div>
+                                        <div class="text-sm text-gray-500">
+                                            <?php if ($rejectedDiff > 0): ?>
+                                                <span class="text-red-600">+<?php echo $rejectedDiff; ?></span>
+                                            <?php elseif ($rejectedDiff < 0): ?>
+                                                <span class="text-emerald-600"><?php echo $rejectedDiff; ?></span>
+                                            <?php else: ?>
+                                                <span>No change</span>
+                                            <?php endif; ?>
+                                            from yesterday
+                                        </div>
                                     </dd>
                                 </dl>
                             </div>
@@ -192,8 +201,16 @@ $responseTimeDiff = $prevAvgResponseTime - $avgResponseTime;
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Avg. Response Time</dt>
                                     <dd>
-                                        <div id="responseTime" class="text-xl font-semibold text-gray-900">N/A</div>
-                                        <div id="responseTimeDiff" class="text-sm text-gray-500">-</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo $avgResponseTime ? $avgResponseTime . 'h' : 'N/A'; ?></div>
+                                        <div class="text-sm text-gray-500">
+                                            <?php if ($responseTimeDiff > 0): ?>
+                                                <span class="text-red-600"><?php echo $responseTimeDiff; ?>h slower</span>
+                                            <?php elseif ($responseTimeDiff < 0): ?>
+                                                <span class="text-emerald-600"><?php echo abs($responseTimeDiff); ?>h faster</span>
+                                            <?php else: ?>
+                                                <span>No change</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </dd>
                                 </dl>
                             </div>
