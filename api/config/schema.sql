@@ -49,6 +49,7 @@ CREATE TABLE teachers (
     password_hash VARCHAR(255) NOT NULL,
     department_id INT NOT NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
+    resetOnLogin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
@@ -66,10 +67,13 @@ CREATE TABLE students (
     date_of_birth DATE,
     gender ENUM('male', 'female'),
     status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
+    level_id INT NOT NULL,
     program_id INT NOT NULL,
     department_id INT NOT NULL,
+    resetOnLogin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (level_id) REFERENCES levels(level_id) ,
     FOREIGN KEY (program_id) REFERENCES programs(program_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
@@ -195,3 +199,19 @@ SELECT
 FROM student_answers sa
 JOIN choices c ON sa.choice_id = c.choice_id
 GROUP BY sa.registration_id;
+
+CREATE TABLE teacher_courses (
+    teacher_course_id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NOT NULL,
+    course_id INT NOT NULL,
+    assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+   
+
+    CONSTRAINT fk_teacher
+        FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_course
+        FOREIGN KEY (course_id) REFERENCES courses(course_id)
+        ON DELETE CASCADE
+);

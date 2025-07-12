@@ -98,7 +98,7 @@
     </div>
   </div>
   <!-- OTP Modal -->
-  <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+  <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
       <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeModal('otpModal')"><i
           class="fas fa-times"></i></button>

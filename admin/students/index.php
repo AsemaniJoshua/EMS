@@ -1,17 +1,121 @@
-<?php 
-include_once __DIR__ . '/../components/adminSidebar.php'; 
+<?php
+include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/config/database.php';
 $currentPage = 'students';
-?>
 
+// Database connection
+$db = new Database();
+$conn = $db->getConnection();
+
+// Fetch stats
+$totalStudents = 0;
+$activeStudents = 0;
+$totalPrograms = 0;
+$totalDepartments = 0;
+$newStudentsThisMonth = 0;
+$examPassRate = 0.0;
+
+// Total students
+$stmt = $conn->query("SELECT COUNT(*) as count FROM students");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalStudents = $row['count'];
+}
+
+// New students this month
+$currentYear = date('Y');
+$currentMonth = date('m');
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM students WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month");
+$stmt->execute(['year' => $currentYear, 'month' => $currentMonth]);
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $newStudentsThisMonth = $row['count'];
+}
+
+// Active students
+$stmt = $conn->query("SELECT COUNT(*) as count FROM students WHERE status = 'active'");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $activeStudents = $row['count'];
+}
+
+// Programs
+$stmt = $conn->query("SELECT COUNT(*) as count FROM programs");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalPrograms = $row['count'];
+}
+
+// Departments
+$stmt = $conn->query("SELECT COUNT(*) as count FROM departments");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $totalDepartments = $row['count'];
+}
+
+// Exam pass rate (average score_percentage from results table)
+$stmt = $conn->query("SELECT AVG(score_percentage) as avg_score FROM results");
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $examPassRate = $row['avg_score'] ? round($row['avg_score'], 1) : 0.0;
+}
+
+// Fetch programs, departments, levels for filters
+$programs = [];
+$stmt = $conn->query("SELECT name FROM programs ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $programs[] = $row['name'];
+}
+$departments = [];
+$stmt = $conn->query("SELECT name FROM departments ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $departments[] = $row['name'];
+}
+$levels = [];
+$stmt = $conn->query("SELECT name FROM levels ORDER BY name");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $levels[] = $row['name'];
+}
+
+// Pagination setup
+$recordsPerPage = 500;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $recordsPerPage;
+
+// Count total records for pagination
+$countStmt = $conn->query("SELECT COUNT(*) FROM students s 
+    JOIN programs p ON s.program_id = p.program_id
+    JOIN departments d ON s.department_id = d.department_id
+    JOIN levels l ON s.level_id = l.level_id");
+$totalRecords = $countStmt->fetchColumn();
+$totalPages = ceil($totalRecords / $recordsPerPage);
+
+// Fetch students with pagination (include department and level)
+$students = [];
+$stmt = $conn->prepare(
+    "SELECT s.student_id, s.index_number, s.email, s.phone_number, s.username, s.first_name, s.last_name, s.status, 
+            p.name as program_name, d.name as department_name, l.name as level_name
+     FROM students s
+     JOIN programs p ON s.program_id = p.program_id
+     JOIN departments d ON s.department_id = d.department_id
+     JOIN levels l ON s.level_id = l.level_id
+     ORDER BY s.first_name, s.last_name
+     LIMIT :offset, :recordsPerPage"
+);
+$stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+$stmt->bindValue(':recordsPerPage', (int)$recordsPerPage, PDO::PARAM_INT);
+$stmt->execute();
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $students[] = $row;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students - EMS Admin</title>
     <link rel="stylesheet" href="../../src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -33,7 +137,6 @@ $currentPage = 'students';
                         <i class="fas fa-download mr-2 -ml-1"></i>
                         Export
                     </button>
-                   
                     <a href="./add.php">
                         <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                             <i class="fas fa-plus mr-2 -ml-1"></i>
@@ -56,10 +159,13 @@ $currentPage = 'students';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Total Students</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">2,847</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalStudents); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+89</span>
-                                            <span class="ml-1 text-gray-500">from last month</span>
+                                            <span class="text-emerald-600 font-medium">
+                                                <?php echo $newStudentsThisMonth > 0 ? '+' : '';
+                                                echo $newStudentsThisMonth; ?>
+                                            </span>
+                                            <span class="ml-1 text-gray-500">new this month</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -67,10 +173,12 @@ $currentPage = 'students';
                         </div>
                     </div>
                 </div>
-
                 <!-- Active Students -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                     <div class="p-5">
+                        <?php
+                        $activeRate = $totalStudents > 0 ? round(($activeStudents / $totalStudents) * 100, 1) : 0;
+                        ?>
                         <div class="flex items-center">
                             <div class="flex-shrink-0 bg-emerald-50 rounded-lg p-3">
                                 <i class="fas fa-user-check text-emerald-600 text-xl"></i>
@@ -79,9 +187,9 @@ $currentPage = 'students';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Active Students</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">2,695</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($activeStudents); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">94.7%</span>
+                                            <span class="text-emerald-600 font-medium"><?php echo $activeRate; ?>%</span>
                                             <span class="ml-1 text-gray-500">active rate</span>
                                         </div>
                                     </dd>
@@ -90,7 +198,6 @@ $currentPage = 'students';
                         </div>
                     </div>
                 </div>
-
                 <!-- Programs -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                     <div class="p-5">
@@ -102,10 +209,10 @@ $currentPage = 'students';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Programs</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">16</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo number_format($totalPrograms); ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-purple-600 font-medium">Across</span>
-                                            <span class="ml-1 text-gray-500">4 departments</span>
+                                            <span class="ml-1 text-gray-500"><?php echo number_format($totalDepartments); ?> departments</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -113,7 +220,6 @@ $currentPage = 'students';
                         </div>
                     </div>
                 </div>
-
                 <!-- Exam Pass Rate -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                     <div class="p-5">
@@ -125,10 +231,10 @@ $currentPage = 'students';
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Exam Pass Rate</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900">87.2%</div>
+                                        <div class="text-xl font-semibold text-gray-900"><?php echo $examPassRate; ?>%</div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-emerald-600 font-medium">+3.5%</span>
-                                            <span class="ml-1 text-gray-500">since last term</span>
+                                            <span class="text-emerald-600 font-medium"></span>
+                                            <span class="ml-1 text-gray-500">average</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -141,7 +247,7 @@ $currentPage = 'students';
             <!-- Search and Filter Bar -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 mb-6">
                 <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                         <div class="relative">
                             <input type="text" id="searchName" placeholder="Search students..."
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -151,10 +257,21 @@ $currentPage = 'students';
                         </div>
                         <select id="filterProgram" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                             <option value="">All Programs</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Engineering">Engineering</option>
-                            <option value="Business">Business</option>
-                            <option value="Arts">Arts</option>
+                            <?php foreach ($programs as $prog): ?>
+                                <option value="<?php echo htmlspecialchars($prog); ?>"><?php echo htmlspecialchars($prog); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select id="filterDepartment" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="">All Departments</option>
+                            <?php foreach ($departments as $dept): ?>
+                                <option value="<?php echo htmlspecialchars($dept); ?>"><?php echo htmlspecialchars($dept); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select id="filterLevel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="">All Levels</option>
+                            <?php foreach ($levels as $level): ?>
+                                <option value="<?php echo htmlspecialchars($level); ?>"><?php echo htmlspecialchars($level); ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <select id="filterStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                             <option value="">All Status</option>
@@ -171,133 +288,132 @@ $currentPage = 'students';
             </div>
 
             <!-- Students Table -->
-            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-auto">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">All Students</h3>
                 </div>
-                <div class="overflow-x-auto">
+                <div>
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="studentsTable" class="bg-white divide-y divide-gray-200">
-                            <!-- Sample student data -->
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <img class="h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                            <?php foreach ($students as $student): ?>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=<?php echo urlencode($student['first_name'] . ' ' . $student['last_name']); ?>&background=60a5fa&color=fff" alt="">
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?></div>
+                                                <div class="text-sm text-gray-500">ID: <?php echo htmlspecialchars($student['index_number']); ?></div>
+                                            </div>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">Jacob Wilson</div>
-                                            <div class="text-sm text-gray-500">ID: STD10045</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">jacob.wilson@example.com</div>
-                                    <div class="text-sm text-gray-500">+1 (555) 234-5678</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        Computer Science
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5"></span>
-                                        Active
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="viewStudent(1)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button onclick="editStudent(1)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="deleteStudent(1)" class="text-red-600 hover:text-red-900 transition-colors">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-48">
+                                        <div><?php echo htmlspecialchars($student['email']); ?></div>
+                                        <div class="text-gray-500"><?php echo htmlspecialchars($student['phone_number']); ?></div>
+                                    </td>
 
-                            <!-- Add more sample rows here -->
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <img class="h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-28">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <?php echo htmlspecialchars($student['program_name']); ?>
+                                        </span>
+                                    </td>
+
+                                    <td class="px-6 py-4 text-sm text-gray-900 truncate w-32">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <?php echo htmlspecialchars($student['department_name']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <?php echo htmlspecialchars($student['level_name']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                <?php
+                                if ($student['status'] === 'active') echo 'bg-emerald-100 text-emerald-800';
+                                elseif ($student['status'] === 'graduated') echo 'bg-purple-100 text-purple-800';
+                                else echo 'bg-gray-100 text-gray-600';
+                ?>">
+                                            <span class="w-1.5 h-1.5
+                <?php
+                                if ($student['status'] === 'active') echo 'bg-emerald-400';
+                                elseif ($student['status'] === 'graduated') echo 'bg-purple-400';
+                                else echo 'bg-gray-400';
+                ?> rounded-full mr-1.5"></span>
+                                            <?php echo ucfirst($student['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-2">
+                                            <a href="view.php?id=<?php echo $student['student_id']; ?>" class="text-emerald-600 hover:text-emerald-900 transition-colors" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="edit.php?id=<?php echo $student['student_id']; ?>" class="text-blue-600 hover:text-blue-900 transition-colors" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button onclick="deleteStudent(<?php echo $student['student_id']; ?>, '<?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?>')" class="text-red-600 hover:text-red-900 transition-colors border-0 bg-transparent p-0" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">Emma Thompson</div>
-                                            <div class="text-sm text-gray-500">ID: STD10046</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">emma.thompson@example.com</div>
-                                    <div class="text-sm text-gray-500">+1 (555) 345-6789</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                        Engineering
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5"></span>
-                                        Active
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="viewStudent(2)" class="text-emerald-600 hover:text-emerald-900 transition-colors">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button onclick="editStudent(2)" class="text-blue-600 hover:text-blue-900 transition-colors">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button onclick="deleteStudent(2)" class="text-red-600 hover:text-red-900 transition-colors">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-700">
-                            Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">2,847</span> students
+                            <?php
+                            $start = min($offset + 1, $totalRecords);
+                            $end = min($offset + $recordsPerPage, $totalRecords);
+                            ?>
+                            Showing <span class="font-medium"><?php echo $start; ?></span> to <span class="font-medium"><?php echo $end; ?></span> of <span class="font-medium"><?php echo $totalRecords; ?></span> students
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                Previous
-                            </button>
-                            <button class="px-3 py-1 text-sm text-white bg-emerald-600 border border-emerald-600 rounded-md">
-                                1
-                            </button>
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                2
-                            </button>
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                3
-                            </button>
-                            <button class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                Next
-                            </button>
+                            <?php if ($page > 1): ?>
+                                <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                    Previous
+                                </a>
+                            <?php else: ?>
+                                <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
+                                    Previous
+                                </span>
+                            <?php endif; ?>
+
+                            <?php
+                            $startPage = max(1, $page - 2);
+                            $endPage = min($totalPages, $page + 2);
+
+                            for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md <?php echo ($i == $page) ? 'text-white bg-emerald-600 border-emerald-600' : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            <?php endfor; ?>
+
+                            <?php if ($page < $totalPages): ?>
+                                <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                    Next
+                                </a>
+                            <?php else: ?>
+                                <span class="px-3 py-1 text-sm text-gray-300 bg-white border border-gray-200 rounded-md cursor-not-allowed">
+                                    Next
+                                </span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -306,10 +422,31 @@ $currentPage = 'students';
     </main>
 
     <script>
-        // Filter functionality
+        // Toast notifications system
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        function showNotification(message, type = 'info') {
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+
         function filterStudents() {
             const searchName = document.getElementById('searchName').value.toLowerCase();
             const filterProgram = document.getElementById('filterProgram').value;
+            const filterDepartment = document.getElementById('filterDepartment').value;
+            const filterLevel = document.getElementById('filterLevel').value;
             const filterStatus = document.getElementById('filterStatus').value;
 
             const table = document.getElementById('studentsTable');
@@ -319,79 +456,128 @@ $currentPage = 'students';
                 const row = rows[i];
                 const nameCell = row.cells[0];
                 const programCell = row.cells[2];
-                const statusCell = row.cells[3];
+                const departmentCell = row.cells[3];
+                const levelCell = row.cells[4];
+                const statusCell = row.cells[5];
 
-                if (nameCell && programCell && statusCell) {
+                if (nameCell && programCell && departmentCell && levelCell && statusCell) {
                     const name = nameCell.textContent.toLowerCase();
                     const program = programCell.textContent.trim();
+                    const department = departmentCell.textContent.trim();
+                    const level = levelCell.textContent.trim();
                     const status = statusCell.textContent.toLowerCase();
 
                     const nameMatch = searchName === '' || name.includes(searchName);
                     const programMatch = filterProgram === '' || program === filterProgram;
+                    const departmentMatch = filterDepartment === '' || department === filterDepartment;
+                    const levelMatch = filterLevel === '' || level === filterLevel;
                     const statusMatch = filterStatus === '' || status.includes(filterStatus.toLowerCase());
 
-                    if (nameMatch && programMatch && statusMatch) {
+                    if (nameMatch && programMatch && departmentMatch && levelMatch && statusMatch) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
                     }
                 }
             }
-
-            showNotification('Students filtered successfully!', 'success');
-        }
-
-        // Student actions
-        function viewStudent(id) {
-            window.location.href = `view.php?id=${id}`;
-        }
-
-        function editStudent(id) {
-            window.location.href = `edit.php?id=${id}`;
-        }
-
-        function deleteStudent(id) {
-            if (confirm('Are you sure you want to delete this student?')) {
-                showNotification('Student deleted successfully!', 'success');
-                // Add delete functionality here
-            }
         }
 
         function exportStudents() {
             showNotification('Exporting students data...', 'info');
-            // Add export functionality here
+            const table = document.getElementById('studentsTable');
+            if (!table) return;
+
+            let csv = 'Name,Email,Phone,Program,Department,Level,Status\n';
+
+            for (let i = 0; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                if (row.style.display !== 'none') {
+                    const name = row.cells[0].textContent.trim().split('ID:')[0].trim();
+                    const emailElem = row.cells[1].querySelector('.text-gray-900');
+                    const phoneElem = row.cells[1].querySelector('.text-gray-500');
+                    const email = emailElem ? emailElem.textContent.trim() : '';
+                    const phone = phoneElem ? phoneElem.textContent.trim() : '';
+                    const program = row.cells[2].textContent.trim();
+                    const department = row.cells[3].textContent.trim();
+                    const level = row.cells[4].textContent.trim();
+                    const status = row.cells[5].textContent.trim();
+
+                    csv += `"${name}","${email}","${phone}","${program}","${department}","${level}","${status}"\n`;
+                }
+            }
+
+            const blob = new Blob([csv], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'students_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification('Export complete!', 'success');
         }
 
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
+        function deleteStudent(studentId, studentName) {
+    Swal.fire({
+        title: 'Delete Student',
+        html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading notification
+            Swal.fire({
+                title: 'Deleting...',
+                text: 'Please wait while the student is being deleted.',
+                icon: 'info',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out`;
-            toast.textContent = message;
+            // Send delete request
+            axios.post('/api/students/deleteStudent.php', { student_id: studentId })
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: response.data.message
+                        });
 
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
+                        // Remove the student row from the table
+                        const row = document.querySelector(`button[onclick="deleteStudent(${studentId}, '${studentName}')"]`).closest('tr');
+                        if (row) row.remove();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.data.message
+                        });
                     }
-                }, 300);
-            }, 3000);
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while deleting the student. Please try again later.'
+                    });
+                    console.error(error);
+                });
         }
+    });
+}
 
         // Real-time search
         document.getElementById('searchName').addEventListener('input', function() {
@@ -402,6 +588,8 @@ $currentPage = 'students';
 
         // Auto-filter on dropdown change
         document.getElementById('filterProgram').addEventListener('change', filterStudents);
+        document.getElementById('filterDepartment').addEventListener('change', filterStudents);
+        document.getElementById('filterLevel').addEventListener('change', filterStudents);
         document.getElementById('filterStatus').addEventListener('change', filterStudents);
     </script>
 </body>
