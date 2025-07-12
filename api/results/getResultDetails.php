@@ -63,9 +63,11 @@ try {
         SELECT 
             q.question_id,
             q.question_text,
+            q.sequence_number,
             sa.choice_id as student_choice_id,
             student_choice.choice_text as student_answer,
             student_choice.is_correct,
+            correct_choice.choice_id as correct_choice_id,
             correct_choice.choice_text as correct_answer
         FROM exam_registrations er
         JOIN results r ON er.registration_id = r.registration_id
@@ -82,11 +84,40 @@ try {
     $stmt->execute();
     $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Fetch all choices for each question
+    $questionChoices = [];
+    foreach ($questions as $question) {
+        $choicesQuery = "
+            SELECT 
+                choice_id,
+                choice_text,
+                is_correct
+            FROM choices
+            WHERE question_id = :question_id
+            ORDER BY choice_id
+        ";
+
+        $choicesStmt = $conn->prepare($choicesQuery);
+        $choicesStmt->bindValue(':question_id', $question['question_id'], PDO::PARAM_INT);
+        $choicesStmt->execute();
+        $choices = $choicesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $questionChoices[$question['question_id']] = $choices;
+    }
+
+    // Add all choices to each question
+    foreach ($questions as &$question) {
+        $question['all_choices'] = $questionChoices[$question['question_id']];
+    }
+    unset($question); // Break the reference
+
+    // Add questions to result
+    $result['questions'] = $questions;
+
     // Return the data
     echo json_encode([
         'success' => true,
-        'result' => $result,
-        'questions' => $questions
+        'result' => $result
     ]);
 } catch (Exception $e) {
     http_response_code(500); // Internal Server Error
