@@ -3,6 +3,9 @@
 header('Content-Type: text/html');
 require_once '../config/database.php';
 
+// Determine the report type
+$reportType = isset($_REQUEST['report_type']) ? $_REQUEST['report_type'] : 'student_results';
+
 // Build filters from request parameters
 $filters = [];
 $params = [];
@@ -22,6 +25,13 @@ if (!empty($_REQUEST['exam'])) {
     $filters[] = '(e.title LIKE :exam OR e.exam_code LIKE :exam)';
     $params[':exam'] = $exam;
     $filterDescriptions[] = "Exam: " . $_REQUEST['exam'];
+}
+
+// Specific exam ID filter
+$examTitle = '';
+if (!empty($_REQUEST['exam_id'])) {
+    $filters[] = 'e.exam_id = :exam_id';
+    $params[':exam_id'] = intval($_REQUEST['exam_id']);
 }
 
 // Department filter
@@ -56,6 +66,19 @@ if (!empty($_REQUEST['status'])) {
     }
 }
 
+// Score range filters
+if (!empty($_REQUEST['score_min'])) {
+    $filters[] = 'r.score_percentage >= :score_min';
+    $params[':score_min'] = floatval($_REQUEST['score_min']);
+    $filterDescriptions[] = "Min Score: " . floatval($_REQUEST['score_min']) . "%";
+}
+
+if (!empty($_REQUEST['score_max'])) {
+    $filters[] = 'r.score_percentage <= :score_max';
+    $params[':score_max'] = floatval($_REQUEST['score_max']);
+    $filterDescriptions[] = "Max Score: " . floatval($_REQUEST['score_max']) . "%";
+}
+
 // Date range filters
 if (!empty($_REQUEST['date_from'])) {
     $filters[] = 'DATE(r.completed_at) >= :date_from';
@@ -79,6 +102,17 @@ try {
     // Initialize database connection
     $db = new Database();
     $conn = $db->getConnection();
+
+    // Fetch exam title if specific exam filter is applied
+    if (!empty($_REQUEST['exam_id'])) {
+        $stmt = $conn->prepare("SELECT title, exam_code FROM exams WHERE exam_id = :id");
+        $stmt->bindValue(':id', intval($_REQUEST['exam_id']));
+        $stmt->execute();
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $examTitle = $row['title'] . ' (' . $row['exam_code'] . ')';
+            $filterDescriptions[] = "Exam: " . $examTitle;
+        }
+    }
 
     // Fetch department name if filter is applied
     if (!empty($_REQUEST['department_id'])) {
@@ -113,83 +147,179 @@ try {
         }
     }
 
-    // Get total count
-    $countQuery = "
-        SELECT COUNT(*) as total 
-        FROM results r
-        JOIN exam_registrations er ON r.registration_id = er.registration_id
-        JOIN students s ON er.student_id = s.student_id
-        JOIN exams e ON er.exam_id = e.exam_id
-        JOIN courses c ON e.course_id = c.course_id
-        JOIN departments d ON e.department_id = d.department_id
-        JOIN programs p ON e.program_id = p.program_id
-        $whereClause
-    ";
+    if ($reportType === 'exams_summary') {
+        // For exam summary report type
 
-    $countStmt = $conn->prepare($countQuery);
-    foreach ($params as $key => $value) {
-        $countStmt->bindValue($key, $value);
+        // Count total exams
+        $countQuery = "
+            SELECT COUNT(DISTINCT e.exam_id) as total 
+            FROM exams e
+            LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id
+            LEFT JOIN results r ON er.registration_id = r.registration_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+        ";
+
+        $countStmt = $conn->prepare($countQuery);
+        foreach ($params as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+        $countStmt->execute();
+        $totalResults = $countStmt->fetchColumn();
+
+        // Get overall statistics
+        $statsQuery = "
+            SELECT 
+                AVG(exam_stats.avg_score) as avg_score,
+                MIN(exam_stats.min_score) as min_score,
+                MAX(exam_stats.max_score) as max_score,
+                SUM(exam_stats.passed) as passed,
+                SUM(exam_stats.failed) as failed
+            FROM (
+                SELECT 
+                    e.exam_id,
+                    AVG(r.score_percentage) as avg_score,
+                    MIN(r.score_percentage) as min_score,
+                    MAX(r.score_percentage) as max_score,
+                    COUNT(CASE WHEN r.score_percentage >= 50 THEN 1 END) as passed,
+                    COUNT(CASE WHEN r.score_percentage < 50 THEN 1 END) as failed
+                FROM exams e
+                LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id
+                LEFT JOIN results r ON er.registration_id = r.registration_id
+                JOIN courses c ON e.course_id = c.course_id
+                JOIN departments d ON e.department_id = d.department_id
+                JOIN programs p ON e.program_id = p.program_id
+                $whereClause
+                GROUP BY e.exam_id
+            ) as exam_stats
+        ";
+
+        $statsStmt = $conn->prepare($statsQuery);
+        foreach ($params as $key => $value) {
+            $statsStmt->bindValue($key, $value);
+        }
+        $statsStmt->execute();
+        $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
+        // Calculate pass rate
+        $passRate = 0;
+        $totalStudentsWithResults = $stats['passed'] + $stats['failed'];
+        if ($totalStudentsWithResults > 0) {
+            $passRate = ($stats['passed'] / $totalStudentsWithResults) * 100;
+        }
+
+        // Fetch exam summary data
+        $query = "
+            SELECT 
+                e.title as exam_title,
+                e.exam_code,
+                c.code as course_code,
+                c.title as course_title,
+                d.name as department_name,
+                p.name as program_name,
+                COUNT(DISTINCT er.student_id) as total_students,
+                COUNT(DISTINCT r.result_id) as submitted_results,
+                MAX(r.completed_at) as last_completed,
+                AVG(r.score_percentage) as avg_score,
+                MIN(r.score_percentage) as min_score,
+                MAX(r.score_percentage) as max_score,
+                ROUND((SUM(CASE WHEN r.score_percentage >= 50 THEN 1 ELSE 0 END) / COUNT(r.result_id)) * 100, 1) as pass_rate,
+                SUM(CASE WHEN r.score_percentage >= 50 THEN 1 ELSE 0 END) as pass_count,
+                SUM(CASE WHEN r.score_percentage < 50 THEN 1 ELSE 0 END) as fail_count,
+                DATE_FORMAT(e.exam_date, '%M %d, %Y') as exam_date
+            FROM exams e
+            LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id
+            LEFT JOIN results r ON er.registration_id = r.registration_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+            GROUP BY e.exam_id
+            ORDER BY e.title ASC
+        ";
+    } else {
+        // For individual student results (default)
+
+        // Get total count
+        $countQuery = "
+            SELECT COUNT(*) as total 
+            FROM results r
+            JOIN exam_registrations er ON r.registration_id = er.registration_id
+            JOIN students s ON er.student_id = s.student_id
+            JOIN exams e ON er.exam_id = e.exam_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+        ";
+
+        $countStmt = $conn->prepare($countQuery);
+        foreach ($params as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+        $countStmt->execute();
+        $totalResults = $countStmt->fetchColumn();
+
+        // Get statistics
+        $statsQuery = "
+            SELECT 
+                AVG(r.score_percentage) as avg_score,
+                MIN(r.score_percentage) as min_score,
+                MAX(r.score_percentage) as max_score,
+                COUNT(CASE WHEN r.score_percentage >= 50 THEN 1 END) as passed,
+                COUNT(CASE WHEN r.score_percentage < 50 THEN 1 END) as failed
+            FROM results r
+            JOIN exam_registrations er ON r.registration_id = er.registration_id
+            JOIN students s ON er.student_id = s.student_id
+            JOIN exams e ON er.exam_id = e.exam_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+        ";
+
+        $statsStmt = $conn->prepare($statsQuery);
+        foreach ($params as $key => $value) {
+            $statsStmt->bindValue($key, $value);
+        }
+        $statsStmt->execute();
+        $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
+        // Calculate pass rate
+        $passRate = 0;
+        if ($totalResults > 0) {
+            $passRate = ($stats['passed'] / $totalResults) * 100;
+        }
+
+        // Fetch recent results (limit to 50 for the report)
+        $query = "
+            SELECT 
+                CONCAT(s.first_name, ' ', s.last_name) as student_name,
+                s.index_number,
+                e.title as exam_title,
+                e.exam_code,
+                c.code as course_code,
+                c.title as course_title,
+                d.name as department_name,
+                p.name as program_name,
+                r.score_percentage,
+                r.correct_answers,
+                r.total_questions,
+                DATE_FORMAT(r.completed_at, '%M %d, %Y') as completed_at
+            FROM results r
+            JOIN exam_registrations er ON r.registration_id = er.registration_id
+            JOIN students s ON er.student_id = s.student_id
+            JOIN exams e ON er.exam_id = e.exam_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+            ORDER BY r.completed_at DESC
+            LIMIT 50
+        ";
     }
-    $countStmt->execute();
-    $totalResults = $countStmt->fetchColumn();
-
-    // Get statistics
-    $statsQuery = "
-        SELECT 
-            AVG(r.score_percentage) as avg_score,
-            MIN(r.score_percentage) as min_score,
-            MAX(r.score_percentage) as max_score,
-            COUNT(CASE WHEN r.score_percentage >= 50 THEN 1 END) as passed,
-            COUNT(CASE WHEN r.score_percentage < 50 THEN 1 END) as failed
-        FROM results r
-        JOIN exam_registrations er ON r.registration_id = er.registration_id
-        JOIN students s ON er.student_id = s.student_id
-        JOIN exams e ON er.exam_id = e.exam_id
-        JOIN courses c ON e.course_id = c.course_id
-        JOIN departments d ON e.department_id = d.department_id
-        JOIN programs p ON e.program_id = p.program_id
-        $whereClause
-    ";
-
-    $statsStmt = $conn->prepare($statsQuery);
-    foreach ($params as $key => $value) {
-        $statsStmt->bindValue($key, $value);
-    }
-    $statsStmt->execute();
-    $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
-
-    // Calculate pass rate
-    $passRate = 0;
-    if ($totalResults > 0) {
-        $passRate = ($stats['passed'] / $totalResults) * 100;
-    }
-
-    // Fetch recent results (limit to 50 for the report)
-    $query = "
-        SELECT 
-            CONCAT(s.first_name, ' ', s.last_name) as student_name,
-            s.index_number,
-            e.title as exam_title,
-            e.exam_code,
-            c.code as course_code,
-            c.title as course_title,
-            d.name as department_name,
-            p.name as program_name,
-            r.score_percentage,
-            r.correct_answers,
-            r.total_questions,
-            DATE_FORMAT(r.completed_at, '%M %d, %Y') as completed_at
-        FROM results r
-        JOIN exam_registrations er ON r.registration_id = er.registration_id
-        JOIN students s ON er.student_id = s.student_id
-        JOIN exams e ON er.exam_id = e.exam_id
-        JOIN courses c ON e.course_id = c.course_id
-        JOIN departments d ON e.department_id = d.department_id
-        JOIN programs p ON e.program_id = p.program_id
-        $whereClause
-        ORDER BY r.completed_at DESC
-        LIMIT 50
-    ";
 
     $stmt = $conn->prepare($query);
     foreach ($params as $key => $value) {
@@ -381,32 +511,71 @@ try {
 
         <h2>Results Summary</h2>
         <?php if (count($results) > 0): ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Student</th>
-                        <th>Student ID</th>
-                        <th>Exam</th>
-                        <th>Course</th>
-                        <th>Score</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($results as $result): ?>
+            <?php if ($reportType === 'exams_summary'): ?>
+                <table>
+                    <thead>
                         <tr>
-                            <td><?php echo htmlspecialchars($result['student_name']); ?></td>
-                            <td><?php echo htmlspecialchars($result['index_number']); ?></td>
-                            <td><?php echo htmlspecialchars($result['exam_title']); ?></td>
-                            <td><?php echo htmlspecialchars($result['course_code'] . ' - ' . $result['course_title']); ?></td>
-                            <td class="score-cell <?php echo $result['score_percentage'] >= 50 ? 'pass' : 'fail'; ?>">
-                                <?php echo number_format($result['score_percentage'], 1); ?>%
-                                (<?php echo $result['correct_answers']; ?>/<?php echo $result['total_questions']; ?>)
-                            </td>
-                            <td><?php echo htmlspecialchars($result['completed_at']); ?></td>
+                            <th>Exam</th>
+                            <th>Course</th>
+                            <th>Department</th>
+                            <th>Program</th>
+                            <th>Students</th>
+                            <th>Average Score</th>
+                            <th>Pass Rate</th>
+                            <th>Last Activity</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($results as $result): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($result['exam_title']); ?> (<?php echo htmlspecialchars($result['exam_code']); ?>)</td>
+                                <td><?php echo htmlspecialchars($result['course_code'] . ' - ' . $result['course_title']); ?></td>
+                                <td><?php echo htmlspecialchars($result['department_name']); ?></td>
+                                <td><?php echo htmlspecialchars($result['program_name']); ?></td>
+                                <td><?php echo $result['total_students']; ?> (<?php echo $result['submitted_results']; ?> submitted)</td>
+                                <td class="score-cell">
+                                    <?php echo number_format($result['avg_score'], 1); ?>%
+                                    <small>(Range: <?php echo number_format($result['min_score'], 1); ?>% - <?php echo number_format($result['max_score'], 1); ?>%)</small>
+                                </td>
+                                <td class="<?php echo $result['pass_rate'] >= 50 ? 'pass' : 'fail'; ?>">
+                                    <?php echo number_format($result['pass_rate'], 1); ?>%
+                                    (<?php echo $result['pass_count']; ?>/<?php echo $result['pass_count'] + $result['fail_count']; ?>)
+                                </td>
+                                <td><?php echo $result['last_completed'] ? date('M d, Y', strtotime($result['last_completed'])) : 'N/A'; ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Student ID</th>
+                            <th>Exam</th>
+                            <th>Course</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($results as $result): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($result['student_name']); ?></td>
+                                <td><?php echo htmlspecialchars($result['index_number']); ?></td>
+                                <td><?php echo htmlspecialchars($result['exam_title']); ?></td>
+                                <td><?php echo htmlspecialchars($result['course_code'] . ' - ' . $result['course_title']); ?></td>
+                                <td class="score-cell <?php echo $result['score_percentage'] >= 50 ? 'pass' : 'fail'; ?>">
+                                    <?php echo number_format($result['score_percentage'], 1); ?>%
+                                    (<?php echo $result['correct_answers']; ?>/<?php echo $result['total_questions']; ?>)
+                                </td>
+                                <td><?php echo htmlspecialchars($result['completed_at']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+            </tbody>
             </table>
             <?php if ($totalResults > 50): ?>
                 <p><em>Showing 50 of <?php echo number_format($totalResults); ?> results. Export to CSV to see all results.</em></p>

@@ -34,6 +34,8 @@ $stmt = $conn->prepare("
         (SELECT COUNT(*) FROM exam_registrations er WHERE er.exam_id = e.exam_id) AS registered_students,
         (SELECT COUNT(*) FROM results r JOIN exam_registrations er ON r.registration_id = er.registration_id 
             WHERE er.exam_id = e.exam_id) AS submitted_results,
+        (SELECT COUNT(*) FROM results r JOIN exam_registrations er ON r.registration_id = er.registration_id 
+            WHERE er.exam_id = e.exam_id) AS completed_results,
         (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.exam_id) AS total_questions
     FROM exams e
     JOIN courses c ON e.course_id = c.course_id
@@ -50,7 +52,7 @@ if (!$exam) {
     exit;
 }
 
-// Fetch exam statistics
+// Fetch exam statistics for all completed exams
 $stmt = $conn->prepare("
     SELECT 
         COUNT(r.result_id) as total_results,
@@ -67,7 +69,7 @@ $stmt = $conn->prepare("
 $stmt->execute([':exam_id' => $examId]);
 $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch score distribution
+// Fetch score distribution for all exams
 $stmt = $conn->prepare("
     SELECT 
         CASE 
@@ -100,7 +102,7 @@ foreach ($distribution as $range) {
     $distributionCounts[] = intval($range['count']);
 }
 
-// Fetch recent results
+// Fetch all recent results
 $stmt = $conn->prepare("
     SELECT 
         r.result_id,
@@ -125,7 +127,7 @@ $stmt = $conn->prepare("
 $stmt->execute([':exam_id' => $examId]);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch question performance data
+// Fetch question performance data for all exams
 $stmt = $conn->prepare("
     SELECT 
         q.question_id,
@@ -137,6 +139,7 @@ $stmt = $conn->prepare("
     JOIN student_answers sa ON q.question_id = sa.question_id
     JOIN choices c ON sa.choice_id = c.choice_id
     JOIN exam_registrations er ON sa.registration_id = er.registration_id
+    JOIN results r ON sa.registration_id = r.registration_id
     WHERE q.exam_id = :exam_id
     GROUP BY q.question_id, q.question_text
     ORDER BY correct_percentage DESC
