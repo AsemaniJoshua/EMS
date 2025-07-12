@@ -1,7 +1,7 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
-include_once __DIR__ . '/../components/adminSidebar.php';
-include_once __DIR__ . '/../components/adminHeader.php';
+require_once __DIR__ . '/../../api/login/sessionCheck.php';
+require_once __DIR__ . '/../components/adminSidebar.php';
+require_once __DIR__ . '/../components/adminHeader.php';
 require_once __DIR__ . '/../../api/config/database.php';
 
 $currentPage = 'approval';

@@ -25,10 +25,7 @@ function fetchExams(status = 'Pending') {
         });
 }
 
-// This function is no longer needed as stats are now loaded directly via PHP
-function fetchApprovalStats() {
-    // Left empty as stats are now handled server-side
-}
+
 
 function populateExams(exams) {
     const table = document.getElementById('approvalTable');
@@ -106,11 +103,6 @@ function populateExams(exams) {
     });
 }
 
-function updateStatCards(stats) {
-    // This function is no longer needed for stat cards as they are now updated directly via PHP
-    // We only need to update the approval count in the table
-}
-
 function approveExam(id) {
     // Confirm before approving
     Swal.fire({
@@ -175,9 +167,12 @@ function processApproval(id, action, comment = '') {
         .then(data => {
             if (data.success) {
                 showNotification(data.message, 'success');
-                // Refresh the exam list and stats
+                // Refresh the exam list
                 fetchExams();
-                fetchApprovalStats();
+                // Reload the page to update PHP-loaded stats
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
                 showNotification(data.message, 'error');
             }
@@ -210,18 +205,88 @@ function bulkApprove() {
         confirmButtonText: 'Yes, approve all!'
     }).then((result) => {
         if (result.isConfirmed) {
-            showNotification('Bulk approval feature is not fully implemented yet', 'info');
-            // This would call a bulk approve API endpoint in a complete implementation
+            // Show loading indicator
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Approving all pending exams',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Make the API call to bulk approve
+            fetch('../../api/exams/bulkApprove.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Request failed');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message || `${data.approvedCount} exams have been approved.`,
+                            icon: 'success',
+                            confirmButtonColor: '#10B981'
+                        });
+                        // Refresh the exam list and stats
+                        fetchExams();
+                        // Stats are now loaded via PHP
+                    } else {
+                        throw new Error(data.message || 'Failed to bulk approve exams');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message,
+                        icon: 'error',
+                        confirmButtonColor: '#EF4444'
+                    });
+                });
         }
     });
 }
 
 function exportReport() {
     showNotification('Generating report...', 'info');
-    // This would generate a report in a complete implementation
-    setTimeout(() => {
-        showNotification('Report generation is not fully implemented yet', 'info');
-    }, 1500);
+
+    // Get the current filter status
+    const filterStatus = document.getElementById('filterStatus').value;
+
+    // Make API call to generate the report
+    fetch(`../../api/exams/exportApprovalReport.php?status=${filterStatus}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Request failed');
+            return response.blob();
+        })
+        .then(blob => {
+            // Create a download link for the CSV file
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = `exam_approvals_${filterStatus.toLowerCase()}_${date}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            showNotification('Report downloaded successfully', 'success');
+        })
+        .catch(error => {
+            showNotification('Error generating report: ' + error.message, 'error');
+        });
 }
 
 function showNotification(message, type = 'info') {
@@ -237,4 +302,4 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         toast.remove();
     }, 3000);
-} 
+}
