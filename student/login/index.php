@@ -3,109 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examplify - Secure Login</title>
-    <!-- Tailwind CSS CDN -->
-    <link href="../../src/output.css" rel="stylesheet">
-    <style>
-        /* Custom styles for Inter font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-    </style>
+    <title>Student Login - EMS</title>
+    <link rel="stylesheet" href="/src/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom login script -->
+    <script src="login.js"></script>
 </head>
-<body class="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-100 to-green-100">
-    <div class="max-w-md w-full space-y-8 p-6 sm:p-8 bg-white rounded-lg shadow-md border border-gray-200">
-        <div class="text-center">
-            <!-- Examplify Logo/Icon - More prominent and refined -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-emerald-600 mb-4">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
-            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-                Welcome Back to <span class="text-emerald-600">Examplify</span>
-            </h2>
-            <p class="mt-2 text-base text-gray-600">
-                Your secure portal for academic excellence
-            </p>
+<body class="bg-gray-50 min-h-screen">
+    <div class="min-h-screen grid lg:grid-cols-2">
+        <!-- Left Panel - Image Section -->
+        <div class="hidden lg:flex relative h-screen bg-gradient-to-br from-emerald-600 to-emerald-800">
+            <!-- <div class="absolute inset-0 bg-black/20"></div>
+            <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1503676382389-4809596d5290?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/80 to-emerald-800/60"></div> -->
+            <div class="absolute inset-0 bg-black/20"></div>
+            <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1503676382389-4809596d5290?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-green-600/80 to-green-800/60"></div>
+            
+            <!-- Content overlay -->
+            <div class="relative z-10 flex flex-col justify-center px-12 text-white">
+                <div class="max-w-md">
+                    <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8">
+                        <i class="fa-solid fa-graduation-cap text-2xl text-white"></i>
         </div>
-        <form class="mt-8 space-y-6" method="POST" id="login-form">
-            <div class="space-y-4">
-                <div>
-                    <label for="email-address" class="sr-only">Email address</label>
-                    <input id="email-address" name="email" type="email" autocomplete="email" required
-                           class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
-                           placeholder="Enter your email address">
+                    <h1 class="text-4xl font-bold mb-4">Student Portal</h1>
+                    <p class="text-lg text-emerald-100 mb-8">Access your learning dashboard and take examinations with confidence.</p>
+                    <div class="flex items-center gap-3 text-emerald-100">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                        <span>Secure & Reliable Platform</span>
                 </div>
-                <div>
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required
-                           class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
-                           placeholder="Enter your password">
+                </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center">
-                    <input id="remember-me" name="remember-me" type="checkbox"
-                           class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
-                    <label for="remember-me" class="ml-2 block text-gray-900">
-                        Remember me
-                    </label>
+        <!-- Right Panel - Form Section -->
+        <div class="flex items-center justify-center p-8 lg:p-12">
+            <div class="w-full max-w-md">
+                <!-- Mobile header (hidden on lg+) -->
+                <div class="lg:hidden text-center mb-8">
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fa-solid fa-graduation-cap text-xl text-emerald-600"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900">Student Login</h1>
                 </div>
 
-                <div>
-                    <a href="#" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
-                        Forgot password?
-                    </a>
+                <!-- Form header -->
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+                    <p class="text-gray-600">Please sign in to your student account</p>
                 </div>
+
+                <!-- Login form -->
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email-address" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email-address"
+                            name="email"
+                            placeholder="Enter your email address" 
+                            required 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
+                        />
             </div>
 
             <div>
-                <button type="submit"
-                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 shadow-lg transform hover:-translate-y-1">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <!-- Lock icon -->
-                        <svg class="h-6 w-6 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                        </svg>
-                    </span>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password" 
+                            required 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
+                        />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                id="remember-me" 
+                                name="remember-me" 
+                                class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 mr-2"
+                            >
+                            <span class="text-sm text-gray-600">Remember me</span>
+                        </label>
+                        <a href="forgot-password/index.php" class="text-sm text-emerald-600 hover:text-emerald-500 font-medium">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                        <i class="fa-solid fa-sign-in-alt"></i>
                     Sign In
                 </button>
-            </div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-semibold">Login</button>
         </form>
-        <p class="mt-6 text-center text-base text-gray-600">
+
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-gray-600">
             Don't have an account?
-            <a href="#" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
+                        <a href="../signup/index.php" class="text-emerald-600 hover:text-emerald-500 font-medium">
                 Register here
             </a>
         </p>
     </div>
-
-    <script>
-        // Basic JavaScript for form submission (for demonstration)
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-
-            const email = document.getElementById('email-address').value;
-            const password = document.getElementById('password').value;
-
-            // In a real application, you would send this data to a backend server
-            // using fetch() or XMLHttpRequest.
-            console.log('Login attempt with:');
-            console.log('Email:', email);
-            console.log('Password:', password);
-
-            // You might show a loading spinner or a success/error message here
-            // For now, just a simple alert for demonstration
-            alert('Login form submitted! (Check console for details)');
-        });
-    </script>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

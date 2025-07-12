@@ -1,0 +1,38 @@
+<?php
+require_once __DIR__ . '/api/config/database.php';
+
+// Departments to add
+$departments = [
+    ['name' => 'Science', 'description' => 'Department of Science'],
+    ['name' => 'Mathematics', 'description' => 'Department of Mathematics'],
+    ['name' => 'English', 'description' => 'Department of English Language and Literature'],
+    ['name' => 'Social Studies', 'description' => 'Department of Social Studies'],
+    ['name' => 'Computer Science', 'description' => 'Department of Computer Science'],
+    ['name' => 'Arts', 'description' => 'Department of Arts'],
+];
+
+// Connect to the database
+$db = new Database();
+$conn = $db->getConnection();
+
+foreach ($departments as $dept) {
+    // Check if department already exists
+    $stmt = $conn->prepare('SELECT * FROM departments WHERE name = :name');
+    $stmt->execute(['name' => $dept['name']]);
+    if ($stmt->fetch()) {
+        echo "Department '{$dept['name']}' already exists.<br>";
+        continue;
+    }
+    // Insert department
+    $stmt = $conn->prepare('INSERT INTO departments (name, description) VALUES (:name, :description)');
+    $success = $stmt->execute([
+        'name' => $dept['name'],
+        'description' => $dept['description']
+    ]);
+    if ($success) {
+        echo "Department '{$dept['name']}' added successfully.<br>";
+    } else {
+        echo "Failed to add department '{$dept['name']}'.<br>";
+    }
+}
+echo '<br><b>Delete this file after use for security.</b>'; 

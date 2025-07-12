@@ -28,32 +28,31 @@ try {
     $query = "
         SELECT 
             r.result_id,
-            r.student_id,
-            r.exam_id,
+            r.registration_id,
             r.total_questions,
             r.correct_answers,
             r.incorrect_answers,
             r.score_percentage,
-            r.completed_at,
-            s.first_name,
-            s.last_name,
+            DATE_FORMAT(r.completed_at, '%M %d, %Y %H:%i') as completed_at,
+            s.student_id,
             CONCAT(s.first_name, ' ', s.last_name) as student_name,
             s.index_number,
             s.email,
-            p.program_id,
-            p.name as program_name,
+            e.exam_id,
             e.title as exam_title,
             e.exam_code,
+            c.course_id,
             c.code as course_code,
             c.title as course_title,
-            d.name as department_name
+            d.name as department_name,
+            p.name as program_name
         FROM results r
-        JOIN students s ON r.student_id = s.student_id
-        JOIN programs p ON s.program_id = p.program_id
         JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN students s ON er.student_id = s.student_id
         JOIN exams e ON er.exam_id = e.exam_id
         JOIN courses c ON e.course_id = c.course_id
-        JOIN departments d ON c.department_id = d.department_id
+        JOIN departments d ON e.department_id = d.department_id
+        JOIN programs p ON e.program_id = p.program_id
         WHERE r.result_id = :result_id
     ";
 
@@ -74,14 +73,18 @@ try {
             q.question_id,
             q.question_text,
             q.sequence_number,
-            sa.student_answer,
-            (SELECT option_text FROM options WHERE question_id = q.question_id AND is_correct = 1 LIMIT 1) as correct_answer,
-            (SELECT option_id FROM options WHERE question_id = q.question_id AND is_correct = 1 LIMIT 1) as correct_option_id,
-            sa.option_id as selected_option_id,
-            (SELECT is_correct FROM options WHERE option_id = sa.option_id) as is_correct
-        FROM questions q
-        JOIN student_answers sa ON q.question_id = sa.question_id
-        WHERE sa.result_id = :result_id
+            sa.choice_id as student_choice_id,
+            student_choice.choice_text as student_answer,
+            student_choice.is_correct,
+            correct_choice.choice_id as correct_choice_id,
+            correct_choice.choice_text as correct_answer
+        FROM exam_registrations er
+        JOIN results r ON er.registration_id = r.registration_id
+        JOIN questions q ON q.exam_id = er.exam_id
+        JOIN student_answers sa ON sa.question_id = q.question_id AND sa.registration_id = er.registration_id
+        JOIN choices student_choice ON student_choice.choice_id = sa.choice_id
+        LEFT JOIN choices correct_choice ON correct_choice.question_id = q.question_id AND correct_choice.is_correct = TRUE
+        WHERE r.result_id = :result_id
         ORDER BY q.sequence_number
     ";
 
@@ -89,6 +92,33 @@ try {
     $stmt->bindValue(':result_id', $resultId, PDO::PARAM_INT);
     $stmt->execute();
     $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch all choices for each question
+    $questionChoices = [];
+    foreach ($questions as $question) {
+        $choicesQuery = "
+            SELECT 
+                choice_id,
+                choice_text,
+                is_correct
+            FROM choices
+            WHERE question_id = :question_id
+            ORDER BY choice_id
+        ";
+
+        $choicesStmt = $conn->prepare($choicesQuery);
+        $choicesStmt->bindValue(':question_id', $question['question_id'], PDO::PARAM_INT);
+        $choicesStmt->execute();
+        $choices = $choicesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $questionChoices[$question['question_id']] = $choices;
+    }
+
+    // Add all choices to each question
+    foreach ($questions as &$question) {
+        $question['all_choices'] = $questionChoices[$question['question_id']];
+    }
+    unset($question); // Break the reference
 } catch (Exception $e) {
     $_SESSION['error'] = "Error loading result details: " . $e->getMessage();
     header('Location: index.php');
@@ -110,12 +140,10 @@ try {
 </head>
 
 <body class="bg-gray-50 min-h-screen">
-    <?php include_once __DIR__ . '/../components/adminHeader.php'; ?>
-    
-    <main class="flex">
-        <!-- Sidebar -->
-        <?php include_once __DIR__ . '/../components/adminSidebar.php'; ?>
-        
+    <?php renderAdminSidebar($currentPage); ?>
+    <?php renderAdminHeader(); ?>
+
+    <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300 flex">
         <!-- Main content -->
         <div class="flex-grow p-6">
             <div class="flex justify-between items-center mb-6">
@@ -147,7 +175,7 @@ try {
                             <div><span class="font-medium">Date Completed:</span> <?php echo htmlspecialchars($resultData['completed_at']); ?></div>
                         </div>
                     </div>
-                    
+
                     <!-- Student Information -->
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-gray-900">Student Information</h3>
@@ -156,16 +184,16 @@ try {
                             <div><span class="font-medium">ID:</span> <?php echo htmlspecialchars($resultData['index_number']); ?></div>
                             <div><span class="font-medium">Program:</span> <?php echo htmlspecialchars($resultData['program_name']); ?></div>
                             <?php if (!empty($resultData['email'])): ?>
-                            <div><span class="font-medium">Email:</span> <?php echo htmlspecialchars($resultData['email']); ?></div>
+                                <div><span class="font-medium">Email:</span> <?php echo htmlspecialchars($resultData['email']); ?></div>
                             <?php endif; ?>
                             <div>
-                                <span class="font-medium">Score:</span> 
+                                <span class="font-medium">Score:</span>
                                 <span class="font-semibold <?php echo $resultData['score_percentage'] >= 50 ? 'text-emerald-600' : 'text-red-600'; ?>">
                                     <?php echo number_format($resultData['score_percentage'], 1); ?>%
                                 </span>
                             </div>
                             <div>
-                                <span class="font-medium">Status:</span> 
+                                <span class="font-medium">Status:</span>
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full <?php echo $resultData['score_percentage'] >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
                                     <?php echo $resultData['score_percentage'] >= 50 ? 'Passed' : 'Failed'; ?>
                                 </span>
@@ -199,30 +227,67 @@ try {
 
             <!-- Questions & Answers -->
             <?php if (!empty($questions)): ?>
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h3>
-                <div class="space-y-6">
-                    <?php foreach ($questions as $index => $question): ?>
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="font-medium text-gray-900 mb-3">Question <?php echo $index + 1; ?>: <?php echo htmlspecialchars($question['question_text']); ?></div>
-                        <div class="ml-4">
-                            <div class="font-medium mt-2">Student's Answer:</div>
-                            <div class="flex items-center ml-2 mt-1">
-                                <span class="mr-2 <?php echo $question['is_correct'] ? 'text-emerald-500' : 'text-red-500'; ?>">
-                                    <i class="fas fa-<?php echo $question['is_correct'] ? 'check-circle' : 'times-circle'; ?>"></i>
-                                </span>
-                                <span><?php echo htmlspecialchars($question['student_answer']); ?></span>
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900">Questions & Answers</h3>
+                    <div class="space-y-6">
+                        <?php foreach ($questions as $index => $question): ?>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="font-medium text-gray-900 mb-3">Question <?php echo $index + 1; ?>: <?php echo htmlspecialchars($question['question_text']); ?></div>
+                                <div class="ml-4">
+                                    <div class="font-medium mt-2 mb-2">Answer Options:</div>
+
+                                    <?php foreach ($question['all_choices'] as $choice):
+                                        $borderClass = '';
+                                        $bgClass = '';
+                                        $iconClass = '';
+                                        $textClass = '';
+                                        $icon = '';
+
+                                        if ($choice['choice_id'] == $question['student_choice_id'] && $choice['is_correct']) {
+                                            $borderClass = 'border-emerald-500';
+                                            $bgClass = 'bg-emerald-50';
+                                            $icon = 'check-circle';
+                                            $iconClass = 'text-emerald-500';
+                                            $textClass = 'text-emerald-700 font-medium';
+                                        } else if ($choice['choice_id'] == $question['student_choice_id']) {
+                                            $borderClass = 'border-red-500';
+                                            $bgClass = 'bg-red-50';
+                                            $icon = 'times-circle';
+                                            $iconClass = 'text-red-500';
+                                            $textClass = 'text-red-700 line-through';
+                                        } else if ($choice['is_correct']) {
+                                            $borderClass = 'border-emerald-500';
+                                            $bgClass = 'bg-white';
+                                            $icon = 'check';
+                                            $iconClass = 'text-emerald-500';
+                                            $textClass = 'text-emerald-700 font-medium';
+                                        } else {
+                                            $borderClass = 'border-gray-200';
+                                            $bgClass = 'bg-white';
+                                            $icon = 'circle';
+                                            $iconClass = 'text-gray-400';
+                                            $textClass = 'text-gray-700';
+                                        }
+                                    ?>
+                                        <div class="flex items-center ml-2 mt-2 p-2 border-l-4 rounded <?php echo $borderClass; ?> <?php echo $bgClass; ?>">
+                                            <span class="mr-2">
+                                                <i class="<?php echo $choice['choice_id'] == $question['student_choice_id'] || $choice['is_correct'] ? 'fas' : 'far'; ?> fa-<?php echo $icon; ?> <?php echo $iconClass; ?>"></i>
+                                            </span>
+
+                                            <span class="<?php echo $textClass; ?>">
+                                                <?php echo htmlspecialchars($choice['choice_text']); ?>
+
+                                                <?php if ($choice['choice_id'] == $question['student_choice_id']): ?>
+                                                    <span class="ml-2 text-sm text-gray-500">(Student's answer)</span>
+                                                <?php endif; ?>
+                                            </span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
-                            
-                            <?php if (!$question['is_correct']): ?>
-                            <div class="font-medium mt-2 text-emerald-600">Correct Answer:</div>
-                            <div class="ml-2 mt-1 text-emerald-600"><?php echo htmlspecialchars($question['correct_answer']); ?></div>
-                            <?php endif; ?>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
-            </div>
             <?php endif; ?>
         </div>
     </main>
@@ -231,10 +296,10 @@ try {
         // Set up the chart
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('resultChart').getContext('2d');
-            
+
             const correctAnswers = <?php echo $resultData['correct_answers']; ?>;
             const incorrectAnswers = <?php echo $resultData['incorrect_answers']; ?>;
-            
+
             const chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -243,7 +308,7 @@ try {
                         data: [correctAnswers, incorrectAnswers],
                         backgroundColor: [
                             '#10B981', // emerald-500
-                            '#EF4444'  // red-500
+                            '#EF4444' // red-500
                         ],
                         hoverOffset: 4
                     }]

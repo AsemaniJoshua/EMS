@@ -6,80 +6,70 @@ function isStudentActive($dir) {
     return $current_dir === $dir;
 }
 ?>
-<aside id="sidebar" class="fixed left-0 top-0 min-h-screen lg:h-screen h-[100dvh] w-60 bg-white shadow-lg z-50 flex flex-col overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full">
-    <div class="p-6 text-2xl font-bold text-blue-600 border-b flex items-center justify-between">
-        <span>EMS Student</span>
-        <button id="closeSidebar" class="lg:hidden text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+<aside id="sidebar" class="fixed left-0 top-0 min-h-screen lg:h-screen h-[100dvh] w-60 bg-white shadow-2xl z-100 flex flex-col overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full">
+    <!-- Header -->
+    <div class="p-5 border-b border-emerald-100 flex items-center justify-between bg-white">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shadow-md">
+                <i class="fas fa-user-graduate text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800">EMS Student</span>
+        </div>
+        <button id="closeSidebar" class="lg:hidden text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Close sidebar">
+            <i class="fas fa-times w-6 h-6"></i>
         </button>
     </div>
+    <!-- Navigation -->
     <nav class="flex-1 p-4 overflow-y-auto">
-        <ul class="space-y-6">
+        <ul class="space-y-1">
             <li>
-                <a href="../dashboard/index.php" class="block font-medium transition-colors duration-200 <?php echo isStudentActive('dashboard') ? 'text-blue-600 bg-blue-50 px-3 py-2 rounded-lg' : 'text-gray-700 hover:text-blue-600'; ?>">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"/>
-                        </svg>
-                        Dashboard
-                    </div>
+                <a href="../dashboard/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('dashboard') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
+                    <i class="fas fa-tachometer-alt text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('dashboard') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
+                    Dashboard
                 </a>
             </li>
             <li>
-                <a href="../exam/index.php" class="block font-medium transition-colors duration-200 <?php echo isStudentActive('exam') ? 'text-blue-600 bg-blue-50 px-3 py-2 rounded-lg' : 'text-gray-700 hover:text-blue-600'; ?>">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"/>
-                        </svg>
-                        Exams
-                    </div>
+                <a href="../exam/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('exam') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
+                    <i class="fas fa-clipboard text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('exam') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
+                    Exams
                 </a>
             </li>
             <li>
-                <a href="../results/index.php" class="block font-medium transition-colors duration-200 <?php echo isStudentActive('results') ? 'text-blue-600 bg-blue-50 px-3 py-2 rounded-lg' : 'text-gray-700 hover:text-blue-600'; ?>">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                        Results
-                    </div>
+                <a href="../results/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('results') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
+                    <i class="fas fa-chart-bar text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('results') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
+                    Results
                 </a>
             </li>
             <li>
-                <a href="../profile/index.php" class="block font-medium transition-colors duration-200 <?php echo isStudentActive('profile') ? 'text-blue-600 bg-blue-50 px-3 py-2 rounded-lg' : 'text-gray-700 hover:text-blue-600'; ?>">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Profile
-                    </div>
+                <a href="../profile/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('profile') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
+                    <i class="fas fa-user text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('profile') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
+                    Profile
                 </a>
             </li>
         </ul>
     </nav>
-    <div class="p-4 border-t">
-        <a href="../login/index.php" class="block text-red-500 hover:text-red-700 font-medium transition-colors duration-200 flex items-center">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
+    <!-- Logout -->
+    <div class="p-4 border-t border-emerald-100 bg-white">
+        <a href="../login/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+            <i class="fas fa-sign-out-alt w-5 h-5 mr-3 flex-shrink-0 text-red-500 group-hover:text-red-600"></i>
             Logout
         </a>
     </div>
 </aside>
-
 <!-- Mobile overlay -->
-<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
-
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 lg:hidden hidden"></div>
+<!-- Mobile menu button -->
+<button
+    id="openSidebar"
+    class="lg:hidden fixed top-4 left-4 p-2.5 w-10 h-10 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg drop-shadow-lg z-50 focus:outline-none transition-colors duration-200 flex items-center justify-center"
+    aria-label="Open sidebar">
+    <i class="fas fa-bars w-5 h-5"></i>
+</button>
 <script>
-// Sidebar toggle functionality
+// Sidebar toggle functionality (same as admin)
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
     if (sidebar.classList.contains('-translate-x-full')) {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden');
@@ -90,20 +80,19 @@ function toggleSidebar() {
         document.body.style.overflow = 'auto';
     }
 }
-
 function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
     sidebar.classList.add('-translate-x-full');
     overlay.classList.add('hidden');
     document.body.style.overflow = 'auto';
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     const closeBtn = document.getElementById('closeSidebar');
+    const openBtn = document.getElementById('openSidebar');
     const overlay = document.getElementById('sidebarOverlay');
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (openBtn) openBtn.addEventListener('click', toggleSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
     window.addEventListener('resize', function() {
         if (window.innerWidth >= 1024) closeSidebar();

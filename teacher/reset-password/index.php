@@ -82,5 +82,6 @@
             // window.location.href = 'login/index.php';
         });
     </script>
+    <script src="reset-password.js"></script>
 </body>
 </html>
