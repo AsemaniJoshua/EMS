@@ -6,7 +6,7 @@ include_once '../components/Header.php';
 // --- DB Connection ---
 require_once '../../api/config/database.php'; // Adjust path as needed
 
-g
+
 // --- Get teacher_id (from session or GET for demo) ---
 $teacher_id = isset($_GET['id']) ? intval($_GET['id']) : 1; // Replace with session logic in production
 
