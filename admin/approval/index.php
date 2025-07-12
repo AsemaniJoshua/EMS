@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Exam Approvals";
-$breadcrumb = "Approvals";
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
