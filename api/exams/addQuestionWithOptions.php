@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

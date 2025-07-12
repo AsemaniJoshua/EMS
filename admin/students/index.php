@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 require_once __DIR__ . '/../../api/config/database.php';
@@ -522,62 +522,64 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         function deleteStudent(studentId, studentName) {
-    Swal.fire({
-        title: 'Delete Student',
-        html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, delete',
-        cancelButtonText: 'Cancel',
-        focusCancel: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading notification
             Swal.fire({
-                title: 'Deleting...',
-                text: 'Please wait while the student is being deleted.',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+                title: 'Delete Student',
+                html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading notification
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait while the student is being deleted.',
+                        icon: 'info',
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Send delete request
+                    axios.post('/api/students/deleteStudent.php', {
+                            student_id: studentId
+                        })
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.data.message
+                                });
+
+                                // Remove the student row from the table
+                                const row = document.querySelector(`button[onclick="deleteStudent(${studentId}, '${studentName}')"]`).closest('tr');
+                                if (row) row.remove();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.data.message
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while deleting the student. Please try again later.'
+                            });
+                            console.error(error);
+                        });
                 }
             });
-
-            // Send delete request
-            axios.post('/api/students/deleteStudent.php', { student_id: studentId })
-                .then(response => {
-                    if (response.data.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: response.data.message
-                        });
-
-                        // Remove the student row from the table
-                        const row = document.querySelector(`button[onclick="deleteStudent(${studentId}, '${studentName}')"]`).closest('tr');
-                        if (row) row.remove();
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.data.message
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred while deleting the student. Please try again later.'
-                    });
-                    console.error(error);
-                });
         }
-    });
-}
 
         // Real-time search
         document.getElementById('searchName').addEventListener('input', function() {

@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 include_once __DIR__ . '/../../api/config/database.php';
@@ -179,17 +179,17 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             e.preventDefault();
             const form = this;
             const submitBtn = document.getElementById('submitBtn');
-            
+
             // Disable button and show loading spinner
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span>Processing...</span>';
-            
+
             const formData = new FormData(form);
             const data = {};
             formData.forEach((value, key) => {
                 data[key] = value;
             });
-            
+
             const Toast = Swal.mixin({
                 toast: true,
                 position: 'top-end',
@@ -201,7 +201,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
-            
+
             axios.post('/api/teachers/createTeacher.php', data)
                 .then(function(response) {
                     if (response.data.status === 'success') {

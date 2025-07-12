@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,33 +15,31 @@
     <!-- Custom login script -->
     <script src="login.js"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
     <div class="min-h-screen grid lg:grid-cols-2">
         <!-- Left Panel - Image Section -->
         <div class="hidden lg:flex relative h-screen bg-gradient-to-br from-emerald-600 to-emerald-800">
-            <!-- <div class="absolute inset-0 bg-black/20"></div>
-            <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/80 to-emerald-800/60"></div> -->
 
             <div class="absolute inset-0 bg-black/20"></div>
             <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;"></div>
             <div class="absolute inset-0 bg-gradient-to-r from-green-600/80 to-green-800/60"></div>
-            
+
             <!-- Content overlay -->
             <div class="relative z-10 flex flex-col justify-center px-12 text-white">
                 <div class="max-w-md">
                     <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8">
                         <i class="fa-solid fa-chalkboard-teacher text-2xl text-white"></i>
-        </div>
+                    </div>
                     <h1 class="text-4xl font-bold mb-4">Teacher Portal</h1>
                     <p class="text-lg text-emerald-100 mb-8">Access your teaching dashboard and manage examinations with ease.</p>
                     <div class="flex items-center gap-3 text-emerald-100">
                         <i class="fa-solid fa-shield-halved text-xl"></i>
                         <span>Secure & Reliable Platform</span>
-                </div>
-                </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
         <!-- Right Panel - Form Section -->
         <div class="flex items-center justify-center p-8 lg:p-12">
@@ -63,36 +62,33 @@
                 <form id="teacher-login-form" class="space-y-6">
                     <div>
                         <label for="username-email" class="block text-sm font-medium text-gray-700 mb-2">Username or Email</label>
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             id="username-email"
                             name="username_email"
-                            placeholder="Enter your username or email" 
-                            required 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                        />
-            </div>
+                            placeholder="Enter your username or email"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" />
+                    </div>
 
-            <div>
+                    <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input 
-                            type="password" 
+                        <input
+                            type="password"
                             id="password"
                             name="password"
-                            placeholder="Enter your password" 
-                            required 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
-                        />
+                            placeholder="Enter your password"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" />
                     </div>
 
                     <div class="flex items-center justify-between">
                         <label class="flex items-center">
-                            <input 
-                                type="checkbox" 
-                                id="remember-me" 
-                                name="remember-me" 
-                                class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 mr-2"
-                            >
+                            <input
+                                type="checkbox"
+                                id="remember-me"
+                                name="remember-me"
+                                class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 mr-2">
                             <span class="text-sm text-gray-600">Remember me</span>
                         </label>
                         <a href="reset-password/index.php" class="text-sm text-emerald-600 hover:text-emerald-500 font-medium">
@@ -100,18 +96,17 @@
                         </a>
                     </div>
 
-                    <button 
-                        type="submit" 
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
-                    >
+                    <button
+                        type="submit"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-sign-in-alt"></i>
                         Sign In
-                </button>
+                    </button>
                 </form>
 
                 <div class="mt-8 text-center">
                     <p class="text-sm text-gray-600">
-                        Need an account? 
+                        Need an account?
                         <a href="#" class="text-emerald-600 hover:text-emerald-500 font-medium">
                             Contact administrator
                         </a>
@@ -121,4 +116,5 @@
         </div>
     </div>
 </body>
+
 </html>

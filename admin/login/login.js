@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const remember = this.querySelector('input[type="checkbox"]').checked;
 
             // Make API request using Axios
-            axios.post('/api/login/processLogin.php', {
+            axios.post('/api/login/admin/processLogin.php', {
                 email: email,
                 password: password,
                 remember: remember

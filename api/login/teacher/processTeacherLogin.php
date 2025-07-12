@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Include database connection
-require_once __DIR__ .'/../config/database.php';
+require_once __DIR__ .'/../../../api/config/database.php';
 $database = new Database();
 $conn = $database->getConnection();
 
@@ -101,7 +101,7 @@ try {
 
             $response['status'] = 'success';
             $response['message'] = 'Login successful';
-            $response['redirect'] = '/teacher/';
+            $response['redirect'] = '/teacher/dashboard/'; // Redirect to teacher dashboard
         } else {
             // Incorrect password
             $response['message'] = 'Invalid email or password';

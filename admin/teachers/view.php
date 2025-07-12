@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 require_once __DIR__ . '/../../api/config/database.php';
@@ -72,6 +72,7 @@ if ($teacherId > 0) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title><?php echo $pageTitle; ?> - EMS Admin</title>

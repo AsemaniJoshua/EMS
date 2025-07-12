@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 require_once __DIR__ . '/../../api/config/database.php';
@@ -71,7 +71,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     <!-- Main content -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
-            
+
             <!-- Page Header -->
             <div class="mb-4 md:flex md:items-center md:justify-between">
                 <div class="flex-1 min-w-0">
@@ -190,22 +190,22 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <?php foreach ($recentActivity as $activity): ?>
-                            <li class="px-6 py-4">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <i class="fas fa-plus text-emerald-600 text-xs"></i>
+                                <li class="px-6 py-4">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-plus text-emerald-600 text-xs"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900 mb-1">New exam "<?php echo htmlspecialchars($activity['title']); ?>" created</p>
+                                            <p class="text-xs text-gray-500 flex items-center">
+                                                <i class="fas fa-clock mr-1 text-gray-400"></i> <?php echo date('M d, Y H:i', strtotime($activity['created_at'])); ?>
+                                            </p>
+                                        </div>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                                            New
+                                        </span>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 mb-1">New exam "<?php echo htmlspecialchars($activity['title']); ?>" created</p>
-                                        <p class="text-xs text-gray-500 flex items-center">
-                                            <i class="fas fa-clock mr-1 text-gray-400"></i> <?php echo date('M d, Y H:i', strtotime($activity['created_at'])); ?>
-                                        </p>
-                                    </div>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        New
-                                    </span>
-                                </div>
-                            </li>
+                                </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
@@ -220,30 +220,30 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <?php foreach ($upcomingExams as $exam): ?>
-                            <li class="px-6 py-4">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="flex-shrink-0 w-2.5 h-2.5 rounded-full <?php
-                                            if ($exam['status'] === 'Approved') echo 'bg-emerald-500';
-                                            elseif ($exam['status'] === 'Pending') echo 'bg-yellow-500';
-                                            else echo 'bg-blue-500';
-                                        ?>"></div>
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></p>
-                                            <p class="text-xs text-gray-500 mt-0.5">
-                                                <i class="far fa-calendar-alt mr-1"></i> <?php echo date('M d, Y', strtotime($exam['start_datetime'])); ?>
-                                            </p>
+                                <li class="px-6 py-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-shrink-0 w-2.5 h-2.5 rounded-full <?php
+                                                                                                if ($exam['status'] === 'Approved') echo 'bg-emerald-500';
+                                                                                                elseif ($exam['status'] === 'Pending') echo 'bg-yellow-500';
+                                                                                                else echo 'bg-blue-500';
+                                                                                                ?>"></div>
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></p>
+                                                <p class="text-xs text-gray-500 mt-0.5">
+                                                    <i class="far fa-calendar-alt mr-1"></i> <?php echo date('M d, Y', strtotime($exam['start_datetime'])); ?>
+                                                </p>
+                                            </div>
                                         </div>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php
+                                                                                                                                if ($exam['status'] === 'Approved') echo 'bg-emerald-100 text-emerald-800';
+                                                                                                                                elseif ($exam['status'] === 'Pending') echo 'bg-yellow-100 text-yellow-800';
+                                                                                                                                else echo 'bg-blue-100 text-blue-800';
+                                                                                                                                ?>">
+                                            <?php echo $exam['status'] === 'Approved' ? 'Ready' : ($exam['status'] === 'Pending' ? 'Pending' : 'Draft'); ?>
+                                        </span>
                                     </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php
-                                        if ($exam['status'] === 'Approved') echo 'bg-emerald-100 text-emerald-800';
-                                        elseif ($exam['status'] === 'Pending') echo 'bg-yellow-100 text-yellow-800';
-                                        else echo 'bg-blue-100 text-blue-800';
-                                    ?>">
-                                        <?php echo $exam['status'] === 'Approved' ? 'Ready' : ($exam['status'] === 'Pending' ? 'Pending' : 'Draft'); ?>
-                                    </span>
-                                </div>
-                            </li>
+                                </li>
                             <?php endforeach; ?>
                         </ul>
                         <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
@@ -258,4 +258,5 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         </div>
     </main>
 </body>
+
 </html>
