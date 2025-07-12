@@ -1,0 +1,46 @@
+<?php
+require_once __DIR__ . '/api/config/database.php';
+
+// Admin credentials
+$username = 'ADMIN@APP.EMS.COM';
+$email = 'ADMIN@APP.EMS.COM';
+$password = '1234';
+$first_name = 'Super';
+$last_name = 'Admin';
+
+// Hash the password
+$password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+// Connect to the database
+$db = new Database();
+$conn = $db->getConnection();
+
+// Check if admin already exists (by username or email)
+$stmt = $conn->prepare('SELECT * FROM admins WHERE username = :username OR email = :email');
+$stmt->execute(['username' => $username, 'email' => $email]);
+if ($stmt->fetch()) {
+    echo "Admin with this username or email already exists.";
+    exit;
+}
+
+// Find the next available admin_id (since it's not AUTO_INCREMENT)
+$stmt = $conn->query('SELECT MAX(admin_id) as max_id FROM admins');
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
+$admin_id = $row && $row['max_id'] !== null ? $row['max_id'] + 1 : 1;
+
+// Insert the new admin
+$stmt = $conn->prepare('INSERT INTO admins (admin_id, email, username, first_name, last_name, password_hash) VALUES (:admin_id, :email, :username, :first_name, :last_name, :password_hash)');
+$success = $stmt->execute([
+    'admin_id' => $admin_id,
+    'email' => $email,
+    'username' => $username,
+    'first_name' => $first_name,
+    'last_name' => $last_name,
+    'password_hash' => $password_hash
+]);
+
+if ($success) {
+    echo "Admin user created successfully!<br>Username: $username<br>Password: $password<br><br><b>Delete this file after use for security.</b>";
+} else {
+    echo "Failed to create admin user.";
+} 

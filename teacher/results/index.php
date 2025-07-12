@@ -1,104 +1,150 @@
 <?php
-// teacher/results/index.php
-// This file contains the main content for the Teacher Results section.
-// It is designed to be included by teacher/index.php.
+// --- Secure session start and teacher authentication ---
+if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_path', '/');
+    session_start();
+}
+require_once __DIR__ . '/../../api/config/database.php';
+if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
+    header('Location: /teacher/login/');
+    exit;
+}
+
+$db = new Database();
+$conn = $db->getConnection();
+$teacher_id = $_SESSION['teacher_id'];
+
+// Fetch all exams for this teacher (for filter dropdown)
+$stmt = $conn->prepare("
+    SELECT e.exam_id, e.title, c.code as course_code
+    FROM exams e
+    JOIN courses c ON e.course_id = c.course_id
+    WHERE e.teacher_id = :teacher_id
+    ORDER BY e.created_at DESC
+");
+$stmt->execute(['teacher_id' => $teacher_id]);
+$exams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch all departments (for filter dropdown)
+$departments = $conn->query('SELECT department_id, name FROM departments ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+
+// Get filters from GET or default
+$selected_exam = isset($_GET['exam_id']) ? intval($_GET['exam_id']) : 0;
+$selected_department = isset($_GET['department_id']) ? intval($_GET['department_id']) : 0;
+$student_search = trim($_GET['student_search'] ?? '');
+
+// Fetch results for the selected exam (with filters)
+$results = [];
+if ($selected_exam) {
+    $query = "
+        SELECT s.first_name, s.last_name, s.index_number, d.name as department, r.score_percentage, r.correct_answers, r.incorrect_answers, r.completed_at, r.result_id
+        FROM results r
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN students s ON er.student_id = s.student_id
+        JOIN departments d ON s.department_id = d.department_id
+        WHERE er.exam_id = :exam_id
+    ";
+    $params = ['exam_id' => $selected_exam];
+    if ($selected_department) {
+        $query .= " AND s.department_id = :department_id";
+        $params['department_id'] = $selected_department;
+    }
+    if ($student_search) {
+        $query .= " AND (s.first_name LIKE :search OR s.last_name LIKE :search OR s.index_number LIKE :search)";
+        $params['search'] = "%$student_search%";
+    }
+    $query .= " ORDER BY r.completed_at DESC";
+    $stmt = $conn->prepare($query);
+    $stmt->execute($params);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
-
-<h1 class="text-3xl font-extrabold text-gray-900 mb-6">Exam Results</h1>
-
-<!-- Filter and Search Section -->
-<div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 mb-8">
-    <h3 class="text-xl font-bold text-gray-900 mb-4">Filter Results</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow-md mt-8">
+    <h1 class="text-2xl font-bold mb-6 text-gray-900">Exam Results</h1>
+    <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div>
-            <label for="filter-course" class="block text-sm font-medium text-gray-700 mb-1">Course</label>
-            <select id="filter-course" name="filter_course"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                <option value="">All Courses</option>
-                <option value="CS101">CS101 - Introduction to Algorithms</option>
-                <option value="CS102">CS102 - Data Structures Fundamentals</option>
-                <option value="MA201">MA201 - Linear Algebra Basics</option>
-                <!-- Dynamically load from backend -->
-            </select>
-        </div>
-        <div>
-            <label for="filter-exam" class="block text-sm font-medium text-gray-700 mb-1">Exam</label>
-            <select id="filter-exam" name="filter_exam"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Exam</label>
+            <select name="exam_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500">
                 <option value="">All Exams</option>
-                <option value="Exam1">Intro to Web Dev Exam</option>
-                <option value="Exam2">Database Systems Midterm</option>
-                <!-- Dynamically load from backend -->
+                <?php foreach ($exams as $exam): ?>
+                    <option value="<?php echo $exam['exam_id']; ?>" <?php if ($selected_exam == $exam['exam_id']) echo 'selected'; ?>>
+                        <?php echo htmlspecialchars($exam['course_code'] . ' - ' . $exam['title']); ?>
+                    </option>
+                <?php endforeach; ?>
             </select>
         </div>
         <div>
-            <label for="search-student" class="block text-sm font-medium text-gray-700 mb-1">Search Student</label>
-            <input type="text" id="search-student" name="search_student" placeholder="Student Name or ID"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+            <select name="department_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">All Departments</option>
+                <?php foreach ($departments as $dept): ?>
+                    <option value="<?php echo $dept['department_id']; ?>" <?php if ($selected_department == $dept['department_id']) echo 'selected'; ?>>
+                        <?php echo htmlspecialchars($dept['name']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Student Search</label>
+            <input type="text" name="student_search" value="<?php echo htmlspecialchars($student_search); ?>" placeholder="Name or Index" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+        <div class="flex items-end">
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold">Filter</button>
+        </div>
+    </form>
+    <div class="flex justify-end mb-4">
+        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold" onclick="alert('Export to CSV coming soon!')">
+            <i class="fas fa-file-csv mr-2"></i> Export CSV
+        </button>
+    </div>
+    <?php if ($selected_exam && empty($results)): ?>
+        <div class="text-gray-500 mb-4">No results found for the selected filters.</div>
+    <?php elseif ($selected_exam): ?>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Index/ID</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score (%)</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incorrect</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed At</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <?php foreach ($results as $res): ?>
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900"><?php echo htmlspecialchars($res['first_name'] . ' ' . $res['last_name']); ?></td>
+                            <td class="px-4 py-2 text-sm text-gray-700"><?php echo htmlspecialchars($res['index_number']); ?></td>
+                            <td class="px-4 py-2 text-sm text-gray-700"><?php echo htmlspecialchars($res['department']); ?></td>
+                            <td class="px-4 py-2 text-sm text-gray-900 font-semibold"><?php echo $res['score_percentage'] !== null ? number_format($res['score_percentage'], 2) : '-'; ?></td>
+                            <td class="px-4 py-2 text-sm text-green-700"><?php echo $res['correct_answers']; ?></td>
+                            <td class="px-4 py-2 text-sm text-red-700"><?php echo $res['incorrect_answers']; ?></td>
+                            <td class="px-4 py-2 text-sm text-gray-500"><?php echo $res['completed_at'] ? date('M d, Y H:i', strtotime($res['completed_at'])) : '-'; ?></td>
+                            <td class="px-4 py-2 text-sm text-right">
+                                <button class="text-blue-600 hover:text-blue-900 font-semibold" onclick="viewResultDetails(<?php echo $res['result_id']; ?>)">
+                                    <i class="fas fa-eye mr-1"></i> View Details
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div class="text-gray-500 mb-4">Select an exam to view results.</div>
+    <?php endif; ?>
+</div>
+
+<!-- Result Details Modal -->
+<div id="resultModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+    <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
+        <button onclick="document.getElementById('resultModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+        <div id="modalContent">
+            <!-- Details will be loaded here by JS -->
         </div>
     </div>
-    <div class="mt-6 flex justify-end">
-        <button class="px-6 py-2 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors duration-200 shadow-md">
-            Apply Filters
-        </button>
-        <button class="ml-4 px-6 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-colors duration-200 shadow-md">
-            Reset Filters
-        </button>
-    </div>
 </div>
-
-<!-- Results Table -->
-<div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-    <h3 class="text-xl font-bold text-gray-900 mb-4">All Exam Results</h3>
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Student Name</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Title</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score (%)</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct/Total</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200" id="results-table-body">
-                <!-- Example rows (will be dynamically loaded) -->
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Alice Johnson</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Intro to Web Dev</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">WD101</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">85.00%</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">17/20</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="#" class="text-blue-600 hover:text-blue-900">View Details</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Bob Williams</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Database Systems</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">DB201</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">62.50%</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10/16</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="#" class="text-blue-600 hover:text-blue-900">View Details</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Charlie Brown</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Intro to Web Dev</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">WD101</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">95.00%</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">19/20</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="#" class="text-blue-600 hover:text-blue-900">View Details</a>
-                    </td>
-                </tr>
-                <!-- More rows can be added here dynamically -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<script src="results.js"></script>
-</body>

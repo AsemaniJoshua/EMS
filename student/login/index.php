@@ -30,16 +30,16 @@
                 <div class="max-w-md">
                     <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8">
                         <i class="fa-solid fa-graduation-cap text-2xl text-white"></i>
-                    </div>
+        </div>
                     <h1 class="text-4xl font-bold mb-4">Student Portal</h1>
                     <p class="text-lg text-emerald-100 mb-8">Access your learning dashboard and take examinations with confidence.</p>
                     <div class="flex items-center gap-3 text-emerald-100">
                         <i class="fa-solid fa-shield-halved text-xl"></i>
                         <span>Secure & Reliable Platform</span>
-                    </div>
+                </div>
+                </div>
                 </div>
             </div>
-        </div>
 
         <!-- Right Panel - Form Section -->
         <div class="flex items-center justify-center p-8 lg:p-12">
@@ -70,9 +70,9 @@
                             required 
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                         />
-                    </div>
-                    
-                    <div>
+            </div>
+
+            <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input 
                             type="password" 
@@ -104,18 +104,18 @@
                         class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                         <i class="fa-solid fa-sign-in-alt"></i>
-                        Sign In
-                    </button>
-                </form>
+                    Sign In
+                </button>
+        </form>
 
                 <div class="mt-8 text-center">
                     <p class="text-sm text-gray-600">
-                        Don't have an account? 
+            Don't have an account?
                         <a href="../signup/index.php" class="text-emerald-600 hover:text-emerald-500 font-medium">
-                            Register here
-                        </a>
-                    </p>
-                </div>
+                Register here
+            </a>
+        </p>
+    </div>
             </div>
         </div>
     </div>

@@ -31,16 +31,16 @@
                 <div class="max-w-md">
                     <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8">
                         <i class="fa-solid fa-chalkboard-teacher text-2xl text-white"></i>
-                    </div>
+        </div>
                     <h1 class="text-4xl font-bold mb-4">Teacher Portal</h1>
                     <p class="text-lg text-emerald-100 mb-8">Access your teaching dashboard and manage examinations with ease.</p>
                     <div class="flex items-center gap-3 text-emerald-100">
                         <i class="fa-solid fa-shield-halved text-xl"></i>
                         <span>Secure & Reliable Platform</span>
-                    </div>
+                </div>
+                </div>
                 </div>
             </div>
-        </div>
 
         <!-- Right Panel - Form Section -->
         <div class="flex items-center justify-center p-8 lg:p-12">
@@ -71,9 +71,9 @@
                             required 
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                         />
-                    </div>
-                    
-                    <div>
+            </div>
+
+            <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input 
                             type="password" 
@@ -106,7 +106,7 @@
                     >
                         <i class="fa-solid fa-sign-in-alt"></i>
                         Sign In
-                    </button>
+                </button>
                 </form>
 
                 <div class="mt-8 text-center">

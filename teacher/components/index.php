@@ -1,4 +1,8 @@
 <?php
+if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_path', '/');
+    session_start();
+}
 // teacher/components/index.php
 
 // This file contains the reusable HTML for the Navbar and Sidebar.
@@ -9,6 +13,9 @@
 if (!isset($active_page)) {
     $active_page = ''; // Default to no active page if not set
 }
+
+// Get teacher name from session
+$teacherName = $_SESSION['teacher_name'] ?? 'Teacher';
 ?>
 
 <!-- Top Navigation Bar -->
@@ -29,8 +36,8 @@ if (!isset($active_page)) {
         <span class="text-xl font-bold text-gray-900">Examplify</span>
     </div>
     <div class="flex items-center space-x-4">
-        <span class="text-gray-700 text-sm md:text-base">Welcome, Teacher Name!</span>
-        <button class="px-4 py-2 rounded-full bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition-colors duration-200 shadow-md">Logout</button>
+        <span class="text-gray-700 text-sm md:text-base">Welcome, <?php echo htmlspecialchars($teacherName); ?>!</span>
+        <a href="/teacher/login/" onclick="logout()" class="px-4 py-2 rounded-full bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition-colors duration-200 shadow-md">Logout</a>
     </div>
 </header>
 
@@ -39,7 +46,7 @@ if (!isset($active_page)) {
     <!-- Sidebar for Desktop -->
     <aside class="hidden md:flex flex-col w-60 bg-white shadow-lg border-r border-gray-100 py-8 px-4 space-y-2 sticky top-0 h-screen z-30">
         <h3 class="text-lg font-semibold text-gray-900 mb-6 px-2 tracking-wide uppercase">Navigation</h3>
-        <a href="../dashboard/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=dashboard" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'dashboard') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -48,7 +55,7 @@ if (!isset($active_page)) {
             </svg>
             Dashboard
         </a>
-        <a href="../exam/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=exams" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'exams') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -59,7 +66,7 @@ if (!isset($active_page)) {
             </svg>
             Exams
         </a>
-        <a href="../results/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=results" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'results') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <path d="M2 13V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7"></path>
@@ -70,7 +77,7 @@ if (!isset($active_page)) {
             </svg>
             Results
         </a>
-        <a href="../profile/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=profile" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'profile') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -86,7 +93,7 @@ if (!isset($active_page)) {
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
         <h3 class="text-lg font-semibold text-gray-900 mb-6 px-2 tracking-wide uppercase">Navigation</h3>
-        <a href="../dashboard/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=dashboard" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'dashboard') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -95,7 +102,7 @@ if (!isset($active_page)) {
             </svg>
             Dashboard
         </a>
-        <a href="../exam/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=exams" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'exams') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -106,7 +113,7 @@ if (!isset($active_page)) {
             </svg>
             Exams
         </a>
-        <a href="../results/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=results" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'results') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <path d="M2 13V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7"></path>
@@ -117,7 +124,7 @@ if (!isset($active_page)) {
             </svg>
             Results
         </a>
-        <a href="../profile/index.php" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
+        <a href="index.php?page=profile" class="flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-colors duration-200
             <?php echo ($active_page == 'profile') ? 'text-emerald-600 bg-emerald-50 font-medium' : ''; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -126,3 +133,25 @@ if (!isset($active_page)) {
             Profile
         </a>
     </div>
+
+<script>
+// Logout function
+function logout() {
+    // Clear session data
+    fetch('/api/login/logout.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(() => {
+        // Redirect to login page
+        window.location.href = '/teacher/login/';
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
+        // Still redirect even if logout API fails
+        window.location.href = '/teacher/login/';
+    });
+}
+</script>

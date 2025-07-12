@@ -1,5 +1,7 @@
 <?php
-// teacher/index.php
+// Include teacher session check and database connection
+include_once __DIR__ . '/../api/login/teacherSessionCheck.php';
+require_once __DIR__ . '/../api/config/database.php';
 
 // Determine which page content to load
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard'; // Default to 'dashboard'
@@ -36,6 +38,7 @@ switch ($page) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Examplify</title>
     <link rel="stylesheet" href="../src/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Custom styles for Inter font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
