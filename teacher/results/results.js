@@ -37,6 +37,14 @@ document.addEventListener('DOMContentLoaded', function () {
             notification.style.display = 'none';
         }, 3000);
     }
+
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            fetchResults();
+        });
+    }
 });
 
 function fetchResults() {
