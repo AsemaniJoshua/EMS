@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php include_once '../components/Sidebar.php'; ?>
 <?php include_once '../components/Header.php'; ?>
 <!DOCTYPE html>
