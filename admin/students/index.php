@@ -399,11 +399,17 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             $startPage = max(1, $page - 2);
                             $endPage = min($totalPages, $page + 2);
 
-                            for ($i = $startPage; $i <= $endPage; $i++): ?>
-                                <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md <?php echo ($i == $page) ? 'text-white bg-emerald-600 border-emerald-600' : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'; ?>">
-                                    <?php echo $i; ?>
-                                </a>
-                            <?php endfor; ?>
+                            for ($i = $startPage; $i <= $endPage; $i++): 
+                                if ($i == $page): ?>
+                                    <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md text-white bg-emerald-600 border-emerald-600">
+                                        <?php echo $i; ?>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md text-gray-500 bg-white border-gray-300 hover:bg-gray-50">
+                                        <?php echo $i; ?>
+                                    </a>
+                                <?php endif;
+                            endfor; ?>
 
                             <?php if ($page < $totalPages): ?>
                                 <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">

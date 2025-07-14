@@ -90,7 +90,7 @@
 
   <!-- Forgot Password Modal -->
   <div id="forgotModal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+    class="fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
       <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
         onclick="closeModal('forgotModal')"><i class="fas fa-times"></i></button>
@@ -111,7 +111,7 @@
 
   <!-- OTP Modal -->
   <div id="otpModal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+    class="fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
       <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
         onclick="closeModal('otpModal')"><i class="fas fa-times"></i></button>
@@ -139,7 +139,7 @@
 
   <!-- Reset Password Modal -->
   <div id="resetModal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+    class="fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
       <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
         onclick="closeModal('resetModal')"><i class="fas fa-times"></i></button>

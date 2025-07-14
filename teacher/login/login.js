@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Make modal functions available globally
     window.openModal = function (id) {
         document.getElementById(id).classList.remove('hidden');
+        document.getElementById(id).classList.add('flex');
     };
 
     window.closeModal = function (id) {
