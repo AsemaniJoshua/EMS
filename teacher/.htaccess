@@ -1,0 +1,12 @@
+RewriteEngine On
+RewriteBase /teacher/
+
+# If the request is exactly /teacher/ or /teacher, redirect to /teacher/login/
+RewriteRule ^$ /teacher/login/ [R=302,L]
+RewriteRule ^index\.php$ /teacher/login/ [R=302,L] # Redirect /teacher/index.php too if it exists
+
+# Skip if the request already contains "login" (case-insensitive)
+# This prevents redirecting login-related pages (like /teacher/login/index.php)
+RewriteCond %{REQUEST_URI} login [NC]
+RewriteRule ^ - [L]
+

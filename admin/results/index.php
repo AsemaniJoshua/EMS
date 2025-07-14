@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 require_once __DIR__ . '/../../api/config/database.php';
@@ -93,7 +93,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl"><?php echo $pageTitle; ?></h1>
-                        <p class="mt-1 text-sm text-gray-500">View, analyze, and manage student exam results</p>
+                        <p class="mt-1 text-sm text-gray-500">View, analyze, and manage results from completed exams</p>
                     </div>
                 </div>
             </div>
@@ -229,7 +229,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             <select id="filterStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 <option value="">All Results</option>
                                 <option value="pass">Passed (≥50%)</option>
-                                <option value="fail">Failed (<50%)</option>
+                                <option value="fail">Failed (<50%)< /option>
                             </select>
                         </div>
 
@@ -260,7 +260,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 </div>
                 <div class="p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <p class="text-gray-600">Export results or generate comprehensive reports</p>
+                        <p class="text-gray-600">Export results or generate comprehensive reports for completed exams</p>
                         <div class="flex gap-3">
                             <button id="exportResultsBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center">
                                 <i class="fas fa-file-export mr-2"></i>
@@ -278,7 +278,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             <!-- Exams Results Table -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-gray-900">Exam Results</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Completed Exams with Results</h3>
                     <span id="resultCount" class="text-sm text-gray-500">Loading exams...</span>
                 </div>
                 <div class="overflow-x-auto">
@@ -286,7 +286,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course / Program</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -295,7 +295,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         <tbody id="resultsTable" class="bg-white divide-y divide-gray-200">
                             <!-- Loading indicator -->
                             <tr>
-                                <td colspan="8" class="px-6 py-4 text-center">
+                                <td colspan="5" class="px-6 py-4 text-center">
                                     <div class="flex justify-center items-center">
                                         <i class="fas fa-spinner fa-spin mr-2 text-emerald-500"></i>
                                         <span class="text-gray-500">Loading exam results...</span>
@@ -323,20 +323,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
             <!-- No longer need the exam results modal since we use a dedicated page -->
 
-            <!-- Student Result Detail Modal (hidden by default) -->
-            <div id="resultModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">Student Result Details</h3>
-                        <button id="closeResultModal" class="text-gray-400 hover:text-gray-500">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="p-6" id="modalContent">
-                        <!-- Modal content will be populated dynamically -->
-                    </div>
-                </div>
-            </div>
+            <!-- Result modals removed in favor of dedicated pages -->
         </div>
     </main>
 
@@ -368,16 +355,6 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             document.getElementById('nextPage').addEventListener('click', function() {
                 currentPage++;
                 fetchExamResults();
-            });            // Close result modal event listener
-            document.getElementById('closeResultModal').addEventListener('click', function() {
-                document.getElementById('resultModal').classList.add('hidden');
-            });
-            
-            // Close modal when clicking outside
-            document.getElementById('resultModal').addEventListener('click', function(event) {
-                if (event.target === this) {
-                    this.classList.add('hidden');
-                }
             });
 
             // Set up cascading dropdown filters (department -> program -> course)
@@ -530,7 +507,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     resultsTable.innerHTML = `
                     <tr>
                         <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                            No exam results found matching the filter criteria
+                            No completed exams with results found matching the filter criteria
                         </td>
                     </tr>
                 `;
@@ -635,7 +612,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     .replace(/"/g, "&quot;")
                     .replace(/'/g, "&#039;");
             }
-        });        /**
+        });
+        /**
          * Redirects to the detailed exam results page
          */
         function viewExamResults(examId) {
@@ -964,20 +942,34 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
          * Exports results for a specific exam
          */
         function exportExamResults(examId) {
-            // Get filter values if in exam results modal
+            // Get filter values
             let queryParams = new URLSearchParams();
             queryParams.append('exam_id', examId);
 
-            if (document.getElementById('examResultsContent').contains(document.getElementById('studentSearch'))) {
-                const studentSearch = document.getElementById('studentSearch').value;
-                const scoreMin = document.getElementById('scoreMin').value;
-                const scoreMax = document.getElementById('scoreMax').value;
-                const status = document.getElementById('statusFilter').value;
+            // Try to get filter values if filters exist on page
+            try {
+                const studentSearch = document.getElementById('studentSearch');
+                if (studentSearch && studentSearch.value) {
+                    queryParams.append('student', studentSearch.value);
+                }
 
-                if (studentSearch) queryParams.append('student', studentSearch);
-                if (scoreMin) queryParams.append('score_min', scoreMin);
-                if (scoreMax) queryParams.append('score_max', scoreMax);
-                if (status) queryParams.append('status', status);
+                const scoreMin = document.getElementById('scoreMin');
+                if (scoreMin && scoreMin.value) {
+                    queryParams.append('score_min', scoreMin.value);
+                }
+
+                const scoreMax = document.getElementById('scoreMax');
+                if (scoreMax && scoreMax.value) {
+                    queryParams.append('score_max', scoreMax.value);
+                }
+
+                const status = document.getElementById('statusFilter');
+                if (status && status.value) {
+                    queryParams.append('status', status.value);
+                }
+            } catch (e) {
+                // Filters don't exist on this page, just continue
+                console.log('No filters found, exporting all results for exam ID: ' + examId);
             }
 
             // Open the export endpoint in a new tab (will trigger download)
@@ -990,20 +982,34 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
          * Generates a comprehensive report for a specific exam
          */
         function generateExamReport(examId) {
-            // Get filter values if in exam results modal
+            // Get filter values
             let queryParams = new URLSearchParams();
             queryParams.append('exam_id', examId);
 
-            if (document.getElementById('examResultsContent').contains(document.getElementById('studentSearch'))) {
-                const studentSearch = document.getElementById('studentSearch').value;
-                const scoreMin = document.getElementById('scoreMin').value;
-                const scoreMax = document.getElementById('scoreMax').value;
-                const status = document.getElementById('statusFilter').value;
+            // Try to get filter values if filters exist on page
+            try {
+                const studentSearch = document.getElementById('studentSearch');
+                if (studentSearch && studentSearch.value) {
+                    queryParams.append('student', studentSearch.value);
+                }
 
-                if (studentSearch) queryParams.append('student', studentSearch);
-                if (scoreMin) queryParams.append('score_min', scoreMin);
-                if (scoreMax) queryParams.append('score_max', scoreMax);
-                if (status) queryParams.append('status', status);
+                const scoreMin = document.getElementById('scoreMin');
+                if (scoreMin && scoreMin.value) {
+                    queryParams.append('score_min', scoreMin.value);
+                }
+
+                const scoreMax = document.getElementById('scoreMax');
+                if (scoreMax && scoreMax.value) {
+                    queryParams.append('score_max', scoreMax.value);
+                }
+
+                const status = document.getElementById('statusFilter');
+                if (status && status.value) {
+                    queryParams.append('status', status.value);
+                }
+            } catch (e) {
+                // Filters don't exist on this page, just continue
+                console.log('No filters found, generating report for all results of exam ID: ' + examId);
             }
 
             // Open the report generator in a new tab
@@ -1013,11 +1019,13 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         /**
-         * Exports the filtered results to CSV (all exams)
+         * Exports the filtered exam results summary to CSV
+         * This exports the data shown in the main table (exam summary data)
          */
         function exportResults() {
             const form = document.getElementById('filterForm');
             const formData = new FormData(form);
+            formData.append('export_type', 'exams_summary');
 
             // Build the query string
             const queryString = new URLSearchParams(formData).toString();
@@ -1025,15 +1033,17 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             // Open the export endpoint in a new tab (will trigger download)
             window.open(`../../api/results/exportResults.php?${queryString}`, '_blank');
 
-            showNotification('Exporting results...', 'info');
+            showNotification('Exporting exam results summary...', 'info');
         }
 
         /**
-         * Generates a comprehensive report (all exams)
+         * Generates a comprehensive report for the exams summary
+         * This generates a report based on the data shown in the main table
          */
         function generateReport() {
             const form = document.getElementById('filterForm');
             const formData = new FormData(form);
+            formData.append('report_type', 'exams_summary');
 
             // Build the query string
             const queryString = new URLSearchParams(formData).toString();
@@ -1041,7 +1051,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             // Open the report generator in a new tab
             window.open(`../../api/results/generateReport.php?${queryString}`, '_blank');
 
-            showNotification('Generating report...', 'info');
+            showNotification('Generating exam results summary report...', 'info');
         }
 
         /**
@@ -1073,4 +1083,5 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
     </script>
 </body>
+
 </html>

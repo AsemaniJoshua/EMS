@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 require_once __DIR__ . '/../../api/config/database.php';
@@ -399,11 +399,17 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                             $startPage = max(1, $page - 2);
                             $endPage = min($totalPages, $page + 2);
 
-                            for ($i = $startPage; $i <= $endPage; $i++): ?>
-                                <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md <?php echo ($i == $page) ? 'text-white bg-emerald-600 border-emerald-600' : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'; ?>">
-                                    <?php echo $i; ?>
-                                </a>
-                            <?php endfor; ?>
+                            for ($i = $startPage; $i <= $endPage; $i++): 
+                                if ($i == $page): ?>
+                                    <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md text-white bg-emerald-600 border-emerald-600">
+                                        <?php echo $i; ?>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="?page=<?php echo $i; ?>" class="px-3 py-1 text-sm border rounded-md text-gray-500 bg-white border-gray-300 hover:bg-gray-50">
+                                        <?php echo $i; ?>
+                                    </a>
+                                <?php endif;
+                            endfor; ?>
 
                             <?php if ($page < $totalPages): ?>
                                 <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
@@ -522,62 +528,64 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         }
 
         function deleteStudent(studentId, studentName) {
-    Swal.fire({
-        title: 'Delete Student',
-        html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, delete',
-        cancelButtonText: 'Cancel',
-        focusCancel: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading notification
             Swal.fire({
-                title: 'Deleting...',
-                text: 'Please wait while the student is being deleted.',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+                title: 'Delete Student',
+                html: `Are you sure you want to delete <strong>${studentName}</strong>?<br><br>This action cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading notification
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait while the student is being deleted.',
+                        icon: 'info',
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Send delete request
+                    axios.post('/api/students/deleteStudent.php', {
+                            student_id: studentId
+                        })
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.data.message
+                                });
+
+                                // Remove the student row from the table
+                                const row = document.querySelector(`button[onclick="deleteStudent(${studentId}, '${studentName}')"]`).closest('tr');
+                                if (row) row.remove();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.data.message
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while deleting the student. Please try again later.'
+                            });
+                            console.error(error);
+                        });
                 }
             });
-
-            // Send delete request
-            axios.post('/api/students/deleteStudent.php', { student_id: studentId })
-                .then(response => {
-                    if (response.data.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: response.data.message
-                        });
-
-                        // Remove the student row from the table
-                        const row = document.querySelector(`button[onclick="deleteStudent(${studentId}, '${studentName}')"]`).closest('tr');
-                        if (row) row.remove();
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.data.message
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred while deleting the student. Please try again later.'
-                    });
-                    console.error(error);
-                });
         }
-    });
-}
 
         // Real-time search
         document.getElementById('searchName').addEventListener('input', function() {

@@ -3,216 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examplify - Register</title>
-    <!-- Tailwind CSS CDN -->
-    <link href="../../src/output.css" rel="stylesheet">
-    <style>
-        /* Custom styles for Inter font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-    </style>
+    <title>Student Signup - EMS</title>
+    <link rel="stylesheet" href="/src/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom signup script -->
+    <script src="signup.js"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md lg:max-w-lg w-full space-y-8 p-8 sm:p-10 bg-white rounded-3xl shadow-2xl border border-gray-200">
-        <div class="text-center">
-            <!-- Examplify Logo/Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-emerald-600 mb-4">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
-            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-                Join <span class="text-emerald-600">Examplify</span> Today!
-            </h2>
-            <p class="mt-2 text-base text-gray-600">
-                Create your account to unlock academic excellence
-            </p>
+<!--
+    The 'overflow-hidden' on the body prevents the entire page from scrolling.
+    The 'h-screen' on the main grid container ensures it takes full viewport height.
+-->
+<body class="bg-gray-50 min-h-screen">
+    <div class="h-screen grid lg:grid-cols-2 overflow-hidden">
+        <!-- Left Panel - Image Section -->
+        <!-- This panel is set to h-screen to fill its grid column height -->
+        <div class="hidden lg:flex relative h-screen w-full col-span-1 bg-gradient-to-br from-emerald-600 to-emerald-800 overflow-hidden">
+            <!-- <div class="absolute inset-0 bg-black/20"></div>
+            <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1464983953574-0892a716854b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/80 to-emerald-800/60"></div> -->
+
+            <div class="absolute inset-0 bg-black/20"></div>
+            <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1464983953574-0892a716854b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-green-600/80 to-green-800/60"></div>
+
+
+            <!-- Content overlay -->
+            <div class="relative z-10 flex flex-col justify-center items-center text-center w-full h-full">
+                <div class="max-w-md flex flex-col items-center justify-center h-full text-white">
+                    <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8 mx-auto">
+                        <i class="fa-solid fa-user-graduate text-2xl text-white"></i>
+                    </div>
+                    <h1 class="text-4xl font-bold mb-4">Student Registration</h1>
+                    <p class="text-lg text-emerald-100 mb-8">Create your Examplify student account and unlock your academic journey.</p>
+                    <div class="flex items-center justify-center gap-3 text-emerald-100">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                        <span>Secure & Reliable Platform</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <form class="mt-8 space-y-6" method="POST" id="signup-form">
-            <div class="space-y-4">
-                <!-- First Name and Last Name - Already in 2 columns -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <!-- Right Panel - Form Section -->
+        <div class="flex flex-col h-screen justify-center items-center overflow-hidden">
+            <div class="w-full max-w-3xl flex flex-col items-center my-auto px-4 lg:px-8">
+                <!-- Mobile header (hidden on lg+) -->
+                <div class="lg:hidden text-center shrink-0 pt-12 pb-6">
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 mx-auto mb-4 flex items-center justify-center">
+                        <i class="fa-solid fa-user-graduate text-xl text-emerald-600"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900">Student Registration</h1>
+                </div>
+
+                <!-- Form header (fixed at top) -->
+                <div class="shrink-0 pb-10 pt-16 text-center w-full">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 text-center">Create your account</h2>
+                    <p class="text-gray-600 text-center">Fill in your details to register as a student</p>
+                </div>
+
+                <!-- Signup form (scrollable only for fields and button) -->
+                <div class="flex flex-col gap-12 w-full">
+                    <form class="space-y-6" method="POST" id="signup-form">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label for="first-name" class="sr-only">First Name</label>
+                                <label for="first-name" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                         <input id="first-name" name="first_name" type="text" autocomplete="given-name" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="First Name">
                     </div>
                     <div>
-                        <label for="last-name" class="sr-only">Last Name</label>
+                                <label for="last-name" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                         <input id="last-name" name="last_name" type="text" autocomplete="family-name" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Last Name">
                     </div>
-                </div>
-
-                <!-- Username and Index Number in 2 columns -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="username" class="sr-only">Username</label>
+                                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
                         <input id="username" name="username" type="text" autocomplete="username" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Choose a Username">
                     </div>
                     <div>
-                        <label for="index-number" class="sr-only">Index Number</label>
+                                <label for="index-number" class="block text-sm font-medium text-gray-700 mb-2">Index Number</label>
                         <input id="index-number" name="index_number" type="text" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Index Number (e.g., CA/MY3/2660)">
                     </div>
-                </div>
-
-                <!-- Email Address and Phone Number in 2 columns -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="email-address" class="sr-only">Email address</label>
+                                <label for="email-address" class="block text-sm font-medium text-gray-700 mb-2">Email address</label>
                         <input id="email-address" name="email" type="email" autocomplete="email" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Email address">
                     </div>
                     <div>
-                        <label for="phone-number" class="sr-only">Phone Number</label>
+                                <label for="phone-number" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                         <input id="phone-number" name="phone_number" type="tel" autocomplete="tel"
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Phone Number (Optional)">
                     </div>
-                </div>
-
-                <!-- Date of Birth and Gender in 2 columns -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="date-of-birth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                <label for="date-of-birth" class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
                         <input id="date-of-birth" name="date_of_birth" type="date" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors">
                     </div>
                     <div>
-                        <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                         <select id="gender" name="gender" required
-                                class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors">
                             <option value="" disabled selected>Select your Gender</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                         </select>
                     </div>
-                </div>
-
-                <!-- Program and Department in 2 columns -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="program" class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                                <label for="program" class="block text-sm font-medium text-gray-700 mb-2">Program</label>
                         <select id="program" name="program_id" required
-                                class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors">
                             <option value="" disabled selected>Select your Program</option>
                             <option value="1">Computer Science</option>
                             <option value="2">Electrical Engineering</option>
                             <option value="3">Business Administration</option>
                             <option value="4">Applied Mathematics</option>
-                            <!-- Add more programs as needed -->
                         </select>
                     </div>
                     <div>
-                        <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                                <label for="department" class="block text-sm font-medium text-gray-700 mb-2">Department</label>
                         <select id="department" name="department_id" required
-                                class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors">
                             <option value="" disabled selected>Select your Department</option>
                             <option value="101">Software Engineering</option>
                             <option value="102">Network Systems</option>
                             <option value="103">Cybersecurity</option>
                             <option value="104">Data Science</option>
-                            <!-- Add more departments as needed -->
                         </select>
                     </div>
-                </div>
-
-                <!-- Password and Confirm Password in 2 columns -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="password" class="sr-only">Password</label>
+                                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="password" name="password" type="password" autocomplete="new-password" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Password">
                     </div>
                     <div>
-                        <label for="confirm-password" class="sr-only">Confirm Password</label>
+                                <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
                         <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" required
-                               class="appearance-none relative block w-full px-4 py-2.5 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-base transition-colors duration-200 shadow-sm"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors"
                                placeholder="Confirm Password">
                     </div>
                 </div>
-            </div>
-
-            <div>
-                <button type="submit"
-                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 shadow-lg transform hover:-translate-y-1">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <!-- User Plus Icon -->
-                        <svg class="h-6 w-6 text-white opacity-80 group-hover:opacity-100 transition-opacity duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="8.5" cy="7" r="4"></circle>
-                            <line x1="20" y1="8" x2="20" y2="14"></line>
-                            <line x1="23" y1="11" x2="17" y2="11"></line>
-                        </svg>
-                    </span>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 mt-12 mb-8">
+                            <i class="fa-solid fa-user-plus"></i>
                     Register Account
                 </button>
+                    </form>
             </div>
-        </form>
-        <p class="mt-6 text-center text-base text-gray-600">
+                <div class="text-center w-full mt-auto pb-8">
+                    <p class="text-sm text-gray-600">
             Already have an account?
-            <a href="login.html" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
+                        <a href="../login/index.php" class="text-emerald-600 hover:text-emerald-500 font-medium">
                 Log in here
             </a>
         </p>
     </div>
-
-    <script>
-        // Basic JavaScript for form submission (for demonstration)
-        document.getElementById('signup-form').addEventListener('submit', function(event) {
-            console.log('Sign-up form submission detected.');
-            event.preventDefault(); // Prevent default form submission
-
-            const firstName = document.getElementById('first-name').value;
-            const lastName = document.getElementById('last-name').value;
-            const username = document.getElementById('username').value;
-            const indexNumber = document.getElementById('index-number').value;
-            const email = document.getElementById('email-address').value;
-            const phoneNumber = document.getElementById('phone-number').value;
-            const dateOfBirth = document.getElementById('date-of-birth').value;
-            const gender = document.getElementById('gender').value;
-            const programId = document.getElementById('program').value;
-            const departmentId = document.getElementById('department').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-
-            // In a real application, you would send this data to a backend server
-            // using fetch() or XMLHttpRequest.
-            console.log('Registration attempt with:');
-            console.log('First Name:', firstName);
-            console.log('Last Name:', lastName);
-            console.log('Username:', username);
-            console.log('Index Number:', indexNumber);
-            console.log('Email:', email);
-            console.log('Phone Number:', phoneNumber);
-            console.log('Date of Birth:', dateOfBirth);
-            console.log('Gender:', gender);
-            console.log('Program ID:', programId);
-            console.log('Department ID:', departmentId);
-            console.log('Password:', password); // In production, never log raw password
-
-            // For now, just a simple message box for demonstration
-            alert('Registration form submitted! (Check console for details)');
-        });
-    </script>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
