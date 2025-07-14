@@ -12,33 +12,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const loginForm = document.getElementById('teacher-login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function (event) {
-            event.preventDefault();
+    // Get the login form
+    const loginForm = document.getElementById('teacherLoginForm');
 
-            // Get form data
-            const usernameEmail = document.getElementById('username-email').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('remember-me').checked;
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
 
             // Show loading state
-            const submitButton = loginForm.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing In...';
-            submitButton.disabled = true;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-            // Prepare data for API
-            const loginData = {
-                email: usernameEmail, // Using email field for both username and email
+            // Get form data
+            const email = this.querySelector('input[type="email"]').value;
+            const password = this.querySelector('input[type="password"]').value;
+            const remember = this.querySelector('input[type="checkbox"]').checked;
+
+            // Make API request using Axios
+            axios.post('/api/login/teacher/processTeacherLogin.php', {
+                email: email,
                 password: password,
-                remember: rememberMe
-            };
-
-            // Make API call to teacher login endpoint using Axios
-            axios.post('/api/login/teacher/processTeacherLogin.php', loginData)
+                remember: remember
+            })
                 .then(function (response) {
                     const data = response.data;
+
                     if (data.status === 'success') {
                         // Show success message
                         Toast.fire({
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         // Redirect after a short delay
                         setTimeout(() => {
-                            window.location.href = data.redirect || '/teacher/dashboard/'; // Use backend redirect if present
+                            window.location.href = data.redirect || '/teacher/dashboard/';
                         }, 1000);
                     } else {
                         // Show error message
@@ -57,9 +57,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             title: data.message || 'Login failed. Please try again.'
                         });
 
-                        // Reset button state
-                        submitButton.innerHTML = originalText;
-                        submitButton.disabled = false;
+                        // Reset button
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
                     }
                 })
                 .catch(function (error) {
@@ -68,41 +68,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Show error message
                     Toast.fire({
                         icon: 'error',
-                        title: 'Network error. Please check your connection and try again.'
+                        title: 'An error occurred. Please try again.'
                     });
 
-                    // Reset button state
-                    submitButton.innerHTML = originalText;
-                    submitButton.disabled = false;
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
                 });
         });
     }
 
-    // Add some basic validation
-    const usernameEmailInput = document.getElementById('username-email');
-    const passwordInput = document.getElementById('password');
-
-    if (usernameEmailInput) {
-        usernameEmailInput.addEventListener('blur', function () {
-            if (this.value.trim() === '') {
-                this.classList.add('border-red-500');
-                this.classList.remove('border-gray-300');
-            } else {
-                this.classList.remove('border-red-500');
-                this.classList.add('border-gray-300');
-            }
-        });
-    }
-
-    if (passwordInput) {
-        passwordInput.addEventListener('blur', function () {
-            if (this.value === '') {
-                this.classList.add('border-red-500');
-                this.classList.remove('border-gray-300');
-            } else {
-                this.classList.remove('border-red-500');
-                this.classList.add('border-gray-300');
-            }
+    // Handle form input validation
+    const formInputs = document.querySelectorAll('input');
+    if (formInputs) {
+        formInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.classList.remove('border-gray-300');
+                    this.classList.add('border-red-500');
+                } else {
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-gray-300');
+                }
+            });
         });
     }
 });

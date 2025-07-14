@@ -1,7 +1,8 @@
 <?php
+// teacherSessionCheck.php - Checks if teacher is logged in, otherwise redirects to login page
+
 // Start session if not already started
-if (session_status() == PHP_SESSION_NONE) {
-    ini_set('session.cookie_path', '/');
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
@@ -29,11 +30,11 @@ try {
     require_once __DIR__ . '/../config/database.php';
     $database = new Database();
     $conn = $database->getConnection();
-    
+
     $stmt = $conn->prepare("SELECT status FROM teachers WHERE teacher_id = :teacher_id");
     $stmt->execute(['teacher_id' => $_SESSION['teacher_id']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$teacher || $teacher['status'] !== 'active') {
         // Teacher account is inactive or doesn't exist
         session_destroy();
@@ -44,4 +45,3 @@ try {
     // If database check fails, continue with session (graceful degradation)
     error_log('Teacher session check database error: ' . $e->getMessage());
 }
-?> 

@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Include database connection
-require_once __DIR__ .'/../../../api/config/database.php';
+require_once __DIR__ . '/../../../api/config/database.php';
 $database = new Database();
 $conn = $database->getConnection();
 
@@ -75,7 +75,6 @@ try {
         if (password_verify($password, $teacher['password_hash'])) {
             // Start session if not already started
             if (session_status() == PHP_SESSION_NONE) {
-                ini_set('session.cookie_path', '/');
                 session_start();
             }
 
@@ -112,7 +111,7 @@ try {
     }
 
     $stmt = null;
-}catch(Exception $e) {
+} catch (Exception $e) {
     // Handle any exceptions
     $response['message'] = 'An error occurred. Please try again later.';
     // Log the error (in production, use a proper logging system)
@@ -121,4 +120,3 @@ try {
 
 // Return JSON response
 echo json_encode($response);
-?> 
