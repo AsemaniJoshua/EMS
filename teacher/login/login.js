@@ -13,13 +13,14 @@ document.addEventListener('DOMContentLoaded', function () {
         },
     });
 
-    function openModal(id) {
+    // Make modal functions available globally
+    window.openModal = function (id) {
         document.getElementById(id).classList.remove('hidden');
-    }
+    };
 
-    function closeModal(id) {
+    window.closeModal = function (id) {
         document.getElementById(id).classList.add('hidden');
-    }
+    };
 
     // Login Handler
     const loginForm = document.getElementById('teacherLoginForm');
@@ -32,9 +33,9 @@ document.addEventListener('DOMContentLoaded', function () {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
 
-            const email = this.querySelector('input[type="email"]').value;
-            const password = this.querySelector('input[type="password"]').value;
-            const remember = this.querySelector('input[type="checkbox"]').checked;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
 
             axios.post('/api/login/teacher/processTeacherLogin.php', {
                 email,
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         window._resetContact = contact;
 
-        axios.post('/api/login/requestReset.php', { contact })
+        axios.post('/api/forgotPassword/teacher/requestReset.php', { contact })
             .then(() => {
                 openModal('otpModal');
             })
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return Swal.fire({ icon: 'error', title: 'Invalid OTP', text: 'Please enter the 6-digit code.' });
         }
 
-        axios.post('/api/login/verifyOtp.php', { contact, otp })
+        axios.post('/api/forgotPassword/teacher/verifyOtp.php', { contact, otp })
             .then(() => {
                 closeModal('otpModal');
                 openModal('resetModal');
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return Swal.fire({ icon: 'error', title: 'Mismatch', text: 'Passwords do not match.' });
         }
 
-        axios.post('/api/login/resetPassword.php', { contact, password })
+        axios.post('/api/forgotPassword/teacher/resetPassword.php', { contact, password })
             .then(() => {
                 closeModal('resetModal');
                 Swal.fire({
