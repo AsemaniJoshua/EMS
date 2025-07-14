@@ -2,23 +2,22 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Teacher Login - EMS</title>
-  <link rel="stylesheet" href="/src/output.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/src/output.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <!-- SweetAlert2 -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
-  <!-- Axios for HTTP requests -->
+  <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <!-- Custom login script -->
-  <script src="login.js"></script>
+  <script src="/teacher/login/login.js"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
   <div class="min-h-screen grid lg:grid-cols-2">
-    <!-- Left Panel - Image Section -->
+    <!-- Left Panel -->
     <div class="hidden lg:flex relative bg-gradient-to-br from-emerald-600 to-emerald-800">
       <div class="absolute inset-0 bg-black/20"></div>
       <div class="absolute inset-0"
@@ -39,7 +38,8 @@
         </div>
       </div>
     </div>
-    <!-- Right Panel - Form Section -->
+
+    <!-- Right Panel -->
     <div class="flex items-center justify-center p-8 lg:p-12">
       <div class="w-full max-w-md">
         <div class="lg:hidden text-center mb-8">
@@ -55,30 +55,17 @@
         <form id="teacherLoginForm" class="space-y-6">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              required
+            <input type="email" id="email" name="email" placeholder="Enter your email" required
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" />
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              required
+            <input type="password" id="password" name="password" placeholder="Enter your password" required
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" />
           </div>
           <div class="flex items-center justify-between">
             <label class="flex items-center">
-              <input
-                type="checkbox"
-                id="remember"
-                name="remember"
+              <input type="checkbox" id="remember" name="remember"
                 class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 mr-2">
               <span class="text-sm text-gray-600">Remember me</span>
             </label>
@@ -100,28 +87,34 @@
       </div>
     </div>
   </div>
+
   <!-- Forgot Password Modal -->
-  <div id="forgotModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+  <div id="forgotModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
-      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeModal('forgotModal')"><i
-          class="fas fa-times"></i></button>
+      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onclick="closeModal('forgotModal')"><i class="fas fa-times"></i></button>
       <h2 class="text-xl font-bold mb-4 text-emerald-700">Forgot Password</h2>
       <form id="forgotForm" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Enter your email</label>
-          <input type="email" id="forgotEmail" name="forgotEmail" required
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email or Phone Number</label>
+          <input type="text" id="contactInput" name="contact" required
+            placeholder="e.g. user@example.com or +233501234567"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+
         </div>
         <button type="submit"
           class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-medium">Send OTP</button>
       </form>
     </div>
   </div>
+
   <!-- OTP Modal -->
-  <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+  <div id="otpModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
-      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeModal('otpModal')"><i
-          class="fas fa-times"></i></button>
+      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onclick="closeModal('otpModal')"><i class="fas fa-times"></i></button>
       <h2 class="text-xl font-bold mb-4 text-emerald-700">Verify OTP</h2>
       <form id="otpForm" class="space-y-4">
         <div class="flex justify-between gap-2">
@@ -143,11 +136,13 @@
       </form>
     </div>
   </div>
+
   <!-- Reset Password Modal -->
-  <div id="resetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+  <div id="resetModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm relative animate-pop">
-      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeModal('resetModal')"><i
-          class="fas fa-times"></i></button>
+      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onclick="closeModal('resetModal')"><i class="fas fa-times"></i></button>
       <h2 class="text-xl font-bold mb-4 text-emerald-700">Reset Password</h2>
       <form id="resetForm" class="space-y-4">
         <div>
@@ -165,6 +160,7 @@
       </form>
     </div>
   </div>
+
   <style>
     .animate-pop {
       animation: popIn .25s cubic-bezier(.4, 2, .6, 1) both;
@@ -182,57 +178,6 @@
       }
     }
   </style>
- <script>
-  // Modal logic
-  function openModal(id) {
-    document.getElementById(id).classList.remove('hidden');
-  }
-
-  function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-  }
-
-  // Forgot button opens modal
-  const forgotBtn = document.getElementById('forgotBtn');
-  if (forgotBtn) {
-    forgotBtn.onclick = () => openModal('forgotModal');
-  }
-
-  // Forgot form submits and moves to OTP modal
-  const forgotForm = document.getElementById('forgotForm');
-  if (forgotForm) {
-    forgotForm.onsubmit = function (e) {
-      e.preventDefault();
-      closeModal('forgotModal');
-      openModal('otpModal');
-    };
-  }
-
-  // OTP form submits and moves to Reset Password modal
-  const otpForm = document.getElementById('otpForm');
-  if (otpForm) {
-    otpForm.onsubmit = function (e) {
-      e.preventDefault();
-      closeModal('otpModal');
-      openModal('resetModal');
-    };
-  }
-
-  // Reset form submits and shows success message
-  const resetForm = document.getElementById('resetForm');
-  if (resetForm) {
-    resetForm.onsubmit = function (e) {
-      e.preventDefault();
-      closeModal('resetModal');
-      Swal.fire({
-        icon: 'success',
-        title: 'Password Reset',
-        text: 'Your password has been successfully reset!',
-        confirmButtonColor: '#10b981',
-      });
-    };
-  }
-</script>
 
 
 </body>
