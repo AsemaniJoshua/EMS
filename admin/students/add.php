@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 include_once __DIR__ . '/../../api/config/database.php';
@@ -103,7 +103,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                     <option value="female">Female</option>
                                 </select>
                             </div>
-                          
+
                         </div>
                     </div>
 
@@ -148,7 +148,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 </select>
                             </div>
                         </div>
-                    </div>                       
+                    </div>
 
                     <!-- Account Information Section -->
                     <div>
@@ -199,8 +199,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
 
-                       <!-- Additional Options -->
-                       <div class="pb-4">
+                    <!-- Additional Options -->
+                    <div class="pb-4">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
                             <i class="fas fa-cog mr-2 text-gray-600"></i>
                             Additional Options
@@ -267,12 +267,12 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         // });
 
         // Department -> Program dynamic filter
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const deptSelect = document.getElementById('departmentSelect');
             const progSelect = document.getElementById('programSelect');
             const allOptions = Array.from(progSelect.options);
 
-            deptSelect.addEventListener('change', function () {
+            deptSelect.addEventListener('change', function() {
                 const deptId = this.value;
                 progSelect.innerHTML = '';
                 progSelect.disabled = !deptId;

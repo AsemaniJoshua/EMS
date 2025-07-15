@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../api/login/sessionCheck.php';
+include_once __DIR__ . '/../../api/login/admin/sessionCheck.php';
 include_once __DIR__ . '/../components/adminSidebar.php';
 include_once __DIR__ . '/../components/adminHeader.php';
 $currentPage = 'exams';
@@ -62,7 +62,7 @@ $pageTitle = "Create New Exam";
                                 <input type="text" name="examCode" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., MATH101-FINAL-2023">
                             </div>
 
-                    
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
                                 <select name="departmentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -224,12 +224,12 @@ $pageTitle = "Create New Exam";
             if (courseSelect.value && semesterSelect.value && !examCodeField.value) {
                 const courseText = courseSelect.options[courseSelect.selectedIndex].text;
                 const semesterText = semesterSelect.options[semesterSelect.selectedIndex].text;
-                
+
                 // Extract course code and semester name for the exam code
                 const courseCode = courseText.split(' ')[0];
                 const semesterCode = semesterText.split(' ')[0].toUpperCase();
                 const year = new Date().getFullYear();
-                
+
                 // Generate exam code
                 examCodeField.value = `${courseCode}-${semesterCode}-${year}`;
             }
@@ -278,10 +278,10 @@ $pageTitle = "Create New Exam";
 
             // In a real application, you'd send this data to the server
             console.log('Creating exam:', examData);
-            
+
             // Show success message
             showNotification('Exam created successfully! Redirecting to question editor...', 'success');
-            
+
             // Redirect to questions page after a short delay
             setTimeout(() => {
                 window.location.href = 'editQuestions.php?examId=1'; // In a real app, you'd pass the new exam ID

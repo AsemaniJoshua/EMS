@@ -198,58 +198,116 @@ function populateResults(results) {
         return;
     }
 
+    // Determine if we're on the exams summary page or student results page
+    const isExamSummaryPage = window.location.pathname.endsWith('/results/') ||
+        window.location.pathname.endsWith('/results/index.php');
+
     // Populate with results
     results.forEach(result => {
         const row = document.createElement('tr');
 
-        // Determine the status class for coloring
-        const statusClass = result.score_percentage >= 50
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800';
+        if (isExamSummaryPage) {
+            // For exam summary page - show aggregated data by exam
+            const passRate = parseFloat(result.pass_rate) || 0;
+            const statusClass = passRate >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
 
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                    <div class="text-sm font-medium text-gray-900">${escapeHtml(result.student_name)}</div>
-                </div>
-                <div class="text-xs text-gray-500">${escapeHtml(result.index_number || '')}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">${escapeHtml(result.exam_title)}</div>
-                <div class="text-xs text-gray-500">Code: ${escapeHtml(result.exam_code)}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">${escapeHtml(result.course_code || '')}</div>
-                <div class="text-xs text-gray-500">${escapeHtml(result.course_title || '')}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">${result.completed_at}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                ${result.score_percentage.toFixed(1)}%
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                ${result.correct_answers} / ${result.total_questions}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                    ${result.score_percentage >= 50 ? 'Passed' : 'Failed'}
-                </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button 
-                    onclick="viewResultDetails(${result.result_id})" 
-                    class="text-indigo-600 hover:text-indigo-900 mr-3">
-                    <i class="fas fa-eye mr-1"></i> View
-                </button>
-                <a 
-                    href="../../api/results/printResult.php?result_id=${result.result_id}" 
-                    target="_blank" 
-                    class="text-green-600 hover:text-green-900">
-                    <i class="fas fa-print mr-1"></i> Print
-                </a>
-            </td>
-        `;
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">${escapeHtml(result.exam_title)}</div>
+                    <div class="text-xs text-gray-500">Code: ${escapeHtml(result.exam_code || '')}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${escapeHtml(result.course_code || '')} - ${escapeHtml(result.course_title || '')}</div>
+                    <div class="text-xs text-gray-500">
+                        <span class="mr-2">${escapeHtml(result.department_name || '')}</span>
+                        <span>${escapeHtml(result.program_name || '')}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">
+                        ${result.total_students} enrolled
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        ${result.submitted_results} results submitted
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <div class="text-xs text-gray-500">Average</div>
+                            <div class="text-sm font-medium">${parseFloat(result.avg_score).toFixed(1)}%</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">Pass Rate</div>
+                            <div class="text-sm font-medium ${statusClass} px-2 py-0.5 rounded-full text-center">
+                                ${parseFloat(result.pass_rate).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a 
+                        href="examResults.php?exam_id=${result.exam_id}" 
+                        class="text-indigo-600 hover:text-indigo-900 mr-3">
+                        <i class="fas fa-eye mr-1"></i> View Details
+                    </a>
+                    <button 
+                        onclick="exportExamResults(${result.exam_id})" 
+                        class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-file-export mr-1"></i> Export
+                    </button>
+                </td>
+            `;
+        } else {
+            // For student results page - show individual student results
+            const statusClass = result.score_percentage >= 50
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800';
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="text-sm font-medium text-gray-900">${escapeHtml(result.student_name)}</div>
+                    </div>
+                    <div class="text-xs text-gray-500">${escapeHtml(result.index_number || '')}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${escapeHtml(result.exam_title)}</div>
+                    <div class="text-xs text-gray-500">Code: ${escapeHtml(result.exam_code)}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${escapeHtml(result.course_code || '')}</div>
+                    <div class="text-xs text-gray-500">${escapeHtml(result.course_title || '')}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${result.completed_at}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    ${result.score_percentage.toFixed(1)}%
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    ${result.correct_answers} / ${result.total_questions}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                        ${result.score_percentage >= 50 ? 'Passed' : 'Failed'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a 
+                        href="viewResult.php?result_id=${result.result_id}" 
+                        class="text-indigo-600 hover:text-indigo-900 mr-3">
+                        <i class="fas fa-eye mr-1"></i> View
+                    </a>
+                    <a 
+                        href="../../api/results/printResult.php?result_id=${result.result_id}" 
+                        target="_blank" 
+                        class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-print mr-1"></i> Print
+                    </a>
+                </td>
+            `;
+        }
         resultsTable.appendChild(row);
     });
 }
@@ -283,6 +341,15 @@ function exportResults() {
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
 
+    // Set export type to exams_summary when we're on the main results page (not individual student results)
+    // Check if we're on the main results page by looking at the current URL path
+    const currentPath = window.location.pathname;
+    if (currentPath.endsWith('/results/') || currentPath.endsWith('/results/index.php')) {
+        formData.append('export_type', 'exams_summary');
+    } else {
+        formData.append('export_type', 'student_results');
+    }
+
     // Send request to export API
     fetch('../../api/results/exportResults.php', {
         method: 'POST',
@@ -300,7 +367,10 @@ function exportResults() {
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = 'exam_results_export.csv';
+
+            // Set appropriate filename based on export type
+            const isExamSummary = currentPath.endsWith('/results/') || currentPath.endsWith('/results/index.php');
+            a.download = isExamSummary ? 'exams_summary_export.csv' : 'student_results_export.csv';
 
             // Append to body and click to trigger download
             document.body.appendChild(a);
@@ -326,6 +396,15 @@ function generateReport() {
 
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
+
+    // Set report type to exams_summary when we're on the main results page (not individual student results)
+    // Check if we're on the main results page by looking at the current URL path
+    const currentPath = window.location.pathname;
+    if (currentPath.endsWith('/results/') || currentPath.endsWith('/results/index.php')) {
+        formData.append('report_type', 'exams_summary');
+    } else {
+        formData.append('report_type', 'student_results');
+    }
 
     // Send request to report API
     fetch('../../api/results/generateReport.php', {
@@ -544,6 +623,52 @@ function showNotification(message, type = 'info') {
 /**
  * Escapes HTML to prevent XSS
  */
+/**
+ * Exports results for a specific exam
+ */
+function exportExamResults(examId) {
+    // Show loading notification
+    showNotification('Preparing export for this exam, please wait...', 'info');
+
+    // Create form data with the exam ID
+    const formData = new FormData();
+    formData.append('exam_id', examId);
+    formData.append('export_type', 'student_results');
+
+    // Send request to export API
+    fetch('../../api/results/exportResults.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create a URL for the blob
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `exam_${examId}_results_export.csv`;
+
+            // Append to body and click to trigger download
+            document.body.appendChild(a);
+            a.click();
+
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            showNotification('Exam results export complete!', 'success');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to export exam results', 'error');
+        });
+}
+
 function escapeHtml(unsafe) {
     if (unsafe === null || unsafe === undefined) return '';
     return String(unsafe)

@@ -2,42 +2,101 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     fetchExams();
+    // Stats are now loaded via PHP, no need for fetchApprovalStats()
 });
 
-function fetchExams() {
-    // Placeholder for backend API call
-    fetch('/api/admin/approval')
+function fetchExams(status = 'Pending') {
+    // Fetch exams from the API
+    fetch('../../api/exams/getApprovalList.php?status=' + status)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
         .then(data => {
-            populateExams(data.exams || []);
+            if (data.success) {
+                populateExams(data.exams || []);
+                // Stats are now updated via PHP
+            } else {
+                showNotification(data.message || 'Failed to load exams', 'error');
+            }
         })
         .catch(error => {
-            showNotification('Failed to load exams (placeholder)', 'error');
+            showNotification('Failed to load exams: ' + error.message, 'error');
         });
 }
+
+
 
 function populateExams(exams) {
     const table = document.getElementById('approvalTable');
     table.innerHTML = '';
+
+    // Update count display
+    const approvalCount = document.getElementById('approvalCount');
+    if (approvalCount) {
+        approvalCount.textContent = exams.length + ' exams found';
+    }
+
     if (exams.length === 0) {
-        table.innerHTML = '<tr><td colspan="7" class="text-center py-4">No exams pending approval.</td></tr>';
+        table.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No exams pending approval.</td></tr>';
         return;
     }
+
     exams.forEach(exam => {
+        // Format dates nicely
+        const startDate = exam.start_datetime ? new Date(exam.start_datetime).toLocaleString() : 'Not set';
+
+        // Create status badge with appropriate color
+        let statusBadge = '';
+        if (exam.status === 'Pending') {
+            statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>';
+        } else if (exam.status === 'Approved') {
+            statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Approved</span>';
+        } else if (exam.status === 'Rejected') {
+            statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Rejected</span>';
+        } else if (exam.status === 'Draft') {
+            statusBadge = '<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Draft</span>';
+        }
+
         const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
         row.innerHTML = `
-            <td class="py-2 px-4 border-b">${exam.name}</td>
-            <td class="py-2 px-4 border-b">${exam.teacher}</td>
-            <td class="py-2 px-4 border-b">${exam.category}</td>
-            <td class="py-2 px-4 border-b">${exam.duration} min</td>
-            <td class="py-2 px-4 border-b"><input type="datetime-local" value="${exam.startTime || ''}" onchange="setStartTime('${exam.id}', this.value)" class="border rounded px-2 py-1"></td>
-            <td class="py-2 px-4 border-b">${exam.status}</td>
-            <td class="py-2 px-4 border-b">
-                <button onclick="approveExam('${exam.id}')" class="bg-green-500 text-white px-2 py-1 rounded mr-2">Approve</button>
-                <button onclick="disapproveExam('${exam.id}')" class="bg-red-500 text-white px-2 py-1 rounded">Disapprove</button>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="font-medium text-gray-900">${exam.title}</div>
+                <div class="text-sm text-gray-500">Code: ${exam.exam_code}</div>
+                <div class="text-xs text-gray-500 mt-1">Questions: ${exam.question_count || 0}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${exam.teacher_name}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${exam.course_code} - ${exam.course_title}</div>
+                <div class="text-xs text-gray-500">${exam.department_name}</div>
+                <div class="text-xs text-gray-500">${exam.program_name}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${exam.duration_minutes} min</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${startDate}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${statusBadge}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                ${exam.status === 'Pending' || exam.status === 'Draft' ? `
+                <button onclick="approveExam(${exam.exam_id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium mr-2 transition-colors">
+                    <i class="fas fa-check mr-1"></i> Approve
+                </button>
+                <button onclick="rejectExam(${exam.exam_id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
+                    <i class="fas fa-times mr-1"></i> Reject
+                </button>
+                ` : `
+                <div class="text-xs text-gray-500">
+                    ${exam.status === 'Approved' ? 'Approved on ' : 'Rejected on '}
+                    ${exam.approved_at ? new Date(exam.approved_at).toLocaleDateString() : 'N/A'}
+                </div>
+                `}
             </td>
         `;
         table.appendChild(row);
@@ -45,54 +104,189 @@ function populateExams(exams) {
 }
 
 function approveExam(id) {
-    // Placeholder for backend API call
-    fetch(`/api/admin/approval/${id}/approve`, { method: 'POST' })
-        .then(response => {
-            if (!response.ok) throw new Error('Approval failed');
-            return response.json();
-        })
-        .then(data => {
-            showNotification('Exam approved! (placeholder)', 'success');
-            fetchExams();
-        })
-        .catch(error => {
-            showNotification('Approval failed (placeholder)', 'error');
-        });
-}
-
-function disapproveExam(id) {
-    // Placeholder for backend API call
-    fetch(`/api/admin/approval/${id}/disapprove`, { method: 'POST' })
-        .then(response => {
-            if (!response.ok) throw new Error('Disapproval failed');
-            return response.json();
-        })
-        .then(data => {
-            showNotification('Exam disapproved! (placeholder)', 'success');
-            fetchExams();
-        })
-        .catch(error => {
-            showNotification('Disapproval failed (placeholder)', 'error');
-        });
-}
-
-function setStartTime(id, value) {
-    // Placeholder for backend API call
-    fetch(`/api/admin/approval/${id}/set-start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startTime: value })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Set start time failed');
-        return response.json();
-    })
-    .then(data => {
-        showNotification('Start time set! (placeholder)', 'success');
-    })
-    .catch(error => {
-        showNotification('Set start time failed (placeholder)', 'error');
+    // Confirm before approving
+    Swal.fire({
+        title: 'Approve Exam?',
+        text: "This will make the exam available to students based on its scheduled date.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10B981',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Yes, approve it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            processApproval(id, 'approve');
+        }
     });
+}
+
+function rejectExam(id) {
+    // Get rejection reason
+    Swal.fire({
+        title: 'Reject Exam',
+        input: 'textarea',
+        inputLabel: 'Reason for rejection',
+        inputPlaceholder: 'Enter the reason why this exam is being rejected...',
+        inputAttributes: {
+            'aria-label': 'Reason for rejection'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Cancel',
+        preConfirm: (comment) => {
+            if (!comment) {
+                Swal.showValidationMessage('Please provide a reason for rejection');
+            }
+            return comment;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            processApproval(id, 'reject', result.value);
+        }
+    });
+}
+
+function processApproval(id, action, comment = '') {
+    // Process approval or rejection via API
+    fetch(`../../api/exams/processApproval.php?exam_id=${id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: action,
+            comment: comment
+        })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Request failed');
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                // Refresh the exam list
+                fetchExams();
+                // Reload the page to update PHP-loaded stats
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Operation failed: ' + error.message, 'error');
+        });
+}
+
+function setExamDate(id, startDatetime, endDatetime) {
+    // This would be implemented when date editing is needed
+    // Currently not used as we're focusing on approval/rejection
+    showNotification('This feature is not yet implemented', 'info');
+}
+
+function filterApprovals() {
+    const filterStatus = document.getElementById('filterStatus').value;
+    fetchExams(filterStatus);
+}
+
+function bulkApprove() {
+    // Show warning about bulk approval
+    Swal.fire({
+        title: 'Bulk Approve?',
+        text: "This will approve all pending exams. Are you sure?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10B981',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Yes, approve all!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading indicator
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Approving all pending exams',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Make the API call to bulk approve
+            fetch('../../api/exams/bulkApprove.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Request failed');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message || `${data.approvedCount} exams have been approved.`,
+                            icon: 'success',
+                            confirmButtonColor: '#10B981'
+                        });
+                        // Refresh the exam list and stats
+                        fetchExams();
+                        // Stats are now loaded via PHP
+                    } else {
+                        throw new Error(data.message || 'Failed to bulk approve exams');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message,
+                        icon: 'error',
+                        confirmButtonColor: '#EF4444'
+                    });
+                });
+        }
+    });
+}
+
+function exportReport() {
+    showNotification('Generating report...', 'info');
+
+    // Get the current filter status
+    const filterStatus = document.getElementById('filterStatus').value;
+
+    // Make API call to generate the report
+    fetch(`../../api/exams/exportApprovalReport.php?status=${filterStatus}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Request failed');
+            return response.blob();
+        })
+        .then(blob => {
+            // Create a download link for the CSV file
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = `exam_approvals_${filterStatus.toLowerCase()}_${date}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            showNotification('Report downloaded successfully', 'success');
+        })
+        .catch(error => {
+            showNotification('Error generating report: ' + error.message, 'error');
+        });
 }
 
 function showNotification(message, type = 'info') {
@@ -108,4 +302,4 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         toast.remove();
     }, 3000);
-} 
+}

@@ -1,153 +1,99 @@
 <?php
-// --- Secure session start and teacher authentication ---
-if (session_status() == PHP_SESSION_NONE) {
-    ini_set('session.cookie_path', '/');
-    session_start();
+// teacher/profile/index.php
+include_once '../components/Sidebar.php';
+include_once '../components/Header.php';
+
+// --- DB Connection ---
+require_once '../../api/config/database.php'; // Adjust path as needed
+
+
+// --- Get teacher_id (from session or GET for demo) ---
+$teacher_id = isset($_GET['id']) ? intval($_GET['id']) : 1; // Replace with session logic in production
+
+// --- Fetch teacher profile ---
+$teacher = null;
+$department = null;
+
+try {
+  $pdo = new PDO('mysql:host=localhost;dbname=ems_db', 'root', ''); // Update credentials as needed
+  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $stmt = $pdo->prepare('SELECT t.*, d.name AS department_name FROM teachers t JOIN departments d ON t.department_id = d.department_id WHERE t.teacher_id = :teacher_id');
+  $stmt->execute(['teacher_id' => $teacher_id]);
+  $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  $error = 'Database error: ' . $e->getMessage();
 }
-require_once __DIR__ . '/../../api/config/database.php';
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    header('Location: /teacher/login/');
-    exit;
-}
-
-$db = new Database();
-$conn = $db->getConnection();
-$teacher_id = $_SESSION['teacher_id'];
-
-// Fetch teacher data
-$stmt = $conn->prepare("
-    SELECT t.*, d.name as department_name 
-    FROM teachers t 
-    JOIN departments d ON t.department_id = d.department_id 
-    WHERE t.teacher_id = :teacher_id
-");
-$stmt->execute(['teacher_id' => $teacher_id]);
-$teacher = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$teacher) {
-    $_SESSION['error'] = "Teacher profile not found.";
-    header('Location: /teacher/');
-    exit;
-}
-
-// Fetch all departments for dropdown
-$departments = $conn->query('SELECT department_id, name FROM departments ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
-
-// Handle success/error messages
-$success_message = $_SESSION['success'] ?? '';
-$error_message = $_SESSION['error'] ?? '';
-unset($_SESSION['success'], $_SESSION['error']);
 ?>
+<!DOCTYPE html>
+<html lang="en">
 
-<div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md mt-8">
-    <h1 class="text-3xl font-extrabold text-gray-900 mb-6">My Profile</h1>
-    
-    <?php if ($success_message): ?>
-        <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div class="flex">
-                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
-                <p class="text-green-800"><?php echo htmlspecialchars($success_message); ?></p>
-            </div>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($error_message): ?>
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div class="flex">
-                <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
-                <p class="text-red-800"><?php echo htmlspecialchars($error_message); ?></p>
-            </div>
-        </div>
-    <?php endif; ?>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Profile - EMS</title>
+  <link rel="stylesheet" href="/src/output.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 
-    <!-- Profile Information Section -->
-    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 mb-8">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Personal Information</h3>
-        <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+<body class="bg-gray-50 min-h-screen">
+  <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
+    <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-2xl mx-auto">
+      <div class="sticky top-16 z-30 bg-gray-50 pb-4 flex items-center gap-4 border-b mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 flex-1">Teacher Profile</h1>
+        <a href="edit.php?id=<?php echo $teacher_id; ?>"
+          class="inline-flex items-center px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium"><i
+            class="fas fa-edit mr-2"></i>Edit Profile</a>
+      </div>
+      <div class="bg-white shadow rounded-xl p-8">
+        <?php if (isset($error)): ?>
+          <div class="text-red-600 mb-4"><?php echo $error; ?></div>
+        <?php elseif ($teacher): ?>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-                <label for="staff_id" class="block text-sm font-medium text-gray-700 mb-1">Staff ID</label>
-                <input type="text" id="staff_id" name="staff_id" value="<?php echo htmlspecialchars($teacher['staff_id']); ?>" disabled
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed shadow-sm sm:text-sm">
-            </div>
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($teacher['username']); ?>" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-            </div>
-            <div>
-                <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <input type="text" id="first_name" name="first_name" value="<?php echo htmlspecialchars($teacher['first_name']); ?>" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-            </div>
-            <div>
-                <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                <input type="text" id="last_name" name="last_name" value="<?php echo htmlspecialchars($teacher['last_name']); ?>" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+              <div class="mb-2 text-gray-600">Full Name</div>
+              <div class="font-medium text-gray-900">
+                <?php echo htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']); ?></div>
             </div>
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($teacher['email']); ?>" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+              <div class="mb-2 text-gray-600">Staff ID</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['staff_id']); ?></div>
             </div>
             <div>
-                <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input type="tel" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($teacher['phone_number'] ?? ''); ?>"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+              <div class="mb-2 text-gray-600">Username</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['username']); ?></div>
             </div>
-            <div class="md:col-span-2">
-                <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                <select id="department_id" name="department_id" required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                    <?php foreach ($departments as $dept): ?>
-                        <option value="<?php echo $dept['department_id']; ?>" <?php if ($teacher['department_id'] == $dept['department_id']) echo 'selected'; ?>>
-                            <?php echo htmlspecialchars($dept['name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <div>
+              <div class="mb-2 text-gray-600">Email</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['email']); ?></div>
             </div>
-            <div class="md:col-span-2">
-                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select id="status" name="status" required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                    <option value="active" <?php if ($teacher['status'] == 'active') echo 'selected'; ?>>Active</option>
-                    <option value="inactive" <?php if ($teacher['status'] == 'inactive') echo 'selected'; ?>>Inactive</option>
-                </select>
+            <div>
+              <div class="mb-2 text-gray-600">Phone Number</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['phone_number']); ?></div>
             </div>
-            <div class="md:col-span-2 flex justify-end mt-6">
-                <button type="submit" class="px-6 py-2 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors duration-200 shadow-md">
-                    <i class="fas fa-save mr-2"></i>Save Changes
-                </button>
+            <div>
+              <div class="mb-2 text-gray-600">Department</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['department_name']); ?></div>
             </div>
-        </form>
+            <div>
+              <div class="mb-2 text-gray-600">Status</div>
+              <span
+                class="inline-flex px-2 py-1 rounded-full text-xs font-semibold <?php echo $teacher['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'; ?>"><?php echo ucfirst($teacher['status']); ?></span>
+            </div>
+            <div>
+              <div class="mb-2 text-gray-600">Created At</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['created_at']); ?></div>
+            </div>
+            <div>
+              <div class="mb-2 text-gray-600">Last Updated</div>
+              <div class="font-medium text-gray-900"><?php echo htmlspecialchars($teacher['updated_at']); ?></div>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="text-gray-600">Teacher not found.</div>
+        <?php endif; ?>
+      </div>
     </div>
+  </main>
+</body>
 
-    <!-- Change Password Section -->
-    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Change Password</h3>
-        <form id="change-password-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-            <div>
-                <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                <input type="password" id="current_password" name="current_password" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-            </div>
-            <div>
-                <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                <input type="password" id="new_password" name="new_password" required minlength="8"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-                <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
-            </div>
-            <div>
-                <label for="confirm_new_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                <input type="password" id="confirm_new_password" name="confirm_new_password" required minlength="8"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
-            </div>
-            <div class="md:col-span-2 flex justify-end mt-6">
-                <button type="submit" class="px-6 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors duration-200 shadow-md">
-                    <i class="fas fa-key mr-2"></i>Update Password
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script src="profile.js"></script>
+</html>

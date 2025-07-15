@@ -17,7 +17,7 @@ try {
 
     // Get parameters
     $page = isset($_REQUEST['page']) ? intval($_REQUEST['page']) : 1;
-    $resultsPerPage = isset($_REQUEST['resultsPerPage']) ? intval($_REQUEST['resultsPerPage']) : 20;
+    $resultsPerPage = isset($_REQUEST['resultsPerPage']) ? intval($_REQUEST['resultsPerPage']) : 100;
     $offset = ($page - 1) * $resultsPerPage;
 
     // Build filters
@@ -82,18 +82,37 @@ try {
         $whereClause = 'WHERE ' . implode(' AND ', $filters);
     }
 
-    // Count total exams for pagination (not individual results)
-    $countQuery = "
-        SELECT COUNT(DISTINCT e.exam_id) as total 
-        FROM results r
-        JOIN exam_registrations er ON r.registration_id = er.registration_id
-        JOIN students s ON er.student_id = s.student_id
-        JOIN exams e ON er.exam_id = e.exam_id
-        JOIN courses c ON e.course_id = c.course_id
-        JOIN departments d ON e.department_id = d.department_id
-        JOIN programs p ON e.program_id = p.program_id
-        $whereClause
-    ";
+    // Determine whether to show exam summaries or individual student results
+    $resultType = isset($_REQUEST['result_type']) ? $_REQUEST['result_type'] : 'exams_summary';
+    $isExamSummary = ($resultType === 'exams_summary');
+
+    // Count query depends on result type
+    if ($isExamSummary) {
+        // Count total exams for pagination - only count exams that have at least one result
+        $countQuery = "
+            SELECT COUNT(DISTINCT e.exam_id) as total 
+            FROM exams e
+            JOIN exam_registrations er ON e.exam_id = er.exam_id
+            JOIN results r ON er.registration_id = r.registration_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+        ";
+    } else {
+        // Count total individual results for pagination
+        $countQuery = "
+            SELECT COUNT(*) as total 
+            FROM results r
+            JOIN exam_registrations er ON r.registration_id = er.registration_id
+            JOIN students s ON er.student_id = s.student_id
+            JOIN exams e ON er.exam_id = e.exam_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+        ";
+    }
 
     $countStmt = $conn->prepare($countQuery);
     foreach ($params as $key => $value) {
@@ -103,39 +122,72 @@ try {
     $totalResults = $countStmt->fetchColumn();
     $totalPages = ceil($totalResults / $resultsPerPage);
 
-    // Fetch exams with result stats (grouped by exam)
-    $query = "
-        SELECT 
-            e.exam_id,
-            e.title as exam_title,
-            e.exam_code,
-            c.course_id,
-            c.code as course_code,
-            c.title as course_title,
-            d.department_id,
-            d.name as department_name,
-            p.program_id,
-            p.name as program_name,
-            e.start_datetime AS date,
-            COUNT(r.result_id) as total_students,
-            MIN(r.score_percentage) as min_score,
-            MAX(r.score_percentage) as max_score,
-            AVG(r.score_percentage) as avg_score,
-            SUM(CASE WHEN r.score_percentage >= 50 THEN 1 ELSE 0 END) as pass_count,
-            SUM(CASE WHEN r.score_percentage < 50 THEN 1 ELSE 0 END) as fail_count,
-            MAX(r.completed_at) as last_completed
-        FROM results r
-        JOIN exam_registrations er ON r.registration_id = er.registration_id
-        JOIN students s ON er.student_id = s.student_id
-        JOIN exams e ON er.exam_id = e.exam_id
-        JOIN courses c ON e.course_id = c.course_id
-        JOIN departments d ON e.department_id = d.department_id
-        JOIN programs p ON e.program_id = p.program_id
-        $whereClause
-        GROUP BY e.exam_id
-        ORDER BY last_completed DESC
-        LIMIT :offset, :limit
-    ";
+    // Different queries based on result type
+    if ($isExamSummary) {
+        // Fetch exams with result stats (grouped by exam) - only fetch exams that have at least one completed result
+        $query = "
+            SELECT 
+                e.exam_id,
+                e.title as exam_title,
+                e.exam_code,
+                c.course_id,
+                c.code as course_code,
+                c.title as course_title,
+                d.department_id,
+                d.name as department_name,
+                p.program_id,
+                p.name as program_name,
+                e.start_datetime AS date,
+                (SELECT COUNT(er2.registration_id) FROM exam_registrations er2 WHERE er2.exam_id = e.exam_id) as total_students,
+                COUNT(r.result_id) as submitted_results,
+                MIN(r.score_percentage) as min_score,
+                MAX(r.score_percentage) as max_score,
+                AVG(r.score_percentage) as avg_score,
+                ROUND((SUM(CASE WHEN r.score_percentage >= 50 THEN 1 ELSE 0 END) / NULLIF(COUNT(r.result_id), 0)) * 100, 1) as pass_rate,
+                SUM(CASE WHEN r.score_percentage >= 50 THEN 1 ELSE 0 END) as pass_count,
+                SUM(CASE WHEN r.score_percentage < 50 THEN 1 ELSE 0 END) as fail_count,
+                MAX(r.completed_at) as last_completed
+            FROM exams e
+            JOIN exam_registrations er ON e.exam_id = er.exam_id
+            JOIN results r ON er.registration_id = r.registration_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+            GROUP BY e.exam_id
+            HAVING COUNT(r.result_id) > 0
+            ORDER BY e.start_datetime DESC, e.title ASC
+            LIMIT :offset, :limit
+        ";
+    } else {
+        // Fetch individual student results
+        $query = "
+            SELECT 
+                r.result_id,
+                CONCAT(s.first_name, ' ', s.last_name) as student_name,
+                s.index_number,
+                e.title as exam_title,
+                e.exam_code,
+                c.code as course_code,
+                c.title as course_title,
+                d.name as department_name,
+                p.name as program_name,
+                r.score_percentage,
+                r.correct_answers,
+                r.total_questions,
+                DATE_FORMAT(r.completed_at, '%Y-%m-%d %H:%i') as completed_at
+            FROM results r
+            JOIN exam_registrations er ON r.registration_id = er.registration_id
+            JOIN students s ON er.student_id = s.student_id
+            JOIN exams e ON er.exam_id = e.exam_id
+            JOIN courses c ON e.course_id = c.course_id
+            JOIN departments d ON e.department_id = d.department_id
+            JOIN programs p ON e.program_id = p.program_id
+            $whereClause
+            ORDER BY r.completed_at DESC
+            LIMIT :offset, :limit
+        ";
+    }
 
     $stmt = $conn->prepare($query);
     foreach ($params as $key => $value) {

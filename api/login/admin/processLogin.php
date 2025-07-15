@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Include database connection
-require_once __DIR__ .'/../../api/config/database.php';
+require_once __DIR__ .'/../../../api/config/database.php';
 $database = new Database();
 $conn = $database->getConnection();
 
