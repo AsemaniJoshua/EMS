@@ -175,6 +175,7 @@ $_SESSION['teacher_name'] = $teacherName;
                     </table>
                 </div>
             </div>
+            
         </div>
     </main>
 
