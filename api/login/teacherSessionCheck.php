@@ -1,27 +1,26 @@
 <?php
+// teacherSessionCheck.php - Checks if teacher is logged in, otherwise redirects to login page
+
 // Start session if not already started
-if (session_status() == PHP_SESSION_NONE) {
-    ini_set('session.cookie_path', '/');
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if teacher is logged in
+// Check if teacher is logged in and session is not expired
 if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    // Redirect to teacher login page
-    header('Location: /teacher/login/');
-    exit;
+    // Not logged in, redirect to login page
+    // header('Location: /teacher/login/');
+    // exit;
 }
 
-// Check session expiry
+// Optionally, check for session expiry
 if (isset($_SESSION['teacher_session_expiry']) && time() > $_SESSION['teacher_session_expiry']) {
-    // Session expired, destroy session and redirect to login
+    // Session expired, destroy session and redirect
+    session_unset();
     session_destroy();
-    header('Location: /teacher/login/');
+    header('Location: /teacher/login/?expired=1');
     exit;
 }
-
-// Update last activity
-$_SESSION['teacher_last_activity'] = time();
 
 // Optional: Check if teacher account is still active in database
 // This adds an extra layer of security
@@ -36,12 +35,15 @@ try {
     
     if (!$teacher || $teacher['status'] !== 'active') {
         // Teacher account is inactive or doesn't exist
+        session_unset();
         session_destroy();
-        header('Location: /teacher/login/');
+        header('Location: /teacher/login/?inactive=1');
         exit;
     }
 } catch (Exception $e) {
     // If database check fails, continue with session (graceful degradation)
     error_log('Teacher session check database error: ' . $e->getMessage());
 }
+
+// If here, user is logged in and session is valid
 ?> 
