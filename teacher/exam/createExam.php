@@ -33,15 +33,13 @@ $stmt = $conn->prepare("SELECT semester_id, name FROM semesters ORDER BY name");
 $stmt->execute();
 $semesters = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch courses this teacher can create exams for
+// Fetch all courses
 $stmt = $conn->prepare("
     SELECT DISTINCT c.course_id, c.code, c.title as name, c.department_id, c.program_id
     FROM courses c
-    JOIN teacher_courses tc ON c.course_id = tc.course_id
-    WHERE tc.teacher_id = :teacher_id
     ORDER BY c.code
 ");
-$stmt->execute(['teacher_id' => $teacher_id]);
+$stmt->execute();
 $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -304,7 +302,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             if (programId) {
                 // Fetch courses from API
-                fetch(`/api/exams/getCoursesByProgramTeacher.php?program_id=${programId}`)
+                fetch(`/api/exams/getCoursesByProgram.php?program_id=${programId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success' && data.courses) {
