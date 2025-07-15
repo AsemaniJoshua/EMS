@@ -10,15 +10,6 @@ header('Content-Type: application/json');
 // Include required files
 require_once __DIR__ . '/../config/database.php';
 
-// Check if teacher is logged in
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Unauthorized access'
-    ]);
-    exit;
-}
-
 // Get program ID from query parameter
 $program_id = $_GET['program_id'] ?? null;
 

@@ -9,16 +9,7 @@ header('Content-Type: application/json');
 
 // Include required files
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../login/teacher/teacherSessionCheck.php';
 
-// Check if teacher is logged in
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Unauthorized access'
-    ]);
-    exit;
-}
 
 // Check request method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -62,6 +53,7 @@ $db = new Database();
 $conn = $db->getConnection();
 
 try {
+    session_start();
     $teacher_id = $_SESSION['teacher_id'];
 
     // Check if exam code already exists
