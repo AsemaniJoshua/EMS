@@ -49,7 +49,6 @@ $teacherName = trim(($teacher['first_name'] ?? '') . ' ' . ($teacher['last_name'
 $_SESSION['teacher_name'] = $teacherName;
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -106,33 +105,34 @@ $_SESSION['teacher_name'] = $teacherName;
             </div>
 
             <!-- Recent Exams Section -->
+
             <div class="bg-white p-6 rounded-lg shadow mb-10">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800">Recent Exams</h2>
-                    <a href="/teacher/exam/" class="text-sm text-emerald-600 hover:text-emerald-800">View All</a>
+                    <h2 class="text-2xl font-bold text-gray-800">Recent Exams</h2>
+                    <a href="/teacher/exam/" class="text-base text-emerald-600 hover:text-emerald-800 font-medium transition duration-300 ease-in-out">View All &rarr;</a>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-left text-gray-700 border">
-                        <thead class="bg-emerald-600 text-white">
+                    <table class="min-w-full text-sm text-left text-gray-700">
+                        <thead class="bg-emerald-700 text-white rounded-t-lg">
                             <tr>
-                                <th class="px-4 py-3">Title</th>
+                                <th class="px-4 py-3 rounded-tl-lg">Title</th>
                                 <th class="px-4 py-3">Course</th>
                                 <th class="px-4 py-3">Exam Code</th>
                                 <th class="px-4 py-3">Start Time</th>
                                 <th class="px-4 py-3">Duration</th>
                                 <th class="px-4 py-3">Status</th>
-                                <th class="px-4 py-3">Actions</th>
+                                <th class="px-4 py-3 rounded-tr-lg">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($recentExams as $exam): ?>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-2 font-medium"><?php echo htmlspecialchars($exam['title']); ?></td>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($exam['course_code'] ?? ''); ?> <?php echo isset($exam['course_title']) ? '- ' . htmlspecialchars($exam['course_title']) : ''; ?></td>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($exam['exam_code']); ?></td>
-                                    <td class="px-4 py-2"><?php echo isset($exam['start_datetime']) ? date("M d, Y - h:i A", strtotime($exam['start_datetime'])) : 'Not scheduled'; ?></td>
-                                    <td class="px-4 py-2"><?php echo isset($exam['duration_minutes']) ? htmlspecialchars($exam['duration_minutes']) . ' mins' : 'N/A'; ?></td>
-                                    <td class="px-4 py-2">
+                                <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                                    <td class="px-4 py-3 font-semibold text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></td>
+                                    <td class="px-4 py-3"><?php echo htmlspecialchars($exam['course_code'] ?? ''); ?> <?php echo isset($exam['course_title']) ? '- ' . htmlspecialchars($exam['course_title']) : ''; ?></td>
+                                    <td class="px-4 py-3 text-gray-600"><?php echo htmlspecialchars($exam['exam_code']); ?></td>
+                                    <td class="px-4 py-3"><?php echo isset($exam['start_datetime']) ? date("M d, Y - h:i A", strtotime($exam['start_datetime'])) : 'Not scheduled'; ?></td>
+                                    <td class="px-4 py-3"><?php echo isset($exam['duration_minutes']) ? htmlspecialchars($exam['duration_minutes']) . ' mins' : 'N/A'; ?></td>
+                                    <td class="px-4 py-3">
                                         <?php
                                         $status = $exam['status'] ?? 'Unknown';
                                         $badgeColor = match ($status) {
@@ -144,17 +144,17 @@ $_SESSION['teacher_name'] = $teacherName;
                                             default => 'bg-gray-100 text-gray-800'
                                         };
                                         ?>
-                                        <span class="inline-block px-2 py-1 rounded text-xs font-semibold <?php echo $badgeColor; ?>">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $badgeColor; ?>">
                                             <?php echo htmlspecialchars($status); ?>
                                         </span>
                                     </td>
-                                    <td class="px-4 py-2">
-                                        <div class="flex space-x-2">
-                                            <a href="/teacher/exam/view.php?id=<?php echo $exam['exam_id']; ?>" class="text-blue-600 hover:text-blue-800" title="View">
-                                                <i class="fas fa-eye"></i>
+                                    <td class="px-4 py-3">
+                                        <div class="flex space-x-3">
+                                            <a href="/teacher/exam/view.php?id=<?php echo $exam['exam_id']; ?>" class="text-blue-600 hover:text-blue-800 transition duration-150 ease-in-out" title="View">
+                                                <i class="fas fa-eye fa-lg"></i>
                                             </a>
-                                            <a href="/teacher/exam/edit.php?id=<?php echo $exam['exam_id']; ?>" class="text-emerald-600 hover:text-emerald-800" title="Edit">
-                                                <i class="fas fa-edit"></i>
+                                            <a href="/teacher/exam/edit.php?id=<?php echo $exam['exam_id']; ?>" class="text-emerald-600 hover:text-emerald-800 transition duration-150 ease-in-out" title="Edit">
+                                                <i class="fas fa-edit fa-lg"></i>
                                             </a>
                                         </div>
                                     </td>
@@ -162,11 +162,11 @@ $_SESSION['teacher_name'] = $teacherName;
                             <?php endforeach; ?>
                             <?php if (empty($recentExams)): ?>
                                 <tr>
-                                    <td colspan="7" class="px-4 py-4 text-center text-gray-500">
-                                        <div class="py-6">
-                                            <i class="fas fa-clipboard-list text-gray-300 text-4xl mb-3"></i>
-                                            <p class="mb-1">No recent exams found.</p>
-                                            <a href="/teacher/exam/create.php" class="text-emerald-600 hover:text-emerald-800 font-medium">Create your first exam</a>
+                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
+                                        <div class="py-6 flex flex-col items-center justify-center">
+                                            <i class="fas fa-clipboard-list text-gray-300 text-5xl mb-4"></i>
+                                            <p class="mb-3 text-lg">No recent exams found.</p>
+                                            <a href="/teacher/exam/create.php" class="text-emerald-600 hover:text-emerald-800 font-semibold text-lg transition duration-300 ease-in-out">Create your first exam &rarr;</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -175,7 +175,7 @@ $_SESSION['teacher_name'] = $teacherName;
                     </table>
                 </div>
             </div>
-            
+
         </div>
     </main>
 

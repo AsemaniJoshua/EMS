@@ -1,5 +1,13 @@
-<?php include_once '../components/Sidebar.php'; ?>
-<?php include_once '../components/Header.php'; ?>
+<?php
+require_once __DIR__ . '/../../api/login/teacher/teacherSessionCheck.php';
+require_once __DIR__ . '/../../api/config/database.php';
+require_once __DIR__ . '/../components/teacherSidebar.php';
+require_once __DIR__ . '/../components/teacherHeader.php'; 
+
+$currentPage = 'exam';
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,10 +15,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Exams - EMS Teacher</title>
-    <link rel="stylesheet" href="/src/output.css">
+      <link rel="stylesheet" href="/src/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
