@@ -18,7 +18,6 @@ if (isset($_SESSION['admin_session_expiry']) && time() > $_SESSION['admin_sessio
     // Session expired, destroy session and redirect
     session_unset();
     session_destroy();
-    header('Location: /admin/login/index.php?expired=1');
+    header('Location: /admin/login/');
     exit;
 }
-// If here, user is logged in and session is valid
