@@ -18,6 +18,7 @@ class Database
     // Get database connection with fallback to online database
     public function getConnection()
     {
+
         $this->conn = null;
 
         try {
