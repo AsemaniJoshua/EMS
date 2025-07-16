@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../api/config/database.php';
 require_once __DIR__ . '/../components/teacherSidebar.php';
 require_once __DIR__ . '/../components/teacherHeader.php';
 
-$currentPage = 'exam';
+$currentPage = 'exams';
 $pageTitle = "Create New Exam";
 
 // Check teacher session
@@ -153,24 +153,61 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             Exam Settings
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
-                                <input type="datetime-local" name="start_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            </div>
+                           <div>
+  <label class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
+  <input type="datetime-local" name="start_datetime" id="start_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+</div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date & Time *</label>
-                                <input type="datetime-local" name="end_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            </div>
+<div>
+  <label class="block text-sm font-medium text-gray-700 mb-2">End Date & Time *</label>
+  <input type="datetime-local" name="end_datetime" id="end_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+</div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
-                                <input type="number" name="duration_minutes" min="15" max="240" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120">
-                            </div>
+<div>
+  <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
+  <input type="number" name="duration_minutes" id="duration_minutes" min="15" max="240" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120">
+</div>
+
+<script>
+  const startInput = document.getElementById('start_datetime');
+  const endInput = document.getElementById('end_datetime');
+  const durationInput = document.getElementById('duration_minutes');
+
+  function updateEndFromDuration() {
+    const startVal = startInput.value;
+    const duration = parseInt(durationInput.value);
+    if (startVal && !isNaN(duration)) {
+      const start = new Date(startVal);
+      const end = new Date(start.getTime() + duration * 60000);
+      endInput.value = end.toISOString().slice(0, 16);
+    }
+  }
+
+  function updateDurationFromEnd() {
+    const startVal = startInput.value;
+    const endVal = endInput.value;
+    if (startVal && endVal) {
+      const start = new Date(startVal);
+      const end = new Date(endVal);
+      const duration = Math.round((end - start) / 60000);
+      if (duration > 0) {
+        durationInput.value = duration;
+      }
+    }
+  }
+
+  durationInput.addEventListener('input', updateEndFromDuration);
+  endInput.addEventListener('input', updateDurationFromEnd);
+  startInput.addEventListener('input', () => {
+    if (durationInput.value) updateEndFromDuration();
+    if (endInput.value) updateDurationFromEnd();
+  });
+</script>
+
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Total Marks *</label>
-                                <input type="number" name="total_marks" min="1" max="500" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 100">
+                                <input type="number" name="total_marks" min="1" max="500" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 100" value="100">
                             </div>
 
                             <div>

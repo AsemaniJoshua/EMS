@@ -1,18 +1,10 @@
 <?php
-
-
 require_once __DIR__ . '/../../api/login/teacher/teacherSessionCheck.php';
 require_once __DIR__ . '/../../api/config/database.php';
 require_once __DIR__ . '/../components/teacherSidebar.php';
 require_once __DIR__ . '/../components/teacherHeader.php';
 
-$currentPage = 'exam';
-
-// Check teacher session
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    header('Location: /teacher/login/');
-    exit;
-}
+$currentPage = 'exams';
 
 // --- Database connection ---
 $db = new Database();
@@ -51,7 +43,6 @@ $draftExams = count(array_filter($exams, function ($exam) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,6 +77,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="total">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -106,6 +98,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </div>
                     </div>
                 </div>
+                
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="approved">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -126,6 +119,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </div>
                     </div>
                 </div>
+                
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="pending">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -146,6 +140,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </div>
                     </div>
                 </div>
+                
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="completed">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -241,9 +236,10 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                 <?php foreach ($exams as $exam): ?>
                                     <tr id="exam-row-<?php echo $exam['exam_id']; ?>" class="exam-row">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?php echo htmlspecialchars($exam['course_code'] . ' - ' . $exam['course_name']); ?></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?php echo ($exam['course_code'] . '<br>' . $exam['course_name']); ?>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            <?php echo htmlspecialchars($exam['program_name'] . ' / ' . $exam['semester_name']); ?>
+                                            <?php echo ($exam['program_name'] . ' <br> ' . $exam['semester_name']); ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                             <?php
@@ -304,7 +300,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                                         <i class="fas fa-trash"></i>
                                                     </a>
                                                 <?php endif; ?>
-                                                <i class="fas fa-trash"></i>
+                                                
                                                 </a>
                                             </div>
                                         </td>
