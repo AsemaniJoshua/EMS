@@ -41,7 +41,7 @@ try {
     $query = "
         SELECT 
             r.result_id,
-            r.student_id,
+            er.student_id,
             r.score_obtained,
             r.total_score,
             r.score_percentage,
@@ -52,9 +52,10 @@ try {
             s.first_name,
             s.last_name,
             s.email
-        FROM results r
-        JOIN students s ON r.student_id = s.student_id
-        WHERE r.exam_id = :exam_id
+        FROM exam_registrations er
+        JOIN results r ON er.registration_id = r.registration_id
+        JOIN students s ON er.student_id = s.student_id
+        WHERE er.exam_id = :exam_id
         ORDER BY r.score_percentage DESC, s.last_name, s.first_name
     ";
 

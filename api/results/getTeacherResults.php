@@ -110,7 +110,8 @@ try {
         SELECT COUNT(DISTINCT e.exam_id) as total
         FROM exams e
         LEFT JOIN courses c ON e.course_id = c.course_id
-        LEFT JOIN results r ON e.exam_id = r.exam_id
+        LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id
+        LEFT JOIN results r ON er.registration_id = r.registration_id
         $whereClause
     ";
 
