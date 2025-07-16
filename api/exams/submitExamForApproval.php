@@ -46,16 +46,17 @@ if (!isset($data['exam_id']) || empty($data['exam_id'])) {
 }
 
 $examId = intval($data['exam_id']);
+$action = isset($data['action']) ? $data['action'] : 'submit_for_approval'; // Default action
 
 // Connect to the database
 $db = new Database();
 $conn = $db->getConnection();
 
 try {
-   
+
     $teacher_id = $_SESSION['teacher_id'];
 
-    // Check if the exam belongs to this teacher and is in Draft status
+    // Check if the exam belongs to this teacher
     $stmt = $conn->prepare("
         SELECT exam_id, status 
         FROM exams 
@@ -75,55 +76,97 @@ try {
         exit;
     }
 
-    if ($exam['status'] !== 'Draft') {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Only exams in Draft status can be submitted for approval'
-        ]);
-        exit;
+    // Handle different actions
+    switch ($action) {
+        case 'submit_for_approval':
+            if ($exam['status'] !== 'Draft') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Only exams in Draft status can be submitted for approval'
+                ]);
+                exit;
+            }
+
+            // Check if the exam has any questions
+            $stmt = $conn->prepare("
+                SELECT COUNT(*) as question_count 
+                FROM questions 
+                WHERE exam_id = :exam_id
+            ");
+            $stmt->execute(['exam_id' => $examId]);
+            $questionCount = $stmt->fetch(PDO::FETCH_ASSOC)['question_count'];
+
+            if ($questionCount === 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Cannot submit an exam without questions'
+                ]);
+                exit;
+            }
+
+            // Update exam status to Pending
+            $newStatus = 'Pending';
+            $successMessage = 'Exam submitted for approval successfully';
+            break;
+
+        case 'return_to_draft':
+            if ($exam['status'] !== 'Pending') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Only exams in Pending status can be returned to Draft'
+                ]);
+                exit;
+            }
+
+            // Update exam status to Draft
+            $newStatus = 'Draft';
+            $successMessage = 'Exam returned to Draft status successfully';
+            break;
+
+        case 'unpublish':
+            if ($exam['status'] !== 'Approved') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Only approved exams can be unpublished'
+                ]);
+                exit;
+            }
+
+            // Update exam status to Draft
+            $newStatus = 'Draft';
+            $successMessage = 'Exam unpublished successfully';
+            break;
+
+        default:
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Invalid action specified'
+            ]);
+            exit;
     }
 
-    // Check if the exam has any questions
-    $stmt = $conn->prepare("
-        SELECT COUNT(*) as question_count 
-        FROM questions 
-        WHERE exam_id = :exam_id
-    ");
-    $stmt->execute(['exam_id' => $examId]);
-    $questionCount = $stmt->fetch(PDO::FETCH_ASSOC)['question_count'];
-
-    if ($questionCount === 0) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Cannot submit an exam without questions'
-        ]);
-        exit;
-    }
-
-    // Update exam status to Pending
+    // Update exam status
     $stmt = $conn->prepare("
         UPDATE exams 
-        SET status = 'Pending' 
+        SET status = :status 
         WHERE exam_id = :exam_id AND teacher_id = :teacher_id
     ");
 
     $result = $stmt->execute([
+        'status' => $newStatus,
         'exam_id' => $examId,
         'teacher_id' => $teacher_id
     ]);
 
     if ($result) {
-        // Create a notification for admins (if you have a notifications system)
-        // This would typically be done with a separate function or table insert
-
         echo json_encode([
             'status' => 'success',
-            'message' => 'Exam submitted for approval successfully'
+            'message' => $successMessage
         ]);
     } else {
         echo json_encode([
             'status' => 'error',
-            'message' => 'Failed to submit exam for approval'
+            'message' => 'Failed to update exam status'
         ]);
     }
 } catch (PDOException $e) {

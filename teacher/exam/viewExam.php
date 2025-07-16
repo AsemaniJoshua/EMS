@@ -109,13 +109,19 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <div class="flex gap-2">
           <?php if ($exam['status'] !== 'Completed'): ?>
-            <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-              <i class="fas fa-edit mr-1"></i>Edit
-            </button>
+            <?php if ($exam['status'] !== 'Pending'): ?>
+              <button onclick="editExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                <i class="fas fa-edit mr-1"></i>Edit
+              </button>
+            <?php endif; ?>
 
             <?php if ($exam['status'] === 'Draft'): ?>
               <button onclick="submitForApproval(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
                 <i class="fas fa-paper-plane mr-1"></i>Submit for Approval
+              </button>
+            <?php elseif ($exam['status'] === 'Pending'): ?>
+              <button onclick="returnToDraft(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-700">
+                <i class="fas fa-arrow-left mr-1"></i>Return to Draft
               </button>
             <?php elseif ($exam['status'] === 'Approved'): ?>
               <button onclick="unpublishExam(<?php echo $examId; ?>)" class="px-3 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700">
@@ -376,10 +382,28 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <script>
     // Display error message if redirected from editExam.php with error parameter
     document.addEventListener('DOMContentLoaded', function() {
-      <?php if (isset($_GET['error']) && $_GET['error'] === 'completed'): ?>
+      <?php if (isset($_GET['error'])): ?>
+        const errorType = '<?php echo $_GET['error']; ?>';
+        let title = 'Cannot Edit';
+        let text = '';
+
+        switch (errorType) {
+          case 'completed':
+            text = 'Completed exams cannot be edited.';
+            break;
+          case 'approved':
+            text = 'Approved exams cannot be edited. You can unpublish the exam to make changes.';
+            break;
+          case 'pending':
+            text = 'Exams under review cannot be edited. You can return the exam to draft status to make changes.';
+            break;
+          default:
+            text = 'This exam cannot be edited.';
+        }
+
         Swal.fire({
-          title: 'Cannot Edit',
-          text: 'Completed exams cannot be edited.',
+          title: title,
+          text: text,
           icon: 'error'
         });
       <?php endif; ?>
@@ -513,6 +537,66 @@ $registeredStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 Swal.fire({
                   title: 'Error',
                   text: response.data.message || 'Failed to unpublish the exam.',
+                  icon: 'error',
+                  confirmButtonColor: '#3085d6'
+                });
+              }
+            })
+            .catch(function(error) {
+              Swal.close();
+              console.error('Error:', error);
+              Swal.fire({
+                title: 'Error',
+                text: 'Network error. Please try again.',
+                icon: 'error',
+                confirmButtonColor: '#3085d6'
+              });
+            });
+        }
+      });
+    }
+
+    function returnToDraft(examId) {
+      Swal.fire({
+        title: 'Return to Draft?',
+        text: 'This will change the exam status from Pending to Draft so you can make changes.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#eab308',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, return to draft!',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Show loading indicator
+          Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          axios.post('/api/exams/submitExamForApproval.php', {
+              exam_id: examId,
+              action: 'return_to_draft'
+            })
+            .then(function(response) {
+              Swal.close();
+              if (response.data.status === 'success') {
+                Swal.fire({
+                  title: 'Success!',
+                  text: 'The exam has been returned to Draft status.',
+                  icon: 'success',
+                  confirmButtonColor: '#10b981'
+                }).then(() => {
+                  window.location.reload();
+                });
+              } else {
+                Swal.fire({
+                  title: 'Error',
+                  text: response.data.message || 'Failed to return exam to draft.',
                   icon: 'error',
                   confirmButtonColor: '#3085d6'
                 });
