@@ -75,11 +75,12 @@ try {
             e.start_datetime,
             e.end_datetime,
             e.status,
+            e.pass_mark,
             c.course_id,
             c.code as course_code,
             c.title as course_title,
             COUNT(DISTINCT er.student_id) as total_students,
-            COUNT(DISTINCT CASE WHEN r.score_percentage >= 50 THEN er.student_id END) as passed_students,
+            COUNT(DISTINCT CASE WHEN r.score_percentage >= e.pass_mark THEN er.student_id END) as passed_students,
             ROUND(AVG(r.score_percentage), 1) as avg_score,
             MAX(r.completed_at) as last_result_date
         FROM exams e
@@ -88,7 +89,7 @@ try {
         LEFT JOIN results r ON er.registration_id = r.registration_id
         $whereClause
         GROUP BY e.exam_id, e.title, e.exam_code, e.start_datetime, e.end_datetime, 
-                 e.status, c.course_id, c.code, c.title
+                 e.status, e.pass_mark, c.course_id, c.code, c.title
         ORDER BY e.start_datetime DESC
         LIMIT :offset, :limit
     ";

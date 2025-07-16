@@ -42,13 +42,12 @@ try {
         SELECT 
             r.result_id,
             er.student_id,
-            r.score_obtained,
-            r.total_score,
+            r.total_questions,
+            r.correct_answers,
+            r.incorrect_answers,
             r.score_percentage,
-            r.time_taken,
             r.completed_at,
-            r.created_at,
-            s.student_number,
+            s.index_number,
             s.first_name,
             s.last_name,
             s.email
@@ -63,25 +62,20 @@ try {
     $stmt->execute(['exam_id' => $exam_id]);
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Get exam pass mark
+    $passMarkStmt = $conn->prepare("SELECT pass_mark FROM exams WHERE exam_id = :exam_id");
+    $passMarkStmt->execute(['exam_id' => $exam_id]);
+    $exam = $passMarkStmt->fetch(PDO::FETCH_ASSOC);
+    $pass_mark = $exam ? $exam['pass_mark'] : 50;
+
     // Format the results
     foreach ($results as &$result) {
-        // Convert time_taken from seconds to minutes if not null
-        if ($result['time_taken']) {
-            $result['time_taken_minutes'] = round($result['time_taken'] / 60, 1);
-        } else {
-            $result['time_taken_minutes'] = null;
-        }
-
         // Add pass/fail status
-        $result['status'] = $result['score_percentage'] >= 50 ? 'Pass' : 'Fail';
+        $result['status'] = $result['score_percentage'] >= $pass_mark ? 'Pass' : 'Fail';
 
         // Format dates
         if ($result['completed_at']) {
             $result['completed_at_formatted'] = date('M j, Y g:i A', strtotime($result['completed_at']));
-        }
-
-        if ($result['created_at']) {
-            $result['created_at_formatted'] = date('M j, Y g:i A', strtotime($result['created_at']));
         }
     }
 
@@ -91,11 +85,11 @@ try {
         'results' => $results,
         'summary' => [
             'total_students' => count($results),
-            'passed_students' => count(array_filter($results, function ($r) {
-                return $r['score_percentage'] >= 50;
+            'passed_students' => count(array_filter($results, function ($r) use ($pass_mark) {
+                return $r['score_percentage'] >= $pass_mark;
             })),
-            'failed_students' => count(array_filter($results, function ($r) {
-                return $r['score_percentage'] < 50;
+            'failed_students' => count(array_filter($results, function ($r) use ($pass_mark) {
+                return $r['score_percentage'] < $pass_mark;
             })),
             'avg_score' => count($results) > 0 ? round(array_sum(array_column($results, 'score_percentage')) / count($results), 1) : 0,
             'min_score' => count($results) > 0 ? min(array_column($results, 'score_percentage')) : 0,

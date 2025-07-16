@@ -40,14 +40,17 @@ if (!$exam) {
 // Get exam statistics
 $statsStmt = $conn->prepare("
     SELECT 
-        COUNT(*) as total_students,
-        COUNT(CASE WHEN score_percentage >= 50 THEN 1 END) as passed_students,
-        ROUND(AVG(score_percentage), 1) as avg_score,
-        MIN(score_percentage) as min_score,
-        MAX(score_percentage) as max_score,
-        ROUND(AVG(time_taken), 0) as avg_time_taken
-    FROM results 
-    WHERE exam_id = :exam_id
+        COUNT(r.result_id) as total_students,
+        COUNT(CASE WHEN r.score_percentage >= e.pass_mark THEN 1 END) as passed_students,
+        ROUND(AVG(r.score_percentage), 1) as avg_score,
+        MIN(r.score_percentage) as min_score,
+        MAX(r.score_percentage) as max_score,
+        AVG(r.total_questions) as avg_questions_attempted,
+        COUNT(CASE WHEN r.completed_at IS NOT NULL THEN 1 END) as completed_count
+    FROM results r 
+    JOIN exam_registrations er ON r.registration_id = er.registration_id
+    JOIN exams e ON er.exam_id = e.exam_id
+    WHERE er.exam_id = :exam_id
 ");
 $statsStmt->execute(['exam_id' => $exam_id]);
 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
@@ -156,7 +159,7 @@ $pageTitle = "Exam Results - " . $exam['title'];
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Duration</label>
-                            <p class="mt-1 text-sm text-gray-900"><?php echo $exam['duration']; ?> minutes</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo $exam['duration_minutes']; ?> minutes</p>
                         </div>
                     </div>
                 </div>
@@ -294,7 +297,6 @@ $pageTitle = "Exam Results - " . $exam['title'];
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Taken</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -318,7 +320,7 @@ $pageTitle = "Exam Results - " . $exam['title'];
             const resultsTable = document.getElementById('resultsTable');
             resultsTable.innerHTML = `
                 <tr>
-                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                         <i class="fas fa-spinner fa-spin mr-2"></i>
                         Loading student results...
                     </td>
@@ -341,7 +343,7 @@ $pageTitle = "Exam Results - " . $exam['title'];
                     } else {
                         resultsTable.innerHTML = `
                         <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-red-500">
+                            <td colspan="7" class="px-6 py-4 text-center text-red-500">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
                                 Error loading results: ${data.message}
                             </td>
@@ -369,7 +371,7 @@ $pageTitle = "Exam Results - " . $exam['title'];
             if (results.length === 0) {
                 resultsTable.innerHTML = `
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                             <div class="flex flex-col items-center py-8">
                                 <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
                                 <p class="text-lg font-medium text-gray-500 mb-2">No student results found</p>
@@ -382,8 +384,8 @@ $pageTitle = "Exam Results - " . $exam['title'];
             }
 
             results.forEach(result => {
-                const isPassed = result.score_percentage >= 50;
-                const timeTaken = result.time_taken ? Math.round(result.time_taken / 60) + ' min' : 'N/A';
+                const isPassed = result.score_percentage >= <?php echo $exam['pass_mark']; ?>;
+                const completedDate = result.completed_at ? formatDate(result.completed_at) : 'N/A';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -391,10 +393,10 @@ $pageTitle = "Exam Results - " . $exam['title'];
                         <div class="text-sm font-medium text-gray-900">${escapeHtml(result.first_name + ' ' + result.last_name)}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${escapeHtml(result.student_number)}
+                        ${escapeHtml(result.index_number)}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${result.score_obtained}/${result.total_score}
+                        ${result.correct_answers}/${result.total_questions}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${result.score_percentage}%
@@ -405,10 +407,7 @@ $pageTitle = "Exam Results - " . $exam['title'];
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${timeTaken}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${result.completed_at ? formatDate(result.completed_at) : 'N/A'}
+                        ${completedDate}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button onclick="viewResultDetails(${result.result_id})" class="text-blue-600 hover:text-blue-900" title="View Details">

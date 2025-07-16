@@ -21,19 +21,21 @@ $conn = $db->getConnection();
 $stmt = $conn->prepare("
     SELECT 
         r.*,
-        s.student_number,
+        s.index_number,
         s.first_name,
         s.last_name,
         s.email,
         e.title as exam_title,
         e.exam_code,
-        e.duration,
+        e.duration_minutes,
+        e.pass_mark,
         c.code as course_code,
         c.title as course_title
     FROM results r
-    JOIN students s ON r.student_id = s.student_id
-    JOIN exams e ON r.exam_id = e.exam_id
-    JOIN courses c ON e.course_id = c.course_id
+    JOIN exam_registrations er ON r.registration_id = er.registration_id
+    JOIN students s ON er.student_id = s.student_id
+    JOIN exams e ON er.exam_id = e.exam_id
+    LEFT JOIN courses c ON e.course_id = c.course_id
     WHERE r.result_id = :result_id AND e.teacher_id = :teacher_id
 ");
 
@@ -105,7 +107,7 @@ $pageTitle = "Result Details - " . $result['first_name'] . ' ' . $result['last_n
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-500">Student Number</label>
-                <p class="mt-1 text-sm text-gray-900"><?php echo htmlspecialchars($result['student_number']); ?></p>
+                <p class="mt-1 text-sm text-gray-900"><?php echo htmlspecialchars($result['index_number']); ?></p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-500">Email</label>
@@ -139,7 +141,7 @@ $pageTitle = "Result Details - " . $result['first_name'] . ' ' . $result['last_n
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-500">Duration</label>
-                <p class="mt-1 text-sm text-gray-900"><?php echo $result['duration']; ?> minutes</p>
+                <p class="mt-1 text-sm text-gray-900"><?php echo $result['duration_minutes']; ?> minutes</p>
               </div>
             </div>
           </div>
@@ -159,7 +161,7 @@ $pageTitle = "Result Details - " . $result['first_name'] . ' ' . $result['last_n
             <!-- Score -->
             <div class="text-center">
               <div class="bg-blue-50 rounded-lg p-4">
-                <div class="text-3xl font-bold text-blue-600"><?php echo $result['score_obtained']; ?>/<?php echo $result['total_score']; ?></div>
+                <div class="text-3xl font-bold text-blue-600"><?php echo $result['correct_answers']; ?>/<?php echo $result['total_questions']; ?></div>
                 <div class="text-sm text-gray-600 mt-1">Score Obtained</div>
               </div>
             </div>
@@ -182,13 +184,13 @@ $pageTitle = "Result Details - " . $result['first_name'] . ' ' . $result['last_n
               </div>
             </div>
 
-            <!-- Time Taken -->
+            <!-- Incorrect Answers -->
             <div class="text-center">
-              <div class="bg-yellow-50 rounded-lg p-4">
-                <div class="text-2xl font-bold text-yellow-600">
-                  <?php echo $result['time_taken'] ? round($result['time_taken'] / 60, 1) : 'N/A'; ?>
+              <div class="bg-red-50 rounded-lg p-4">
+                <div class="text-2xl font-bold text-red-600">
+                  <?php echo $result['incorrect_answers']; ?>
                 </div>
-                <div class="text-sm text-gray-600 mt-1">Minutes Taken</div>
+                <div class="text-sm text-gray-600 mt-1">Incorrect Answers</div>
               </div>
             </div>
           </div>
