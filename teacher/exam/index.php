@@ -292,16 +292,11 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                 <?php endif; ?>
-                                                <a href="questions.php?exam_id=<?php echo $exam['exam_id']; ?>" class="text-emerald-600 hover:text-emerald-900" title="Questions">
-                                                    <i class="fas fa-list-check"></i>
-                                                </a>
                                                 <?php if ($exam['status'] !== 'Completed'): ?>
                                                     <a href="#" data-exam-id="<?php echo $exam['exam_id']; ?>" class="text-red-600 hover:text-red-900 delete-exam-btn" title="Delete">
                                                         <i class="fas fa-trash"></i>
                                                     </a>
                                                 <?php endif; ?>
-                                                
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
