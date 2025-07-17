@@ -1,104 +1,1083 @@
-// Admin Settings JS
+// Admin Settings JS - Comprehensive System Management
 
 document.addEventListener('DOMContentLoaded', function () {
-    fetchCategories();
-    document.getElementById('categoryForm').onsubmit = addCategory;
-    document.getElementById('durationForm').onsubmit = setDuration;
+    initializeSettings();
+    loadAllData();
 });
 
-function fetchCategories() {
-    // Placeholder for backend API call
-    fetch('/api/admin/categories')
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
+// Global variables
+let currentEditId = null;
+let currentEditType = null;
+
+// Initialize settings page
+function initializeSettings() {
+    // Set up SweetAlert defaults
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
+    window.Toast = Toast;
+
+    // Set initial tab
+    showTab('departments');
+}
+
+// Tab Management
+function showTab(tabName) {
+    // Hide all tabs
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.classList.add('hidden'));
+
+    // Show selected tab
+    const selectedTab = document.getElementById(`content-${tabName}`);
+    if (selectedTab) {
+        selectedTab.classList.remove('hidden');
+    }
+
+    // Update tab buttons
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.classList.remove('active', 'border-emerald-500', 'text-emerald-600');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+
+    const activeButton = document.getElementById(`tab-${tabName}`);
+    if (activeButton) {
+        activeButton.classList.add('active', 'border-emerald-500', 'text-emerald-600');
+        activeButton.classList.remove('border-transparent', 'text-gray-500');
+    }
+
+    // Load data for the selected tab
+    switch (tabName) {
+        case 'departments':
+            loadDepartments();
+            break;
+        case 'programs':
+            loadPrograms();
+            break;
+        case 'courses':
+            loadCourses();
+            break;
+        case 'levels':
+            loadLevels();
+            break;
+        case 'semesters':
+            loadSemesters();
+            break;
+        case 'system':
+            loadSystemConfig();
+            break;
+    }
+}
+
+// Load all data
+function loadAllData() {
+    loadDepartments();
+    loadPrograms();
+    loadCourses();
+    loadLevels();
+    loadSemesters();
+    loadSystemConfig();
+}
+
+// DEPARTMENTS MANAGEMENT
+function loadDepartments() {
+    fetch('/api/admin/settings/departments.php?action=get')
+        .then(response => response.json())
         .then(data => {
-            populateCategories(data.categories || []);
+            if (data.success) {
+                displayDepartments(data.data);
+            } else {
+                showNotification(data.message || 'Failed to load departments', 'error');
+            }
         })
         .catch(error => {
-            showNotification('Failed to load categories (placeholder)', 'error');
+            console.error('Error loading departments:', error);
+            showNotification('Error loading departments', 'error');
         });
 }
 
-function populateCategories(categories) {
-    const list = document.getElementById('categoriesList');
-    list.innerHTML = '';
-    if (categories.length === 0) {
-        list.innerHTML = '<li class="text-gray-500">No categories found.</li>';
+function displayDepartments(departments) {
+    const container = document.getElementById('departments-list');
+    if (!container) return;
+
+    if (departments.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No departments found.</p>';
         return;
     }
-    categories.forEach((cat, idx) => {
-        const li = document.createElement('li');
-        li.className = 'bg-gray-100 p-3 rounded flex justify-between items-center';
-        li.innerHTML = `<span>${cat.name}</span><button onclick="editCategory(${idx})" class="text-blue-500 hover:underline">Edit</button>`;
-        list.appendChild(li);
+
+    container.innerHTML = departments.map(dept => `
+        <div class="bg-white p-4 rounded-lg border border-gray-200 flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold text-gray-900">${escapeHtml(dept.name)}</h3>
+                <p class="text-sm text-gray-500">${escapeHtml(dept.description || 'No description')}</p>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editDepartment(${dept.department_id})" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteDepartment(${dept.department_id})" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddDepartmentModal() {
+    const modalHtml = `
+        <div id="departmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Department</h3>
+                <form id="departmentForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Department Name</label>
+                        <input type="text" id="deptName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="deptDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Add Department</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    document.getElementById('departmentForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveDepartment();
     });
 }
 
-function addCategory(e) {
-    e.preventDefault();
-    const form = e.target;
-    const category = form.category.value;
-    // Placeholder for backend API call
-    fetch('/api/admin/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Add failed');
-        return response.json();
-    })
-    .then(data => {
-        showNotification('Category added! (placeholder)', 'success');
-        fetchCategories();
-        form.reset();
-    })
-    .catch(error => {
-        showNotification('Failed to add category (placeholder)', 'error');
-    });
-}
+function saveDepartment() {
+    const name = document.getElementById('deptName').value;
+    const description = document.getElementById('deptDescription').value;
 
-function editCategory(idx) {
-    // Placeholder for edit logic
-    showNotification('Edit category feature coming soon!', 'info');
-}
-
-function setDuration(e) {
-    e.preventDefault();
-    const form = e.target;
-    const duration = form.duration.value;
-    // Placeholder for backend API call
-    fetch('/api/admin/duration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duration })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Set failed');
-        return response.json();
-    })
-    .then(data => {
-        showNotification('Duration set! (placeholder)', 'success');
-        form.reset();
-    })
-    .catch(error => {
-        showNotification('Failed to set duration (placeholder)', 'error');
-    });
-}
-
-function showNotification(message, type = 'info') {
-    const colors = {
-        success: 'bg-green-500',
-        error: 'bg-red-500',
-        info: 'bg-blue-500',
+    const data = {
+        action: currentEditId ? 'update' : 'create',
+        name: name,
+        description: description
     };
-    const toast = document.createElement('div');
-    toast.className = `fixed top-5 right-5 px-4 py-2 rounded shadow text-white z-50 ${colors[type] || colors.info}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-} 
+
+    if (currentEditId) {
+        data.department_id = currentEditId;
+    }
+
+    fetch('/api/admin/settings/departments.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message || 'Department saved successfully', 'success');
+                closeModal();
+                loadDepartments();
+                currentEditId = null;
+            } else {
+                showNotification(data.message || 'Failed to save department', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving department:', error);
+            showNotification('Error saving department', 'error');
+        });
+}
+
+function editDepartment(id) {
+    fetch(`/api/admin/settings/departments.php?action=get&id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                currentEditId = id;
+                showAddDepartmentModal();
+                document.getElementById('deptName').value = data.data.name;
+                document.getElementById('deptDescription').value = data.data.description || '';
+                document.querySelector('#departmentModal h3').textContent = 'Edit Department';
+                document.querySelector('#departmentModal button[type="submit"]').textContent = 'Update Department';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading department:', error);
+            showNotification('Error loading department', 'error');
+        });
+}
+
+function deleteDepartment(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will delete the department and may affect related data!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/api/admin/settings/departments.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'delete',
+                    department_id: id
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Department deleted successfully', 'success');
+                        loadDepartments();
+                    } else {
+                        showNotification(data.message || 'Failed to delete department', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting department:', error);
+                    showNotification('Error deleting department', 'error');
+                });
+        }
+    });
+}
+
+// PROGRAMS MANAGEMENT
+function loadPrograms() {
+    fetch('/api/admin/settings/programs.php?action=get')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayPrograms(data.data);
+            } else {
+                showNotification(data.message || 'Failed to load programs', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading programs:', error);
+            showNotification('Error loading programs', 'error');
+        });
+}
+
+function displayPrograms(programs) {
+    const container = document.getElementById('programs-list');
+    if (!container) return;
+
+    if (programs.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No programs found.</p>';
+        return;
+    }
+
+    container.innerHTML = programs.map(program => `
+        <div class="bg-white p-4 rounded-lg border border-gray-200 flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold text-gray-900">${escapeHtml(program.name)}</h3>
+                <p class="text-sm text-gray-500">${escapeHtml(program.department_name)} | ${escapeHtml(program.description || 'No description')}</p>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editProgram(${program.program_id})" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteProgram(${program.program_id})" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddProgramModal() {
+    // First load departments for the dropdown
+    fetch('/api/admin/settings/departments.php?action=get')
+        .then(response => response.json())
+        .then(data => {
+            const departmentOptions = data.success ?
+                data.data.map(dept => `<option value="${dept.department_id}">${escapeHtml(dept.name)}</option>`).join('') :
+                '<option value="">No departments available</option>';
+
+            const modalHtml = `
+                <div id="programModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Program</h3>
+                        <form id="programForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Program Name</label>
+                                <input type="text" id="programName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                <select id="programDepartment" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Select Department</option>
+                                    ${departmentOptions}
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea id="programDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Add Program</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('programForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                saveProgram();
+            });
+        });
+}
+
+function saveProgram() {
+    const name = document.getElementById('programName').value;
+    const departmentId = document.getElementById('programDepartment').value;
+    const description = document.getElementById('programDescription').value;
+
+    const data = {
+        action: currentEditId ? 'update' : 'create',
+        name: name,
+        department_id: departmentId,
+        description: description
+    };
+
+    if (currentEditId) {
+        data.program_id = currentEditId;
+    }
+
+    fetch('/api/admin/settings/programs.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message || 'Program saved successfully', 'success');
+                closeModal();
+                loadPrograms();
+                currentEditId = null;
+            } else {
+                showNotification(data.message || 'Failed to save program', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving program:', error);
+            showNotification('Error saving program', 'error');
+        });
+}
+
+// COURSES MANAGEMENT (similar pattern)
+function loadCourses() {
+    fetch('/api/admin/settings/courses.php?action=get')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayCourses(data.data);
+            } else {
+                showNotification(data.message || 'Failed to load courses', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading courses:', error);
+            showNotification('Error loading courses', 'error');
+        });
+}
+
+function displayCourses(courses) {
+    const container = document.getElementById('courses-list');
+    if (!container) return;
+
+    if (courses.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No courses found.</p>';
+        return;
+    }
+
+    container.innerHTML = courses.map(course => `
+        <div class="bg-white p-4 rounded-lg border border-gray-200 flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold text-gray-900">${escapeHtml(course.code)} - ${escapeHtml(course.title)}</h3>
+                <p class="text-sm text-gray-500">${escapeHtml(course.department_name)} | ${escapeHtml(course.program_name)} | Credits: ${course.credits}</p>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editCourse(${course.course_id})" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteCourse(${course.course_id})" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddCourseModal() {
+    // Load departments, programs, levels, and semesters for dropdowns
+    Promise.all([
+        fetch('/api/admin/settings/departments.php?action=get').then(r => r.json()),
+        fetch('/api/admin/settings/programs.php?action=get').then(r => r.json()),
+        fetch('/api/admin/settings/levels.php?action=get').then(r => r.json()),
+        fetch('/api/admin/settings/semesters.php?action=get').then(r => r.json())
+    ]).then(([deptData, progData, levelData, semData]) => {
+        const departmentOptions = deptData.success ?
+            deptData.data.map(dept => `<option value="${dept.department_id}">${escapeHtml(dept.name)}</option>`).join('') : '';
+        const programOptions = progData.success ?
+            progData.data.map(prog => `<option value="${prog.program_id}">${escapeHtml(prog.name)}</option>`).join('') : '';
+        const levelOptions = levelData.success ?
+            levelData.data.map(level => `<option value="${level.level_id}">${escapeHtml(level.name)}</option>`).join('') : '';
+        const semesterOptions = semData.success ?
+            semData.data.map(sem => `<option value="${sem.semester_id}">${escapeHtml(sem.name)}</option>`).join('') : '';
+
+        const modalHtml = `
+            <div id="courseModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Course</h3>
+                    <form id="courseForm">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Course Code</label>
+                                <input type="text" id="courseCode" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Credits</label>
+                                <input type="number" id="courseCredits" min="1" max="10" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
+                            <input type="text" id="courseTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                <select id="courseDepartment" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Select Department</option>
+                                    ${departmentOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Program</label>
+                                <select id="courseProgram" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Select Program</option>
+                                    ${programOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Level</label>
+                                <select id="courseLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Select Level</option>
+                                    ${levelOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+                                <select id="courseSemester" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Select Semester</option>
+                                    ${semesterOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Add Course</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        document.getElementById('courseForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            saveCourse();
+        });
+    });
+}
+
+function saveCourse() {
+    const data = {
+        action: currentEditId ? 'update' : 'create',
+        code: document.getElementById('courseCode').value,
+        title: document.getElementById('courseTitle').value,
+        department_id: document.getElementById('courseDepartment').value,
+        program_id: document.getElementById('courseProgram').value,
+        level_id: document.getElementById('courseLevel').value,
+        semester_id: document.getElementById('courseSemester').value,
+        credits: document.getElementById('courseCredits').value
+    };
+
+    if (currentEditId) {
+        data.course_id = currentEditId;
+    }
+
+    fetch('/api/admin/settings/courses.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message || 'Course saved successfully', 'success');
+                closeModal();
+                loadCourses();
+                currentEditId = null;
+            } else {
+                showNotification(data.message || 'Failed to save course', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving course:', error);
+            showNotification('Error saving course', 'error');
+        });
+}
+
+// LEVELS MANAGEMENT
+function loadLevels() {
+    fetch('/api/admin/settings/levels.php?action=get')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayLevels(data.data);
+            } else {
+                showNotification(data.message || 'Failed to load levels', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading levels:', error);
+            showNotification('Error loading levels', 'error');
+        });
+}
+
+function displayLevels(levels) {
+    const container = document.getElementById('levels-list');
+    if (!container) return;
+
+    if (levels.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No levels found.</p>';
+        return;
+    }
+
+    container.innerHTML = levels.map(level => `
+        <div class="bg-white p-4 rounded-lg border border-gray-200 flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold text-gray-900">${escapeHtml(level.name)}</h3>
+                <p class="text-sm text-gray-500">Level ID: ${level.level_id}</p>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editLevel(${level.level_id})" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteLevel(${level.level_id})" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddLevelModal() {
+    const modalHtml = `
+        <div id="levelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Level</h3>
+                <form id="levelForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Level ID</label>
+                        <input type="number" id="levelId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g., 100, 200, 300">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Level Name</label>
+                        <input type="text" id="levelName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g., Level 100">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Add Level</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    document.getElementById('levelForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveLevel();
+    });
+}
+
+function saveLevel() {
+    const data = {
+        action: currentEditId ? 'update' : 'create',
+        level_id: document.getElementById('levelId').value,
+        name: document.getElementById('levelName').value
+    };
+
+    if (currentEditId) {
+        data.old_level_id = currentEditId;
+    }
+
+    fetch('/api/admin/settings/levels.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message || 'Level saved successfully', 'success');
+                closeModal();
+                loadLevels();
+                currentEditId = null;
+            } else {
+                showNotification(data.message || 'Failed to save level', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving level:', error);
+            showNotification('Error saving level', 'error');
+        });
+}
+
+// SEMESTERS MANAGEMENT
+function loadSemesters() {
+    fetch('/api/admin/settings/semesters.php?action=get')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displaySemesters(data.data);
+            } else {
+                showNotification(data.message || 'Failed to load semesters', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading semesters:', error);
+            showNotification('Error loading semesters', 'error');
+        });
+}
+
+function displaySemesters(semesters) {
+    const container = document.getElementById('semesters-list');
+    if (!container) return;
+
+    if (semesters.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No semesters found.</p>';
+        return;
+    }
+
+    container.innerHTML = semesters.map(semester => `
+        <div class="bg-white p-4 rounded-lg border border-gray-200 flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold text-gray-900">${escapeHtml(semester.name)}</h3>
+                <p class="text-sm text-gray-500">
+                    ${semester.start_date ? `Start: ${semester.start_date}` : ''} 
+                    ${semester.end_date ? `| End: ${semester.end_date}` : ''}
+                </p>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editSemester(${semester.semester_id})" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteSemester(${semester.semester_id})" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddSemesterModal() {
+    const modalHtml = `
+        <div id="semesterModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Semester</h3>
+                <form id="semesterForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Semester Name</label>
+                        <input type="text" id="semesterName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g., Fall 2024">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                        <input type="date" id="semesterStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                        <input type="date" id="semesterEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Add Semester</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    document.getElementById('semesterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveSemester();
+    });
+}
+
+function saveSemester() {
+    const data = {
+        action: currentEditId ? 'update' : 'create',
+        name: document.getElementById('semesterName').value,
+        start_date: document.getElementById('semesterStartDate').value || null,
+        end_date: document.getElementById('semesterEndDate').value || null
+    };
+
+    if (currentEditId) {
+        data.semester_id = currentEditId;
+    }
+
+    fetch('/api/admin/settings/semesters.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message || 'Semester saved successfully', 'success');
+                closeModal();
+                loadSemesters();
+                currentEditId = null;
+            } else {
+                showNotification(data.message || 'Failed to save semester', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving semester:', error);
+            showNotification('Error saving semester', 'error');
+        });
+}
+
+// SYSTEM CONFIGURATION
+function loadSystemConfig() {
+    // Load system configuration settings
+    // This would typically come from a system_settings table
+    fetch('/api/admin/settings/system.php?action=get')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateSystemConfig(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading system config:', error);
+        });
+}
+
+function populateSystemConfig(config) {
+    if (config.defaultDuration) document.getElementById('defaultDuration').value = config.defaultDuration;
+    if (config.autoFinalize) document.getElementById('autoFinalize').value = config.autoFinalize;
+    if (config.notificationMethod) document.getElementById('notificationMethod').value = config.notificationMethod;
+    if (config.backupFrequency) document.getElementById('backupFrequency').value = config.backupFrequency;
+    if (config.maintenanceMode) document.getElementById('maintenanceMode').value = config.maintenanceMode;
+    if (config.maxAttempts) document.getElementById('maxAttempts').value = config.maxAttempts;
+}
+
+function saveSystemConfig() {
+    const config = {
+        action: 'save',
+        defaultDuration: document.getElementById('defaultDuration').value,
+        autoFinalize: document.getElementById('autoFinalize').value,
+        notificationMethod: document.getElementById('notificationMethod').value,
+        backupFrequency: document.getElementById('backupFrequency').value,
+        maintenanceMode: document.getElementById('maintenanceMode').value,
+        maxAttempts: document.getElementById('maxAttempts').value
+    };
+
+    fetch('/api/admin/settings/system.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('System configuration saved successfully', 'success');
+            } else {
+                showNotification(data.message || 'Failed to save configuration', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving system config:', error);
+            showNotification('Error saving configuration', 'error');
+        });
+}
+
+// UTILITY FUNCTIONS
+function closeModal() {
+    const modals = document.querySelectorAll('[id$="Modal"]');
+    modals.forEach(modal => modal.remove());
+    currentEditId = null;
+}
+
+
+// Export and logs functions
+function exportSystemData() {
+    const exportUrl = '../../api/admin/settings/export.php';
+    window.open(exportUrl, '_blank');
+}
+
+let currentLogsPage = 1;
+let currentLogsLimit = 25;
+
+async function loadSystemLogs(page = 1, limit = 25, type = '', search = '') {
+    try {
+        currentLogsPage = page;
+        currentLogsLimit = limit;
+
+        const params = new URLSearchParams({
+            page: page,
+            limit: limit
+        });
+
+        if (type) params.append('type', type);
+        if (search) params.append('search', search);
+
+        const response = await axios.get(`../../api/admin/settings/logs.php?${params}`);
+
+        if (response.data.success) {
+            displaySystemLogs(response.data.logs);
+            displayLogsPagination(response.data.pagination);
+            displayLogsTypeStats(response.data.typeStats);
+        } else {
+            throw new Error(response.data.message);
+        }
+    } catch (error) {
+        console.error('Error loading system logs:', error);
+        const logsTableBody = document.getElementById('logsTableBody');
+        if (logsTableBody) {
+            logsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-600">Failed to load logs</td></tr>';
+        }
+    }
+}
+
+function displaySystemLogs(logs) {
+    const logsTableBody = document.getElementById('logsTableBody');
+    if (!logsTableBody) return;
+
+    if (logs.length === 0) {
+        logsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">No logs found</td></tr>';
+        return;
+    }
+
+    logsTableBody.innerHTML = logs.map(log => `
+        <tr class="border-b border-gray-200 hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm">${new Date(log.created_at).toLocaleString()}</td>
+            <td class="px-4 py-3">
+                <span class="px-2 py-1 text-xs font-medium rounded-full 
+                    ${getLogTypeColor(log.log_type)}">
+                    ${log.log_type}
+                </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-900">${log.message}</td>
+            <td class="px-4 py-3 text-sm text-gray-600">${log.admin_name || 'System'}</td>
+            <td class="px-4 py-3 text-right">
+                <button onclick="deleteLog(${log.log_id})" 
+                    class="text-red-600 hover:text-red-800 text-sm">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getLogTypeColor(type) {
+    const colors = {
+        'info': 'bg-blue-100 text-blue-800',
+        'warning': 'bg-yellow-100 text-yellow-800',
+        'error': 'bg-red-100 text-red-800',
+        'success': 'bg-green-100 text-green-800',
+        'system': 'bg-purple-100 text-purple-800',
+        'export': 'bg-indigo-100 text-indigo-800'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
+}
+
+function displayLogsPagination(pagination) {
+    const paginationDiv = document.getElementById('logsPagination');
+    if (!paginationDiv) return;
+
+    let paginationHTML = '';
+
+    // Previous button
+    if (pagination.page > 1) {
+        paginationHTML += `
+            <button onclick="loadSystemLogs(${pagination.page - 1}, ${pagination.limit})" 
+                class="px-3 py-2 text-sm text-gray-600 hover:text-emerald-600">
+                Previous
+            </button>
+        `;
+    }
+
+    // Page numbers
+    const startPage = Math.max(1, pagination.page - 2);
+    const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+        const isActive = i === pagination.page;
+        paginationHTML += `
+            <button onclick="loadSystemLogs(${i}, ${pagination.limit})" 
+                class="px-3 py-2 text-sm ${isActive ?
+                'bg-emerald-600 text-white' :
+                'text-gray-600 hover:text-emerald-600'}">
+                ${i}
+            </button>
+        `;
+    }
+
+    // Next button
+    if (pagination.page < pagination.pages) {
+        paginationHTML += `
+            <button onclick="loadSystemLogs(${pagination.page + 1}, ${pagination.limit})" 
+                class="px-3 py-2 text-sm text-gray-600 hover:text-emerald-600">
+                Next
+            </button>
+        `;
+    }
+
+    paginationDiv.innerHTML = paginationHTML;
+}
+
+function displayLogsTypeStats(typeStats) {
+    const statsDiv = document.getElementById('logsTypeStats');
+    if (!statsDiv) return;
+
+    statsDiv.innerHTML = typeStats.map(stat => `
+        <div class="flex justify-between items-center py-1">
+            <span class="text-sm capitalize">${stat.log_type}:</span>
+            <span class="font-medium">${stat.count}</span>
+        </div>
+    `).join('');
+}
+
+async function deleteLog(logId) {
+    try {
+        const result = await Swal.fire({
+            title: 'Delete Log Entry?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280'
+        });
+
+        if (result.isConfirmed) {
+            const response = await axios.delete('../../api/admin/settings/logs.php', {
+                data: { log_id: logId }
+            });
+
+            if (response.data.success) {
+                Swal.fire('Deleted', 'Log entry deleted successfully', 'success');
+                loadSystemLogs(currentLogsPage, currentLogsLimit);
+            } else {
+                throw new Error(response.data.message);
+            }
+        }
+    } catch (error) {
+        console.error('Error deleting log:', error);
+        Swal.fire('Error', error.response?.data?.message || 'Failed to delete log', 'error');
+    }
+}
+
+async function clearOldLogs() {
+    try {
+        const { value: days } = await Swal.fire({
+            title: 'Clear Old Logs',
+            input: 'select',
+            inputOptions: {
+                '7': 'Older than 7 days',
+                '30': 'Older than 30 days',
+                '90': 'Older than 90 days',
+                '365': 'Older than 1 year'
+            },
+            inputPlaceholder: 'Select time period',
+            showCancelButton: true,
+            confirmButtonColor: '#059669'
+        });
+
+        if (days) {
+            const response = await axios.delete('../../api/admin/settings/logs.php', {
+                data: { older_than_days: parseInt(days) }
+            });
+
+            if (response.data.success) {
+                Swal.fire('Success', response.data.message, 'success');
+                loadSystemLogs(1, currentLogsLimit);
+            } else {
+                throw new Error(response.data.message);
+            }
+        }
+    } catch (error) {
+        console.error('Error clearing logs:', error);
+        Swal.fire('Error', error.response?.data?.message || 'Failed to clear logs', 'error');
+    }
+}
+
+// Search and filter functions
+function filterLogs() {
+    const type = document.getElementById('logsTypeFilter').value;
+    const search = document.getElementById('logsSearchInput').value;
+    loadSystemLogs(1, currentLogsLimit, type, search);
+}
+
+// Make functions globally available
+window.exportSystemData = exportSystemData;
+window.loadSystemLogs = loadSystemLogs;
+window.deleteLog = deleteLog;
+window.clearOldLogs = clearOldLogs;
+window.filterLogs = filterLogs;
+
+/*
+
+Additional improvements and features to consider:
+
+1. **User Management**: Extend the system to manage users, roles, and permissions.
+2. **Audit Logs**: Keep track of changes made in the system for security and compliance.
+3. **Notifications System**: Implement a system to manage and send notifications to users.
+4. **Backup and Restore**: Enhance the backup system to allow for easy restoration of data.
+5. **Performance Monitoring**: Tools to monitor system performance and generate reports.
+6. **API Access**: Secure API access for integration with other systems or for mobile app development.
+7. **Data Validation**: Implement comprehensive data validation both on client and server sides.
+8. **Error Handling**: Improve error handling to provide more informative messages and recovery options.
+9. **Accessibility Features**: Ensure the system is accessible to users with disabilities.
+10. **Internationalization**: Prepare the system for multiple languages and regional settings.
+
+These features would significantly enhance the functionality, usability, and security of the system.
+
+*/
