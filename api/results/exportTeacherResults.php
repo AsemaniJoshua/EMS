@@ -55,16 +55,17 @@ function exportExamResults($conn, $teacher_id, $exam_id)
             s.student_id,
             s.first_name,
             s.last_name,
-            s.student_number,
-            r.score_obtained,
-            r.total_score,
+            s.index_number,
+            r.correct_answers,
+            r.total_questions,
             r.score_percentage,
-            r.time_taken,
             r.completed_at,
-            CASE WHEN r.score_percentage >= 50 THEN 'Pass' ELSE 'Fail' END as result_status
+            CASE WHEN r.score_percentage >= e.pass_mark THEN 'Pass' ELSE 'Fail' END as result_status
         FROM results r
-        JOIN students s ON r.student_id = s.student_id
-        WHERE r.exam_id = :exam_id
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN students s ON er.student_id = s.student_id
+        JOIN exams e ON er.exam_id = e.exam_id
+        WHERE er.exam_id = :exam_id
         ORDER BY s.last_name, s.first_name
     ";
 
@@ -99,28 +100,24 @@ function exportExamResults($conn, $teacher_id, $exam_id)
         'Student Number',
         'First Name',
         'Last Name',
-        'Score Obtained',
-        'Total Score',
+        'Correct Answers',
+        'Total Questions',
         'Percentage',
         'Result',
-        'Time Taken (minutes)',
         'Completed At'
     ]);
 
     // Add data rows
     foreach ($results as $result) {
-        $timeTaken = $result['time_taken'] ? round($result['time_taken'] / 60, 1) : 'N/A';
-
         fputcsv($output, [
             $result['student_id'],
-            $result['student_number'],
+            $result['index_number'],
             $result['first_name'],
             $result['last_name'],
-            $result['score_obtained'],
-            $result['total_score'],
+            $result['correct_answers'],
+            $result['total_questions'],
             $result['score_percentage'] . '%',
             $result['result_status'],
-            $timeTaken,
             $result['completed_at'] ? date('Y-m-d H:i:s', strtotime($result['completed_at'])) : 'N/A'
         ]);
     }
@@ -172,27 +169,28 @@ function exportExamsSummary($conn, $teacher_id, $course_id, $status, $date_range
             e.exam_code,
             e.start_datetime,
             e.end_datetime,
-            e.duration,
+            e.duration_minutes,
             e.status,
             c.code as course_code,
             c.title as course_title,
             d.name as department_name,
             p.name as program_name,
-            COUNT(DISTINCT r.student_id) as total_students,
-            COUNT(DISTINCT CASE WHEN r.score_percentage >= 50 THEN r.student_id END) as passed_students,
+            COUNT(DISTINCT er.student_id) as total_students,
+            COUNT(DISTINCT CASE WHEN r.score_percentage >= e.pass_mark THEN er.student_id END) as passed_students,
             ROUND(AVG(r.score_percentage), 1) as avg_score,
             MIN(r.score_percentage) as min_score,
             MAX(r.score_percentage) as max_score,
-            ROUND((COUNT(DISTINCT CASE WHEN r.score_percentage >= 50 THEN r.student_id END) / 
-                   NULLIF(COUNT(DISTINCT r.student_id), 0)) * 100, 1) as pass_rate
+            ROUND((COUNT(DISTINCT CASE WHEN r.score_percentage >= e.pass_mark THEN er.student_id END) / 
+                   NULLIF(COUNT(DISTINCT er.student_id), 0)) * 100, 1) as pass_rate
         FROM exams e
         LEFT JOIN courses c ON e.course_id = c.course_id
         LEFT JOIN programs p ON c.program_id = p.program_id
         LEFT JOIN departments d ON p.department_id = d.department_id
-        LEFT JOIN results r ON e.exam_id = r.exam_id
+        LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id
+        LEFT JOIN results r ON er.registration_id = r.registration_id
         $whereClause
         GROUP BY e.exam_id, e.title, e.exam_code, e.start_datetime, e.end_datetime, 
-                 e.duration, e.status, c.code, c.title, d.name, p.name
+                 e.duration_minutes, e.status, c.code, c.title, d.name, p.name
         ORDER BY e.start_datetime DESC
     ";
 
@@ -255,7 +253,7 @@ function exportExamsSummary($conn, $teacher_id, $course_id, $status, $date_range
             $exam['program_name'],
             $exam['start_datetime'] ? date('Y-m-d H:i', strtotime($exam['start_datetime'])) : 'N/A',
             $exam['end_datetime'] ? date('Y-m-d H:i', strtotime($exam['end_datetime'])) : 'N/A',
-            $exam['duration'],
+            $exam['duration_minutes'],
             $exam['status'],
             $exam['total_students'] ?: 0,
             $exam['passed_students'] ?: 0,

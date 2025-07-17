@@ -16,7 +16,7 @@ $db = new Database();
 $conn = $db->getConnection();
 
 // Get teacher information
-$teacherStmt = $conn->prepare("SELECT first_name, last_name, employee_id FROM teachers WHERE teacher_id = :teacher_id");
+$teacherStmt = $conn->prepare("SELECT first_name, last_name, staff_id FROM teachers WHERE teacher_id = :teacher_id");
 $teacherStmt->execute(['teacher_id' => $teacher_id]);
 $teacher = $teacherStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -71,14 +71,16 @@ function generateExamReport($conn, $teacher_id, $teacher, $exam_id)
     // Get exam statistics
     $statsStmt = $conn->prepare("
         SELECT 
-            COUNT(*) as total_students,
-            COUNT(CASE WHEN score_percentage >= 50 THEN 1 END) as passed_students,
-            ROUND(AVG(score_percentage), 1) as avg_score,
-            MIN(score_percentage) as min_score,
-            MAX(score_percentage) as max_score,
-            ROUND(AVG(time_taken), 0) as avg_time_taken
-        FROM results 
-        WHERE exam_id = :exam_id
+            COUNT(r.result_id) as total_students,
+            COUNT(CASE WHEN r.score_percentage >= e.pass_mark THEN 1 END) as passed_students,
+            ROUND(AVG(r.score_percentage), 1) as avg_score,
+            MIN(r.score_percentage) as min_score,
+            MAX(r.score_percentage) as max_score,
+            AVG(r.total_questions) as avg_questions_attempted
+        FROM results r 
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN exams e ON er.exam_id = e.exam_id
+        WHERE er.exam_id = :exam_id
     ");
     $statsStmt->execute(['exam_id' => $exam_id]);
     $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
@@ -87,18 +89,19 @@ function generateExamReport($conn, $teacher_id, $teacher, $exam_id)
     $distributionStmt = $conn->prepare("
         SELECT 
             CASE 
-                WHEN score_percentage >= 90 THEN '90-100'
-                WHEN score_percentage >= 80 THEN '80-89'
-                WHEN score_percentage >= 70 THEN '70-79'
-                WHEN score_percentage >= 60 THEN '60-69'
-                WHEN score_percentage >= 50 THEN '50-59'
+                WHEN r.score_percentage >= 90 THEN '90-100'
+                WHEN r.score_percentage >= 80 THEN '80-89'
+                WHEN r.score_percentage >= 70 THEN '70-79'
+                WHEN r.score_percentage >= 60 THEN '60-69'
+                WHEN r.score_percentage >= 50 THEN '50-59'
                 ELSE 'Below 50'
             END as score_range,
             COUNT(*) as count
-        FROM results 
-        WHERE exam_id = :exam_id
+        FROM results r 
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        WHERE er.exam_id = :exam_id
         GROUP BY score_range
-        ORDER BY MIN(score_percentage) DESC
+        ORDER BY MIN(r.score_percentage) DESC
     ");
     $distributionStmt->execute(['exam_id' => $exam_id]);
     $distribution = $distributionStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -106,18 +109,19 @@ function generateExamReport($conn, $teacher_id, $teacher, $exam_id)
     // Get student results
     $resultsStmt = $conn->prepare("
         SELECT 
-            s.student_number,
+            s.index_number,
             s.first_name,
             s.last_name,
-            r.score_obtained,
-            r.total_score,
+            r.correct_answers,
+            r.total_questions,
             r.score_percentage,
-            r.time_taken,
             r.completed_at,
-            CASE WHEN r.score_percentage >= 50 THEN 'Pass' ELSE 'Fail' END as result_status
+            CASE WHEN r.score_percentage >= e.pass_mark THEN 'Pass' ELSE 'Fail' END as result_status
         FROM results r
-        JOIN students s ON r.student_id = s.student_id
-        WHERE r.exam_id = :exam_id
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN students s ON er.student_id = s.student_id
+        JOIN exams e ON er.exam_id = e.exam_id
+        WHERE er.exam_id = :exam_id
         ORDER BY r.score_percentage DESC, s.last_name, s.first_name
     ");
     $resultsStmt->execute(['exam_id' => $exam_id]);
@@ -171,21 +175,22 @@ function generateExamsSummaryReport($conn, $teacher_id, $teacher, $course_id, $s
             e.exam_code,
             e.start_datetime,
             e.end_datetime,
-            e.duration,
+            e.duration_minutes,
             e.status,
             c.code as course_code,
             c.title as course_title,
-            COUNT(DISTINCT r.student_id) as total_students,
-            COUNT(DISTINCT CASE WHEN r.score_percentage >= 50 THEN r.student_id END) as passed_students,
+            COUNT(DISTINCT er.student_id) as total_students,
+            COUNT(DISTINCT CASE WHEN r.score_percentage >= e.pass_mark THEN er.student_id END) as passed_students,
             ROUND(AVG(r.score_percentage), 1) as avg_score,
-            ROUND((COUNT(DISTINCT CASE WHEN r.score_percentage >= 50 THEN r.student_id END) / 
-                   NULLIF(COUNT(DISTINCT r.student_id), 0)) * 100, 1) as pass_rate
+            ROUND((COUNT(DISTINCT CASE WHEN r.score_percentage >= e.pass_mark THEN er.student_id END) / 
+                   NULLIF(COUNT(DISTINCT er.student_id), 0)) * 100, 1) as pass_rate
         FROM exams e
         LEFT JOIN courses c ON e.course_id = c.course_id
-        LEFT JOIN results r ON e.exam_id = r.exam_id
+        LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id
+        LEFT JOIN results r ON er.registration_id = r.registration_id
         $whereClause
         GROUP BY e.exam_id, e.title, e.exam_code, e.start_datetime, e.end_datetime, 
-                 e.duration, e.status, c.code, c.title
+                 e.duration_minutes, e.status, c.code, c.title
         ORDER BY e.start_datetime DESC
     ";
 
@@ -264,7 +269,7 @@ function generateExamReportHTML($exam, $teacher, $stats, $distribution, $results
         <div class="info-box">
             <h3>Teacher Information</h3>
             <p><strong>Name:</strong> ' . htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']) . '</p>
-            <p><strong>Employee ID:</strong> ' . htmlspecialchars($teacher['employee_id']) . '</p>
+            <p><strong>Staff ID:</strong> ' . htmlspecialchars($teacher['staff_id']) . '</p>
             <p><strong>Department:</strong> ' . htmlspecialchars($exam['department_name'] ?? 'N/A') . '</p>
             <p><strong>Program:</strong> ' . htmlspecialchars($exam['program_name'] ?? 'N/A') . '</p>
         </div>
@@ -332,23 +337,20 @@ function generateExamReportHTML($exam, $teacher, $stats, $distribution, $results
                     <th>Score</th>
                     <th>Percentage</th>
                     <th>Result</th>
-                    <th>Time Taken</th>
                     <th>Completed At</th>
                 </tr>
             </thead>
             <tbody>';
 
         foreach ($results as $result) {
-            $timeTaken = $result['time_taken'] ? round($result['time_taken'] / 60, 1) . ' min' : 'N/A';
             $resultClass = $result['result_status'] === 'Pass' ? 'pass' : 'fail';
 
             echo '<tr>
-                <td>' . htmlspecialchars($result['student_number']) . '</td>
+                <td>' . htmlspecialchars($result['index_number']) . '</td>
                 <td>' . htmlspecialchars($result['first_name'] . ' ' . $result['last_name']) . '</td>
-                <td>' . $result['score_obtained'] . '/' . $result['total_score'] . '</td>
+                <td>' . $result['correct_answers'] . '/' . $result['total_questions'] . '</td>
                 <td>' . $result['score_percentage'] . '%</td>
                 <td class="' . $resultClass . '">' . $result['result_status'] . '</td>
-                <td>' . $timeTaken . '</td>
                 <td>' . ($result['completed_at'] ? date('M j, Y g:i A', strtotime($result['completed_at'])) : 'N/A') . '</td>
             </tr>';
         }
@@ -406,7 +408,7 @@ function generateSummaryReportHTML($teacher, $exams, $overallStats, $course_id, 
     <div class="info-box">
         <h3>Teacher Information</h3>
         <p><strong>Name:</strong> ' . htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']) . '</p>
-        <p><strong>Employee ID:</strong> ' . htmlspecialchars($teacher['employee_id']) . '</p>
+        <p><strong>Staff ID:</strong> ' . htmlspecialchars($teacher['staff_id']) . '</p>
         <p><strong>Report Period:</strong> ' . getDateRangeText($date_range) . '</p>
         <p><strong>Status Filter:</strong> ' . ($status ? htmlspecialchars($status) : 'All Statuses') . '</p>
     </div>

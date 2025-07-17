@@ -248,7 +248,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
 
             <!-- Action Buttons -->
-            <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden mb-8">
+            <!-- <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <i class="fas fa-tools mr-2 text-emerald-600"></i>
@@ -267,7 +267,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </button>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Exams Results Table -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
