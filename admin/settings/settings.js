@@ -67,9 +67,6 @@ function showTab(tabName) {
         case 'semesters':
             loadSemesters();
             break;
-        case 'system':
-            loadSystemConfig();
-            break;
     }
 }
 
@@ -80,7 +77,6 @@ function loadAllData() {
     loadCourses();
     loadLevels();
     loadSemesters();
-    loadSystemConfig();
 }
 
 // DEPARTMENTS MANAGEMENT
@@ -782,63 +778,6 @@ function saveSemester() {
         });
 }
 
-// SYSTEM CONFIGURATION
-function loadSystemConfig() {
-    // Load system configuration settings
-    // This would typically come from a system_settings table
-    fetch('/api/admin/settings/system.php?action=get')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                populateSystemConfig(data.data);
-            }
-        })
-        .catch(error => {
-            console.error('Error loading system config:', error);
-        });
-}
-
-function populateSystemConfig(config) {
-    if (config.defaultDuration) document.getElementById('defaultDuration').value = config.defaultDuration;
-    if (config.autoFinalize) document.getElementById('autoFinalize').value = config.autoFinalize;
-    if (config.notificationMethod) document.getElementById('notificationMethod').value = config.notificationMethod;
-    if (config.backupFrequency) document.getElementById('backupFrequency').value = config.backupFrequency;
-    if (config.maintenanceMode) document.getElementById('maintenanceMode').value = config.maintenanceMode;
-    if (config.maxAttempts) document.getElementById('maxAttempts').value = config.maxAttempts;
-}
-
-function saveSystemConfig() {
-    const config = {
-        action: 'save',
-        defaultDuration: document.getElementById('defaultDuration').value,
-        autoFinalize: document.getElementById('autoFinalize').value,
-        notificationMethod: document.getElementById('notificationMethod').value,
-        backupFrequency: document.getElementById('backupFrequency').value,
-        maintenanceMode: document.getElementById('maintenanceMode').value,
-        maxAttempts: document.getElementById('maxAttempts').value
-    };
-
-    fetch('/api/admin/settings/system.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config)
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('System configuration saved successfully', 'success');
-            } else {
-                showNotification(data.message || 'Failed to save configuration', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error saving system config:', error);
-            showNotification('Error saving configuration', 'error');
-        });
-}
-
 // UTILITY FUNCTIONS
 function closeModal() {
     const modals = document.querySelectorAll('[id$="Modal"]');
@@ -846,238 +785,30 @@ function closeModal() {
     currentEditId = null;
 }
 
-
-// Export and logs functions
-function exportSystemData() {
-    const exportUrl = '../../api/admin/settings/export.php';
-    window.open(exportUrl, '_blank');
-}
-
-let currentLogsPage = 1;
-let currentLogsLimit = 25;
-
-async function loadSystemLogs(page = 1, limit = 25, type = '', search = '') {
+// Database backup function
+async function performBackup() {
     try {
-        currentLogsPage = page;
-        currentLogsLimit = limit;
-
-        const params = new URLSearchParams({
-            page: page,
-            limit: limit
+        Swal.fire({
+            title: 'Creating Backup...',
+            text: 'Please wait while we create a backup of your database',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
 
-        if (type) params.append('type', type);
-        if (search) params.append('search', search);
-
-        const response = await axios.get(`../../api/admin/settings/logs.php?${params}`);
+        const response = await axios.post('../../api/admin/settings/backup.php');
 
         if (response.data.success) {
-            displaySystemLogs(response.data.logs);
-            displayLogsPagination(response.data.pagination);
-            displayLogsTypeStats(response.data.typeStats);
+            Swal.fire('Success', 'Database backup created successfully', 'success');
         } else {
             throw new Error(response.data.message);
         }
     } catch (error) {
-        console.error('Error loading system logs:', error);
-        const logsTableBody = document.getElementById('logsTableBody');
-        if (logsTableBody) {
-            logsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-600">Failed to load logs</td></tr>';
-        }
+        console.error('Error creating backup:', error);
+        Swal.fire('Error', error.response?.data?.message || 'Failed to create backup', 'error');
     }
-}
-
-function displaySystemLogs(logs) {
-    const logsTableBody = document.getElementById('logsTableBody');
-    if (!logsTableBody) return;
-
-    if (logs.length === 0) {
-        logsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">No logs found</td></tr>';
-        return;
-    }
-
-    logsTableBody.innerHTML = logs.map(log => `
-        <tr class="border-b border-gray-200 hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm">${new Date(log.created_at).toLocaleString()}</td>
-            <td class="px-4 py-3">
-                <span class="px-2 py-1 text-xs font-medium rounded-full 
-                    ${getLogTypeColor(log.log_type)}">
-                    ${log.log_type}
-                </span>
-            </td>
-            <td class="px-4 py-3 text-sm text-gray-900">${log.message}</td>
-            <td class="px-4 py-3 text-sm text-gray-600">${log.admin_name || 'System'}</td>
-            <td class="px-4 py-3 text-right">
-                <button onclick="deleteLog(${log.log_id})" 
-                    class="text-red-600 hover:text-red-800 text-sm">
-                    Delete
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function getLogTypeColor(type) {
-    const colors = {
-        'info': 'bg-blue-100 text-blue-800',
-        'warning': 'bg-yellow-100 text-yellow-800',
-        'error': 'bg-red-100 text-red-800',
-        'success': 'bg-green-100 text-green-800',
-        'system': 'bg-purple-100 text-purple-800',
-        'export': 'bg-indigo-100 text-indigo-800'
-    };
-    return colors[type] || 'bg-gray-100 text-gray-800';
-}
-
-function displayLogsPagination(pagination) {
-    const paginationDiv = document.getElementById('logsPagination');
-    if (!paginationDiv) return;
-
-    let paginationHTML = '';
-
-    // Previous button
-    if (pagination.page > 1) {
-        paginationHTML += `
-            <button onclick="loadSystemLogs(${pagination.page - 1}, ${pagination.limit})" 
-                class="px-3 py-2 text-sm text-gray-600 hover:text-emerald-600">
-                Previous
-            </button>
-        `;
-    }
-
-    // Page numbers
-    const startPage = Math.max(1, pagination.page - 2);
-    const endPage = Math.min(pagination.pages, pagination.page + 2);
-
-    for (let i = startPage; i <= endPage; i++) {
-        const isActive = i === pagination.page;
-        paginationHTML += `
-            <button onclick="loadSystemLogs(${i}, ${pagination.limit})" 
-                class="px-3 py-2 text-sm ${isActive ?
-                'bg-emerald-600 text-white' :
-                'text-gray-600 hover:text-emerald-600'}">
-                ${i}
-            </button>
-        `;
-    }
-
-    // Next button
-    if (pagination.page < pagination.pages) {
-        paginationHTML += `
-            <button onclick="loadSystemLogs(${pagination.page + 1}, ${pagination.limit})" 
-                class="px-3 py-2 text-sm text-gray-600 hover:text-emerald-600">
-                Next
-            </button>
-        `;
-    }
-
-    paginationDiv.innerHTML = paginationHTML;
-}
-
-function displayLogsTypeStats(typeStats) {
-    const statsDiv = document.getElementById('logsTypeStats');
-    if (!statsDiv) return;
-
-    statsDiv.innerHTML = typeStats.map(stat => `
-        <div class="flex justify-between items-center py-1">
-            <span class="text-sm capitalize">${stat.log_type}:</span>
-            <span class="font-medium">${stat.count}</span>
-        </div>
-    `).join('');
-}
-
-async function deleteLog(logId) {
-    try {
-        const result = await Swal.fire({
-            title: 'Delete Log Entry?',
-            text: 'This action cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280'
-        });
-
-        if (result.isConfirmed) {
-            const response = await axios.delete('../../api/admin/settings/logs.php', {
-                data: { log_id: logId }
-            });
-
-            if (response.data.success) {
-                Swal.fire('Deleted', 'Log entry deleted successfully', 'success');
-                loadSystemLogs(currentLogsPage, currentLogsLimit);
-            } else {
-                throw new Error(response.data.message);
-            }
-        }
-    } catch (error) {
-        console.error('Error deleting log:', error);
-        Swal.fire('Error', error.response?.data?.message || 'Failed to delete log', 'error');
-    }
-}
-
-async function clearOldLogs() {
-    try {
-        const { value: days } = await Swal.fire({
-            title: 'Clear Old Logs',
-            input: 'select',
-            inputOptions: {
-                '7': 'Older than 7 days',
-                '30': 'Older than 30 days',
-                '90': 'Older than 90 days',
-                '365': 'Older than 1 year'
-            },
-            inputPlaceholder: 'Select time period',
-            showCancelButton: true,
-            confirmButtonColor: '#059669'
-        });
-
-        if (days) {
-            const response = await axios.delete('../../api/admin/settings/logs.php', {
-                data: { older_than_days: parseInt(days) }
-            });
-
-            if (response.data.success) {
-                Swal.fire('Success', response.data.message, 'success');
-                loadSystemLogs(1, currentLogsLimit);
-            } else {
-                throw new Error(response.data.message);
-            }
-        }
-    } catch (error) {
-        console.error('Error clearing logs:', error);
-        Swal.fire('Error', error.response?.data?.message || 'Failed to clear logs', 'error');
-    }
-}
-
-// Search and filter functions
-function filterLogs() {
-    const type = document.getElementById('logsTypeFilter').value;
-    const search = document.getElementById('logsSearchInput').value;
-    loadSystemLogs(1, currentLogsLimit, type, search);
 }
 
 // Make functions globally available
-window.exportSystemData = exportSystemData;
-window.loadSystemLogs = loadSystemLogs;
-window.deleteLog = deleteLog;
-window.clearOldLogs = clearOldLogs;
-window.filterLogs = filterLogs;
-
-/*
-
-Additional improvements and features to consider:
-
-1. **User Management**: Extend the system to manage users, roles, and permissions.
-2. **Audit Logs**: Keep track of changes made in the system for security and compliance.
-3. **Notifications System**: Implement a system to manage and send notifications to users.
-4. **Backup and Restore**: Enhance the backup system to allow for easy restoration of data.
-5. **Performance Monitoring**: Tools to monitor system performance and generate reports.
-6. **API Access**: Secure API access for integration with other systems or for mobile app development.
-7. **Data Validation**: Implement comprehensive data validation both on client and server sides.
-8. **Error Handling**: Improve error handling to provide more informative messages and recovery options.
-9. **Accessibility Features**: Ensure the system is accessible to users with disabilities.
-10. **Internationalization**: Prepare the system for multiple languages and regional settings.
-
-These features would significantly enhance the functionality, usability, and security of the system.
-
-*/
+window.performBackup = performBackup;

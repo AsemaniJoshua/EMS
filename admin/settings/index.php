@@ -80,13 +80,9 @@ try {
                         <p class="mt-1 text-sm text-gray-500">Manage system configurations and academic structure</p>
                     </div>
                     <div class="flex space-x-3">
-                        <button onclick="exportSystemData()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
-                            <i class="fas fa-download mr-2 -ml-1"></i>
-                            Export Data
-                        </button>
-                        <button onclick="backupDatabase()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        <button onclick="performBackup()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                             <i class="fas fa-database mr-2 -ml-1"></i>
-                            Backup System
+                            Backup Database
                         </button>
                     </div>
                 </div>
@@ -185,9 +181,6 @@ try {
                         <button onclick="showTab('semesters')" id="tab-semesters" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
                             <i class="fas fa-calendar-alt mr-2"></i>Semesters
                         </button>
-                        <button onclick="showTab('system')" id="tab-system" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
-                            <i class="fas fa-cog mr-2"></i>System
-                        </button>
                     </nav>
                 </div>
 
@@ -266,168 +259,8 @@ try {
                     </div>
                 </div>
 
-                <!-- System Configuration Tab -->
-                <div id="content-system" class="tab-content hidden p-6">
-                    <div class="space-y-8">
-                        <!-- System Configuration -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">System Name</label>
-                                        <input type="text" id="systemNameInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Exam Management System">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">System Description</label>
-                                        <textarea id="systemDescInput" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="System description..."></textarea>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">System Timezone</label>
-                                        <select id="systemTimezone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                                            <option value="UTC">UTC</option>
-                                            <option value="Africa/Accra">Africa/Accra</option>
-                                            <option value="America/New_York">America/New_York</option>
-                                            <option value="Europe/London">Europe/London</option>
-                                            <option value="Asia/Tokyo">Asia/Tokyo</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Security Settings</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Session Timeout (seconds)</label>
-                                        <input type="number" id="sessionTimeout" min="300" max="86400" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="3600">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Login Attempts</label>
-                                        <input type="number" id="maxLoginAttempts" min="3" max="10" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="5">
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-medium text-gray-700">Maintenance Mode</span>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" id="maintenanceMode" class="sr-only peer">
-                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notification Settings -->
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Notification Settings</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-gray-700">Enable Notifications</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="enableNotifications" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                    </label>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-gray-700">Email Notifications</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="emailNotifications" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- System Actions -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4">System Maintenance</h3>
-                                <div class="space-y-3">
-                                    <button onclick="performBackup()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
-                                        <i class="fas fa-download mr-2"></i>Create Database Backup
-                                    </button>
-                                    <button onclick="optimizeDatabase()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
-                                        <i class="fas fa-cogs mr-2"></i>Optimize Database
-                                    </button>
-                                    <button onclick="cleanupData()" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md transition-colors">
-                                        <i class="fas fa-broom mr-2"></i>Cleanup System Data
-                                    </button>
-                                    <button onclick="exportSystemData()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors">
-                                        <i class="fas fa-file-export mr-2"></i>Export System Data
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-4">System Logs</h3>
-                                <div id="logsTypeStats" class="mb-4 text-sm text-gray-600">
-                                    <!-- Log type statistics will be loaded here -->
-                                </div>
-                                <div class="space-y-3">
-                                    <button onclick="loadSystemLogs(1, 25); document.getElementById('systemLogsSection').classList.remove('hidden');" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors">
-                                        <i class="fas fa-list mr-2"></i>View System Logs
-                                    </button>
-                                    <button onclick="clearOldLogs()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
-                                        <i class="fas fa-trash mr-2"></i>Clear Old Logs
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- System Logs Table -->
-                        <div id="systemLogsSection" class="bg-white rounded-lg shadow hidden">
-                            <div class="p-6 border-b border-gray-200">
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-                                    <h3 class="text-lg font-semibold text-gray-900">System Logs</h3>
-                                    <div class="flex space-x-3">
-                                        <select id="logsTypeFilter" onchange="filterLogs()" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
-                                            <option value="">All Types</option>
-                                            <option value="info">Info</option>
-                                            <option value="warning">Warning</option>
-                                            <option value="error">Error</option>
-                                            <option value="success">Success</option>
-                                            <option value="system">System</option>
-                                            <option value="export">Export</option>
-                                        </select>
-                                        <input type="text" id="logsSearchInput" placeholder="Search logs..." onkeyup="if(event.key==='Enter') filterLogs()" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
-                                        <button onclick="filterLogs()" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 text-sm">
-                                            Search
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="logsTableBody" class="bg-white divide-y divide-gray-200">
-                                        <!-- Logs will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="px-6 py-3 border-t border-gray-200 flex justify-center">
-                                <div id="logsPagination" class="flex space-x-1">
-                                    <!-- Pagination will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Save Button -->
-                        <div class="flex justify-end">
-                            <button onclick="saveSystemSettings()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-md transition-colors">
-                                <i class="fas fa-save mr-2"></i>Save System Settings
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
+        </div>
         </div>
     </main>
 
