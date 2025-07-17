@@ -1,28 +1,5 @@
 <?php
-// teacher/profile/index.php
-include_once '../components/Sidebar.php';
-include_once '../components/Header.php';
 
-// --- DB Connection ---
-require_once '../../api/config/database.php'; // Adjust path as needed
-
-
-// --- Get teacher_id (from session or GET for demo) ---
-$teacher_id = isset($_GET['id']) ? intval($_GET['id']) : 1; // Replace with session logic in production
-
-// --- Fetch teacher profile ---
-$teacher = null;
-$department = null;
-
-try {
-  $pdo = new PDO('mysql:host=localhost;dbname=ems_db', 'root', ''); // Update credentials as needed
-  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $stmt = $pdo->prepare('SELECT t.*, d.name AS department_name FROM teachers t JOIN departments d ON t.department_id = d.department_id WHERE t.teacher_id = :teacher_id');
-  $stmt->execute(['teacher_id' => $teacher_id]);
-  $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-  $error = 'Database error: ' . $e->getMessage();
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">

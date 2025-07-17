@@ -166,7 +166,7 @@ $_SESSION['teacher_name'] = $teacherName;
                                         <div class="py-6 flex flex-col items-center justify-center">
                                             <i class="fas fa-clipboard-list text-gray-300 text-5xl mb-4"></i>
                                             <p class="mb-3 text-lg">No recent exams found.</p>
-                                            <a href="/teacher/exam/create.php" class="text-emerald-600 hover:text-emerald-800 font-semibold text-lg transition duration-300 ease-in-out">Create your first exam &rarr;</a>
+                                            <a href="/teacher/exam/createExam.php" class="text-emerald-600 hover:text-emerald-800 font-semibold text-lg transition duration-300 ease-in-out">Create your first exam &rarr;</a>
                                         </div>
                                     </td>
                                 </tr>

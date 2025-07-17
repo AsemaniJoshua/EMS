@@ -1,18 +1,10 @@
 <?php
-
-
 require_once __DIR__ . '/../../api/login/teacher/teacherSessionCheck.php';
 require_once __DIR__ . '/../../api/config/database.php';
 require_once __DIR__ . '/../components/teacherSidebar.php';
 require_once __DIR__ . '/../components/teacherHeader.php';
 
-$currentPage = 'exam';
-
-// Check teacher session
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    header('Location: /teacher/login/');
-    exit;
-}
+$currentPage = 'exams';
 
 // --- Database connection ---
 $db = new Database();
@@ -20,7 +12,7 @@ $conn = $db->getConnection();
 $teacher_id = $_SESSION['teacher_id'];    // --- Fetch all exams for this teacher ---
 $stmt = $conn->prepare("
     SELECT e.exam_id, e.title, e.exam_code, e.status, e.start_datetime, e.duration_minutes, 
-           c.course_id, c.name as course_name, c.code as course_code, 
+           c.course_id, c.title as course_name, c.code as course_code, 
            d.name as department_name, p.name as program_name, s.name as semester_name
     FROM exams e
     JOIN courses c ON e.course_id = c.course_id
@@ -51,7 +43,6 @@ $draftExams = count(array_filter($exams, function ($exam) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,7 +77,8 @@ $draftExams = count(array_filter($exams, function ($exam) {
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="total">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 bg-emerald-50 rounded-lg p-3">
@@ -96,7 +88,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Total Exams</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900"><?php echo $totalExams; ?></div>
+                                        <div class="text-xl font-semibold text-gray-900 stat-value"><?php echo $totalExams; ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-emerald-600 font-medium">All time</span>
                                         </div>
@@ -106,19 +98,20 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </div>
                     </div>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="approved">
                     <div class="p-5">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-blue-50 rounded-lg p-3">
-                                <i class="fas fa-clock text-blue-600 text-xl"></i>
+                            <div class="flex-shrink-0 bg-green-50 rounded-lg p-3">
+                                <i class="fas fa-check text-green-600 text-xl"></i>
                             </div>
                             <div class="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Active</dt>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Active Exams</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900"><?php echo $activeExams; ?></div>
+                                        <div class="text-xl font-semibold text-gray-900 stat-value"><?php echo $activeExams; ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-blue-600 font-medium">Approved</span>
+                                            <span class="text-green-600 font-medium">Approved</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -126,7 +119,8 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </div>
                     </div>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="pending">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 bg-yellow-50 rounded-lg p-3">
@@ -134,11 +128,11 @@ $draftExams = count(array_filter($exams, function ($exam) {
                             </div>
                             <div class="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Pending</dt>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Pending Approval</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900"><?php echo $pendingExams; ?></div>
+                                        <div class="text-xl font-semibold text-gray-900 stat-value"><?php echo $pendingExams; ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
-                                            <span class="text-yellow-600 font-medium">Review</span>
+                                            <span class="text-yellow-600 font-medium">Awaiting</span>
                                         </div>
                                     </dd>
                                 </dl>
@@ -146,7 +140,8 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </div>
                     </div>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100 stats-card" data-stat-type="completed">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 bg-purple-50 rounded-lg p-3">
@@ -156,7 +151,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                 <dl>
                                     <dt class="text-sm font-medium text-gray-500 truncate">Completed</dt>
                                     <dd>
-                                        <div class="text-xl font-semibold text-gray-900"><?php echo $completedExams; ?></div>
+                                        <div class="text-xl font-semibold text-gray-900 stat-value"><?php echo $completedExams; ?></div>
                                         <div class="mt-1 flex items-baseline text-sm">
                                             <span class="text-purple-600 font-medium">Finished</span>
                                         </div>
@@ -211,7 +206,7 @@ $draftExams = count(array_filter($exams, function ($exam) {
                         </button>
                     </div>
                 </div>
-            </div>                    <!-- Exams Table -->
+            </div> <!-- Exams Table -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">All Exams</h3>
@@ -241,12 +236,13 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                 <?php foreach ($exams as $exam): ?>
                                     <tr id="exam-row-<?php echo $exam['exam_id']; ?>" class="exam-row">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?php echo htmlspecialchars($exam['course_code'] . ' - ' . $exam['course_name']); ?></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            <?php echo htmlspecialchars($exam['program_name'] . ' / ' . $exam['semester_name']); ?>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?php echo ($exam['course_code'] . '<br>' . $exam['course_name']); ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            <?php 
+                                            <?php echo ($exam['program_name'] . ' <br> ' . $exam['semester_name']); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            <?php
                                             $timestamp = strtotime($exam['start_datetime']);
                                             echo ($exam['start_datetime'] && $timestamp !== false)
                                                 ? date('M d, Y h:i A', $timestamp)
@@ -292,20 +288,15 @@ $draftExams = count(array_filter($exams, function ($exam) {
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <?php if ($exam['status'] === 'Draft' || $exam['status'] === 'Rejected'): ?>
-                                                <a href="editExam.php?id=<?php echo $exam['exam_id']; ?>" class="text-yellow-600 hover:text-yellow-900" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
+                                                    <a href="editExam.php?id=<?php echo $exam['exam_id']; ?>" class="text-yellow-600 hover:text-yellow-900" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
                                                 <?php endif; ?>
-                                                <a href="questions.php?exam_id=<?php echo $exam['exam_id']; ?>" class="text-emerald-600 hover:text-emerald-900" title="Questions">
-                                                    <i class="fas fa-list-check"></i>
-                                                </a>
                                                 <?php if ($exam['status'] !== 'Completed'): ?>
-                                                <a href="#" data-exam-id="<?php echo $exam['exam_id']; ?>" class="text-red-600 hover:text-red-900 delete-exam-btn" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                    <a href="#" data-exam-id="<?php echo $exam['exam_id']; ?>" class="text-red-600 hover:text-red-900 delete-exam-btn" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
                                                 <?php endif; ?>
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -327,7 +318,9 @@ $draftExams = count(array_filter($exams, function ($exam) {
             pending: <?php echo $pendingExams; ?>,
             approved: <?php echo $activeExams; ?>,
             completed: <?php echo $completedExams; ?>,
-            rejected: <?php echo count(array_filter($exams, function ($exam) { return $exam['status'] === 'Rejected'; })); ?>
+            rejected: <?php echo count(array_filter($exams, function ($exam) {
+                            return $exam['status'] === 'Rejected';
+                        })); ?>
         };
 
         // Bar Chart: Exams by Status
@@ -420,9 +413,9 @@ $draftExams = count(array_filter($exams, function ($exam) {
             const program = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
             const status = row.querySelector('td:nth-child(6) span').textContent;
 
-            const matchesSearch = title.includes(searchTerm) || 
-                                 course.includes(searchTerm) ||
-                                 program.includes(searchTerm);
+            const matchesSearch = title.includes(searchTerm) ||
+                course.includes(searchTerm) ||
+                program.includes(searchTerm);
             const matchesStatus = !statusFilter || status === statusFilter;
 
             if (matchesSearch && matchesStatus) {
@@ -446,21 +439,19 @@ $draftExams = count(array_filter($exams, function ($exam) {
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch('/api/exam/deleteExam.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'same-origin',
-                        body: JSON.stringify({
-                            exam_id: examId
-                        })
+                // Use axios for consistency with other parts of the application
+                axios.post('/api/exams/deleteExam.php', {
+                        exam_id: examId
                     })
-                    .then(res => res.json())
-                    .then(data => {
+                    .then(function(response) {
+                        const data = response.data;
                         if (data.status === 'success') {
                             const row = document.getElementById('exam-row-' + examId);
                             if (row) row.remove();
+
+                            // Recalculate stats and update charts
+                            updateStats();
+                            renderCharts();
 
                             Swal.fire(
                                 'Deleted!',
@@ -475,7 +466,8 @@ $draftExams = count(array_filter($exams, function ($exam) {
                             );
                         }
                     })
-                    .catch(() => {
+                    .catch(function(error) {
+                        console.error('Delete exam error:', error);
                         Swal.fire(
                             'Error!',
                             'Network error. Please try again.',
@@ -486,41 +478,56 @@ $draftExams = count(array_filter($exams, function ($exam) {
         });
     }
 
+    // Function to update stats after a successful deletion
+    function updateStats() {
+        axios.get('/api/exams/getTeacherExamStats.php')
+            .then(function(response) {
+                const data = response.data;
+                if (data.status === 'success') {
+                    document.querySelectorAll('.stats-card').forEach(card => {
+                        const statType = card.dataset.statType;
+                        if (data.stats[statType] !== undefined) {
+                            card.querySelector('.stat-value').textContent = data.stats[statType];
+                        }
+                    });
+                }
+            })
+            .catch(function(error) {
+                console.error('Error updating stats:', error);
+            });
+    }
+
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
         // Render charts
-        renderCharts();
+        setTimeout(renderCharts, 100);
 
         // Setup event listeners
-        document.getElementById('searchExam').addEventListener('input', filterExams);
-        document.getElementById('filterStatus').addEventListener('change', filterExams);
-        document.addEventListener('DOMContentLoaded', function() {
-            // Render charts
-            setTimeout(renderCharts, 100);
+        var searchExam = document.getElementById('searchExam');
+        if (searchExam) {
+            searchExam.addEventListener('input', filterExams);
+        }
 
-            // Setup event listeners
-            var searchExam = document.getElementById('searchExam');
-            if (searchExam) {
-                searchExam.addEventListener('input', filterExams);
-            }
-            var filterStatus = document.getElementById('filterStatus');
-            if (filterStatus) {
-                filterStatus.addEventListener('change', filterExams);
-            }
-            var filterBtn = document.getElementById('filterBtn');
-            if (filterBtn) {
-                filterBtn.addEventListener('click', filterExams);
-            }
+        var filterStatus = document.getElementById('filterStatus');
+        if (filterStatus) {
+            filterStatus.addEventListener('change', filterExams);
+        }
 
-            // Attach delete event listeners
-            document.querySelectorAll('.delete-exam-btn').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const examId = this.getAttribute('data-exam-id');
-                    deleteExam(examId, this);
-                });
+        var filterBtn = document.getElementById('filterBtn');
+        if (filterBtn) {
+            filterBtn.addEventListener('click', filterExams);
+        }
+
+        // Attach delete event listeners
+        document.querySelectorAll('.delete-exam-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const examId = this.getAttribute('data-exam-id');
+                deleteExam(examId, this);
             });
         });
+    });
+</script>
 </body>
 
 </html>

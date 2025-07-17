@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 12, 2025 at 01:38 AM
+-- Generation Time: Jul 16, 2025 at 06:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.4.8
 
@@ -11,12 +11,15 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
 --
 -- Database: `exam_management`
 --
--- DROP DATABASE IF EXISTS `exam_management`;
--- CREATE DATABASE IF NOT EXISTS `exam_management` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
--- USE `exam_management`;
 
 -- --------------------------------------------------------
 
@@ -26,13 +29,13 @@ SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `admins`;
 CREATE TABLE `admins` (
-`admin_id` int(11) NOT NULL,
-`email` varchar(100) NOT NULL,
-`username` varchar(50) NOT NULL,
-`first_name` varchar(50) DEFAULT NULL,
-`last_name` varchar(50) DEFAULT NULL,
-`password_hash` varchar(255) NOT NULL,
-`created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `admin_id` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `first_name` varchar(50) DEFAULT NULL,
+  `last_name` varchar(50) DEFAULT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -52,10 +55,10 @@ INSERT INTO `admins` (`admin_id`, `email`, `username`, `first_name`, `last_name`
 
 DROP TABLE IF EXISTS `choices`;
 CREATE TABLE `choices` (
-`choice_id` int(11) NOT NULL,
-`question_id` int(11) NOT NULL,
-`choice_text` varchar(255) NOT NULL,
-`is_correct` tinyint(1) DEFAULT 0
+  `choice_id` int(11) NOT NULL,
+  `question_id` int(11) NOT NULL,
+  `choice_text` varchar(255) NOT NULL,
+  `is_correct` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -93,7 +96,11 @@ INSERT INTO `choices` (`choice_id`, `question_id`, `choice_text`, `is_correct`) 
 (44, 12, '2', 1),
 (45, 4, 'O(n)', 0),
 (46, 4, 'O(log n)', 0),
-(47, 4, 'O(1)', 1);
+(47, 4, 'O(1)', 1),
+(54, 14, '43', 0),
+(55, 14, '38', 1),
+(56, 15, 'tounkna', 1),
+(57, 15, 'dkljdiihjkn', 0);
 
 -- --------------------------------------------------------
 
@@ -103,14 +110,14 @@ INSERT INTO `choices` (`choice_id`, `question_id`, `choice_text`, `is_correct`) 
 
 DROP TABLE IF EXISTS `courses`;
 CREATE TABLE `courses` (
-`course_id` int(11) NOT NULL,
-`code` varchar(20) NOT NULL,
-`title` varchar(100) NOT NULL,
-`department_id` int(11) NOT NULL,
-`credits` int(11) NOT NULL,
-`program_id` int(11) NOT NULL,
-`level_id` int(11) NOT NULL,
-`semester_id` int(11) NOT NULL
+  `course_id` int(11) NOT NULL,
+  `code` varchar(20) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `department_id` int(11) NOT NULL,
+  `credits` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `level_id` int(11) NOT NULL,
+  `semester_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -131,9 +138,9 @@ INSERT INTO `courses` (`course_id`, `code`, `title`, `department_id`, `credits`,
 
 DROP TABLE IF EXISTS `departments`;
 CREATE TABLE `departments` (
-`department_id` int(11) NOT NULL,
-`name` varchar(100) NOT NULL,
-`description` text DEFAULT NULL
+  `department_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -153,28 +160,28 @@ INSERT INTO `departments` (`department_id`, `name`, `description`) VALUES
 
 DROP TABLE IF EXISTS `exams`;
 CREATE TABLE `exams` (
-`exam_id` int(11) NOT NULL,
-`exam_code` varchar(50) NOT NULL,
-`title` varchar(100) NOT NULL,
-`description` text DEFAULT NULL,
-`department_id` int(11) NOT NULL,
-`program_id` int(11) NOT NULL,
-`semester_id` int(11) NOT NULL,
-`course_id` int(11) NOT NULL,
-`teacher_id` int(11) NOT NULL,
-`status` enum('Pending','Approved','Rejected','Draft','Completed') DEFAULT 'Pending',
-`duration_minutes` int(11) NOT NULL,
-`pass_mark` decimal(5,2) DEFAULT 50.00,
-`total_marks` int(11) NOT NULL,
-`start_datetime` datetime DEFAULT NULL,
-`end_datetime` datetime DEFAULT NULL,
-`max_attempts` int(11) DEFAULT 1,
-`randomize` tinyint(1) DEFAULT 0,
-`show_results` tinyint(1) DEFAULT 1,
-`anti_cheating` tinyint(1) DEFAULT 1,
-`created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-`approved_by` int(11) DEFAULT NULL,
-`approved_at` timestamp NULL DEFAULT NULL
+  `exam_id` int(11) NOT NULL,
+  `exam_code` varchar(50) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `department_id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `semester_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `teacher_id` int(11) NOT NULL,
+  `status` enum('Pending','Approved','Rejected','Draft','Completed') DEFAULT 'Pending',
+  `duration_minutes` int(11) NOT NULL,
+  `pass_mark` decimal(5,2) DEFAULT 50.00,
+  `total_marks` int(11) NOT NULL,
+  `start_datetime` datetime DEFAULT NULL,
+  `end_datetime` datetime DEFAULT NULL,
+  `max_attempts` int(11) DEFAULT 1,
+  `randomize` tinyint(1) DEFAULT 0,
+  `show_results` tinyint(1) DEFAULT 1,
+  `anti_cheating` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -182,9 +189,10 @@ CREATE TABLE `exams` (
 --
 
 INSERT INTO `exams` (`exam_id`, `exam_code`, `title`, `description`, `department_id`, `program_id`, `semester_id`, `course_id`, `teacher_id`, `status`, `duration_minutes`, `pass_mark`, `total_marks`, `start_datetime`, `end_datetime`, `max_attempts`, `randomize`, `show_results`, `anti_cheating`, `created_at`, `approved_by`, `approved_at`) VALUES
-(1, 'CS101-F24-MID', 'CS101 Midterm Exam', 'Midterm exam for Introduction to Programming', 1, 1, 1, 1, 1, 'Approved', 60, 50.00, 100, '2024-11-01 10:00:00', '2024-11-01 11:00:00', 1, 1, 1, 1, '2025-07-07 10:52:23', 1, '2024-10-25 09:00:00'),
+(1, 'CS101-F24-MID', 'CS101 Midterm Exam', 'Midterm exam for Introduction to Programming', 1, 1, 1, 1, 1, 'Completed', 60, 50.00, 100, '2024-11-01 10:00:00', '2024-11-01 11:00:00', 1, 1, 1, 1, '2025-07-07 10:52:23', 1, '2024-10-25 09:00:00'),
 (2, 'EE201-F24-FINAL', 'EE201 Final Exam', 'Final exam for Circuit Analysis', 2, 2, 1, 2, 2, 'Approved', 90, 60.00, 100, '2024-12-10 14:00:00', '2024-12-10 15:30:00', 1, 1, 1, 1, '2025-07-07 10:52:23', NULL, NULL),
-(3, 'CS202-S25-QUIZ1', 'CS202 Quiz 1', 'First quiz for Data Structures', 1, 1, 2, 3, 3, 'Approved', 30, 40.00, 50, '2025-03-05 09:00:00', '2025-03-05 09:30:00', 2, 1, 1, 0, '2025-07-07 10:52:23', 1, '2025-02-28 11:00:00');
+(3, 'CS202-S25-QUIZ1', 'CS202 Quiz 1', 'First quiz for Data Structures', 1, 1, 2, 3, 3, 'Approved', 30, 40.00, 50, '2025-03-05 09:00:00', '2025-03-05 09:30:00', 2, 1, 1, 0, '2025-07-07 10:52:23', 1, '2025-02-28 11:00:00'),
+(4, '343', 'dadasa', 'wwsss', 1, 1, 3, 3, 6, 'Pending', 120, 50.00, 100, '2025-07-15 18:24:00', '2025-07-15 20:24:00', 1, 0, 1, 1, '2025-07-15 18:27:37', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -194,10 +202,10 @@ INSERT INTO `exams` (`exam_id`, `exam_code`, `title`, `description`, `department
 
 DROP TABLE IF EXISTS `exam_registrations`;
 CREATE TABLE `exam_registrations` (
-`registration_id` int(11) NOT NULL,
-`exam_id` int(11) NOT NULL,
-`student_id` int(11) NOT NULL,
-`registered_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `registration_id` int(11) NOT NULL,
+  `exam_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `registered_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -216,8 +224,8 @@ INSERT INTO `exam_registrations` (`registration_id`, `exam_id`, `student_id`, `r
 
 DROP TABLE IF EXISTS `levels`;
 CREATE TABLE `levels` (
-`level_id` int(11) NOT NULL,
-`name` varchar(50) NOT NULL
+  `level_id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -253,11 +261,11 @@ CREATE TABLE `live_results` (
 
 DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
-`notification_id` int(11) NOT NULL,
-`user_id` int(11) NOT NULL,
-`message` text NOT NULL,
-`created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-`seen` tinyint(1) DEFAULT 0
+  `notification_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `seen` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -273,15 +281,34 @@ INSERT INTO `notifications` (`notification_id`, `user_id`, `message`, `created_a
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `password_reset_tokens`
+--
+
+DROP TABLE IF EXISTS `password_reset_tokens`;
+CREATE TABLE `password_reset_tokens` (
+  `id` int(11) NOT NULL,
+  `teacher_id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `admin_id` int(11) DEFAULT NULL,
+  `token` varchar(10) NOT NULL,
+  `verified` tinyint(1) DEFAULT 0,
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `programs`
 --
 
 DROP TABLE IF EXISTS `programs`;
 CREATE TABLE `programs` (
-`program_id` int(11) NOT NULL,
-`name` varchar(100) NOT NULL,
-`description` text DEFAULT NULL,
-`department_id` int(11) NOT NULL
+  `program_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `department_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -301,10 +328,10 @@ INSERT INTO `programs` (`program_id`, `name`, `description`, `department_id`) VA
 
 DROP TABLE IF EXISTS `questions`;
 CREATE TABLE `questions` (
-`question_id` int(11) NOT NULL,
-`exam_id` int(11) NOT NULL,
-`question_text` text NOT NULL,
-`sequence_number` int(11) DEFAULT NULL
+  `question_id` int(11) NOT NULL,
+  `exam_id` int(11) NOT NULL,
+  `question_text` text NOT NULL,
+  `sequence_number` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -322,7 +349,9 @@ INSERT INTO `questions` (`question_id`, `exam_id`, `question_text`, `sequence_nu
 (8, 2, 'What is the name of the girl?', 1),
 (10, 2, 'This is a new question', 2),
 (11, 2, 'Hello World, how are you doing?', 3),
-(12, 2, 'gdhjkhvjcrvgbhnj', 4);
+(12, 2, 'gdhjkhvjcrvgbhnj', 4),
+(14, 4, 'Hello World', 1),
+(15, 4, 'apoiergnvderirgerddakj', 2);
 
 -- --------------------------------------------------------
 
@@ -332,13 +361,13 @@ INSERT INTO `questions` (`question_id`, `exam_id`, `question_text`, `sequence_nu
 
 DROP TABLE IF EXISTS `results`;
 CREATE TABLE `results` (
-`result_id` int(11) NOT NULL,
-`registration_id` int(11) NOT NULL,
-`total_questions` int(11) DEFAULT NULL,
-`correct_answers` int(11) DEFAULT NULL,
-`incorrect_answers` int(11) DEFAULT NULL,
-`score_percentage` decimal(5,2) DEFAULT NULL,
-`completed_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `result_id` int(11) NOT NULL,
+  `registration_id` int(11) NOT NULL,
+  `total_questions` int(11) DEFAULT NULL,
+  `correct_answers` int(11) DEFAULT NULL,
+  `incorrect_answers` int(11) DEFAULT NULL,
+  `score_percentage` decimal(5,2) DEFAULT NULL,
+  `completed_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -357,10 +386,10 @@ INSERT INTO `results` (`result_id`, `registration_id`, `total_questions`, `corre
 
 DROP TABLE IF EXISTS `semesters`;
 CREATE TABLE `semesters` (
-`semester_id` int(11) NOT NULL,
-`name` varchar(100) NOT NULL,
-`start_date` date DEFAULT NULL,
-`end_date` date DEFAULT NULL
+  `semester_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -380,23 +409,23 @@ INSERT INTO `semesters` (`semester_id`, `name`, `start_date`, `end_date`) VALUES
 
 DROP TABLE IF EXISTS `students`;
 CREATE TABLE `students` (
-`student_id` int(11) NOT NULL,
-`index_number` varchar(50) NOT NULL,
-`username` varchar(50) NOT NULL,
-`first_name` varchar(50) DEFAULT NULL,
-`last_name` varchar(50) DEFAULT NULL,
-`email` varchar(100) NOT NULL,
-`phone_number` varchar(20) DEFAULT NULL,
-`password_hash` varchar(255) NOT NULL,
-`date_of_birth` date DEFAULT NULL,
-`gender` enum('male','female') DEFAULT NULL,
-`status` enum('active','inactive','graduated') DEFAULT 'active',
-`level_id` int(11) NOT NULL,
-`program_id` int(11) NOT NULL,
-`department_id` int(11) NOT NULL,
-`resetOnLogin` tinyint(1) NOT NULL DEFAULT 0,
-`created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-`updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `student_id` int(11) NOT NULL,
+  `index_number` varchar(50) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `first_name` varchar(50) DEFAULT NULL,
+  `last_name` varchar(50) DEFAULT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('male','female') DEFAULT NULL,
+  `status` enum('active','inactive','graduated') DEFAULT 'active',
+  `level_id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `department_id` int(11) NOT NULL,
+  `resetOnLogin` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -416,11 +445,11 @@ INSERT INTO `students` (`student_id`, `index_number`, `username`, `first_name`, 
 
 DROP TABLE IF EXISTS `student_answers`;
 CREATE TABLE `student_answers` (
-`answer_id` int(11) NOT NULL,
-`registration_id` int(11) NOT NULL,
-`question_id` int(11) NOT NULL,
-`choice_id` int(11) NOT NULL,
-`answered_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `answer_id` int(11) NOT NULL,
+  `registration_id` int(11) NOT NULL,
+  `question_id` int(11) NOT NULL,
+  `choice_id` int(11) NOT NULL,
+  `answered_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -443,19 +472,19 @@ INSERT INTO `student_answers` (`answer_id`, `registration_id`, `question_id`, `c
 
 DROP TABLE IF EXISTS `teachers`;
 CREATE TABLE `teachers` (
-`teacher_id` int(11) NOT NULL,
-`staff_id` varchar(50) NOT NULL,
-`email` varchar(100) NOT NULL,
-`phone_number` varchar(20) DEFAULT NULL,
-`username` varchar(50) NOT NULL,
-`first_name` varchar(50) DEFAULT NULL,
-`last_name` varchar(50) DEFAULT NULL,
-`password_hash` varchar(255) NOT NULL,
-`department_id` int(11) NOT NULL,
-`status` enum('active','inactive') DEFAULT 'active',
-`resetOnLogin` tinyint(1) NOT NULL DEFAULT 0,
-`created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-`updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `teacher_id` int(11) NOT NULL,
+  `staff_id` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `username` varchar(50) NOT NULL,
+  `first_name` varchar(50) DEFAULT NULL,
+  `last_name` varchar(50) DEFAULT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `department_id` int(11) NOT NULL,
+  `status` enum('active','inactive') DEFAULT 'active',
+  `resetOnLogin` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -465,9 +494,9 @@ CREATE TABLE `teachers` (
 INSERT INTO `teachers` (`teacher_id`, `staff_id`, `email`, `phone_number`, `username`, `first_name`, `last_name`, `password_hash`, `department_id`, `status`, `resetOnLogin`, `created_at`, `updated_at`) VALUES
 (1, 'TCH001', 'teacher1@example.com', '0241234567', 'dr_adams', 'John', 'Adams', 'hashed_password_teacher1', 1, 'active', 0, '2025-07-07 10:52:21', '2025-07-07 10:52:21'),
 (2, 'TCH002', 'teacher2@example.com', '0242345678', 'prof_brown', 'Rudith', 'Brown', 'hashed_password_teacher2', 2, 'active', 1, '2025-07-07 10:52:21', '2025-07-08 14:26:08'),
-(3, 'TCH003', 'teacher3@example.com', '0243456789', 'ms_davis', 'Emily Gomez', 'Davis', 'hashed_password_teacher3', 1, 'active', 0, '2025-07-07 10:52:21', '2025-07-08 13:35:49'),
+(3, 'TCH003', 'teacher3@example.com', '0243456789', 'Anthony', 'Emily Gomez', 'Davis Garcia', 'hashed_password_teacher3', 1, 'inactive', 0, '2025-07-07 10:52:21', '2025-07-16 14:26:43'),
 (5, 'TCH7894566', 'sykukah@gmail.com', '0246706020', 'sykukah@gmail.com', 'SIMON', 'KUKAH', '$2y$12$ZxHRB5xMWvOmhV9r2.UAOOfTO3tCxIoMe.Uy2KZCjCSgV.RlqQ5Zu', 2, 'active', 0, '2025-07-07 11:04:52', '2025-07-07 11:04:52'),
-(6, 'adsklj', 'michelaadu@gmail.com', '556', 'micheal', 'Micheal', 'Adu', '$2y$12$vtzlCrhjP1uO9Be148fRZ.QgxuPEvJEzRzODg/0TXiVQMKnMuPCRy', 1, 'active', 0, '2025-07-08 16:15:59', '2025-07-08 16:15:59');
+(6, 'adsklj', 'teacher@app.ems.com', '556', 'micheal', 'Micheal', 'Adu', '$2y$12$gi/qhAXSyUXdAJFicnvDJeY7olrbuUppexQgX5FGn7h9az/g1Qbd.', 1, 'active', 0, '2025-07-08 16:15:59', '2025-07-12 14:32:13');
 
 -- --------------------------------------------------------
 
@@ -477,10 +506,10 @@ INSERT INTO `teachers` (`teacher_id`, `staff_id`, `email`, `phone_number`, `user
 
 DROP TABLE IF EXISTS `teacher_courses`;
 CREATE TABLE `teacher_courses` (
-`teacher_course_id` int(11) NOT NULL,
-`teacher_id` int(11) NOT NULL,
-`course_id` int(11) NOT NULL,
-`assigned_at` datetime DEFAULT current_timestamp()
+  `teacher_course_id` int(11) NOT NULL,
+  `teacher_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `assigned_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -491,7 +520,7 @@ CREATE TABLE `teacher_courses` (
 DROP TABLE IF EXISTS `live_results`;
 
 DROP VIEW IF EXISTS `live_results`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `live_results` AS SELECT `sa`.`registration_id` AS `registration_id`, count(`sa`.`question_id`) AS `total_questions`, sum(case when `c`.`is_correct` then 1 else 0 end) AS `correct_answers`, sum(case when `c`.`is_correct` = 0 then 1 else 0 end) AS `incorrect_answers`, round(sum(case when `c`.`is_correct` then 1 else 0 end) / count(`sa`.`question_id`) * 100,2) AS `score_percentage` FROM (`student_answers` `sa` join `choices` `c` on(`sa`.`choice_id` = `c`.`choice_id`)) GROUP BY `sa`.`registration_id` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `live_results`  AS SELECT `sa`.`registration_id` AS `registration_id`, count(`sa`.`question_id`) AS `total_questions`, sum(case when `c`.`is_correct` then 1 else 0 end) AS `correct_answers`, sum(case when `c`.`is_correct` = 0 then 1 else 0 end) AS `incorrect_answers`, round(sum(case when `c`.`is_correct` then 1 else 0 end) / count(`sa`.`question_id`) * 100,2) AS `score_percentage` FROM (`student_answers` `sa` join `choices` `c` on(`sa`.`choice_id` = `c`.`choice_id`)) GROUP BY `sa`.`registration_id` ;
 
 --
 -- Indexes for dumped tables
@@ -501,137 +530,146 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- Indexes for table `admins`
 --
 ALTER TABLE `admins`
-ADD PRIMARY KEY (`admin_id`),
-ADD UNIQUE KEY `email` (`email`),
-ADD UNIQUE KEY `username` (`username`);
+  ADD PRIMARY KEY (`admin_id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `username` (`username`);
 
 --
 -- Indexes for table `choices`
 --
 ALTER TABLE `choices`
-ADD PRIMARY KEY (`choice_id`),
-ADD KEY `question_id` (`question_id`);
+  ADD PRIMARY KEY (`choice_id`),
+  ADD KEY `question_id` (`question_id`);
 
 --
 -- Indexes for table `courses`
 --
 ALTER TABLE `courses`
-ADD PRIMARY KEY (`course_id`),
-ADD UNIQUE KEY `code` (`code`),
-ADD KEY `department_id` (`department_id`),
-ADD KEY `program_id` (`program_id`),
-ADD KEY `level_id` (`level_id`),
-ADD KEY `semester_id` (`semester_id`);
+  ADD PRIMARY KEY (`course_id`),
+  ADD UNIQUE KEY `code` (`code`),
+  ADD KEY `department_id` (`department_id`),
+  ADD KEY `program_id` (`program_id`),
+  ADD KEY `level_id` (`level_id`),
+  ADD KEY `semester_id` (`semester_id`);
 
 --
 -- Indexes for table `departments`
 --
 ALTER TABLE `departments`
-ADD PRIMARY KEY (`department_id`),
-ADD UNIQUE KEY `name` (`name`);
+  ADD PRIMARY KEY (`department_id`),
+  ADD UNIQUE KEY `name` (`name`);
 
 --
 -- Indexes for table `exams`
 --
 ALTER TABLE `exams`
-ADD PRIMARY KEY (`exam_id`),
-ADD UNIQUE KEY `exam_code` (`exam_code`),
-ADD KEY `department_id` (`department_id`),
-ADD KEY `program_id` (`program_id`),
-ADD KEY `semester_id` (`semester_id`),
-ADD KEY `course_id` (`course_id`),
-ADD KEY `teacher_id` (`teacher_id`),
-ADD KEY `approved_by` (`approved_by`);
+  ADD PRIMARY KEY (`exam_id`),
+  ADD UNIQUE KEY `exam_code` (`exam_code`),
+  ADD KEY `department_id` (`department_id`),
+  ADD KEY `program_id` (`program_id`),
+  ADD KEY `semester_id` (`semester_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `teacher_id` (`teacher_id`),
+  ADD KEY `approved_by` (`approved_by`);
 
 --
 -- Indexes for table `exam_registrations`
 --
 ALTER TABLE `exam_registrations`
-ADD PRIMARY KEY (`registration_id`),
-ADD KEY `exam_id` (`exam_id`),
-ADD KEY `student_id` (`student_id`);
+  ADD PRIMARY KEY (`registration_id`),
+  ADD KEY `exam_id` (`exam_id`),
+  ADD KEY `student_id` (`student_id`);
 
 --
 -- Indexes for table `levels`
 --
 ALTER TABLE `levels`
-ADD PRIMARY KEY (`level_id`),
-ADD UNIQUE KEY `name` (`name`);
+  ADD PRIMARY KEY (`level_id`),
+  ADD UNIQUE KEY `name` (`name`);
 
 --
 -- Indexes for table `notifications`
 --
 ALTER TABLE `notifications`
-ADD PRIMARY KEY (`notification_id`),
-ADD KEY `notifications_ibfk_1` (`user_id`);
+  ADD PRIMARY KEY (`notification_id`),
+  ADD KEY `notifications_ibfk_1` (`user_id`);
+
+--
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `teacher_id` (`teacher_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `admin_id` (`admin_id`);
 
 --
 -- Indexes for table `programs`
 --
 ALTER TABLE `programs`
-ADD PRIMARY KEY (`program_id`),
-ADD UNIQUE KEY `name` (`name`),
-ADD KEY `department_id` (`department_id`);
+  ADD PRIMARY KEY (`program_id`),
+  ADD UNIQUE KEY `name` (`name`),
+  ADD KEY `department_id` (`department_id`);
 
 --
 -- Indexes for table `questions`
 --
 ALTER TABLE `questions`
-ADD PRIMARY KEY (`question_id`),
-ADD KEY `exam_id` (`exam_id`);
+  ADD PRIMARY KEY (`question_id`),
+  ADD KEY `exam_id` (`exam_id`);
 
 --
 -- Indexes for table `results`
 --
 ALTER TABLE `results`
-ADD PRIMARY KEY (`result_id`),
-ADD KEY `registration_id` (`registration_id`);
+  ADD PRIMARY KEY (`result_id`),
+  ADD KEY `registration_id` (`registration_id`);
 
 --
 -- Indexes for table `semesters`
 --
 ALTER TABLE `semesters`
-ADD PRIMARY KEY (`semester_id`),
-ADD UNIQUE KEY `name` (`name`);
+  ADD PRIMARY KEY (`semester_id`),
+  ADD UNIQUE KEY `name` (`name`);
 
 --
 -- Indexes for table `students`
 --
 ALTER TABLE `students`
-ADD PRIMARY KEY (`student_id`),
-ADD UNIQUE KEY `index_number` (`index_number`),
-ADD UNIQUE KEY `username` (`username`),
-ADD UNIQUE KEY `email` (`email`),
-ADD KEY `program_id` (`program_id`),
-ADD KEY `department_id` (`department_id`),
-ADD KEY `level_id` (`level_id`);
+  ADD PRIMARY KEY (`student_id`),
+  ADD UNIQUE KEY `index_number` (`index_number`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `program_id` (`program_id`),
+  ADD KEY `department_id` (`department_id`),
+  ADD KEY `level_id` (`level_id`);
 
 --
 -- Indexes for table `student_answers`
 --
 ALTER TABLE `student_answers`
-ADD PRIMARY KEY (`answer_id`),
-ADD KEY `registration_id` (`registration_id`),
-ADD KEY `question_id` (`question_id`),
-ADD KEY `choice_id` (`choice_id`);
+  ADD PRIMARY KEY (`answer_id`),
+  ADD KEY `registration_id` (`registration_id`),
+  ADD KEY `question_id` (`question_id`),
+  ADD KEY `choice_id` (`choice_id`);
 
 --
 -- Indexes for table `teachers`
 --
 ALTER TABLE `teachers`
-ADD PRIMARY KEY (`teacher_id`),
-ADD UNIQUE KEY `staff_id` (`staff_id`),
-ADD UNIQUE KEY `email` (`email`),
-ADD UNIQUE KEY `username` (`username`),
-ADD KEY `department_id` (`department_id`);
+  ADD PRIMARY KEY (`teacher_id`),
+  ADD UNIQUE KEY `staff_id` (`staff_id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `department_id` (`department_id`);
 
 --
 -- Indexes for table `teacher_courses`
 --
 ALTER TABLE `teacher_courses`
-ADD PRIMARY KEY (`teacher_course_id`),
-ADD KEY `fk_teacher` (`teacher_id`),
-ADD KEY `fk_course` (`course_id`);
+  ADD PRIMARY KEY (`teacher_course_id`),
+  ADD KEY `fk_teacher` (`teacher_id`),
+  ADD KEY `fk_course` (`course_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -641,97 +679,103 @@ ADD KEY `fk_course` (`course_id`);
 -- AUTO_INCREMENT for table `admins`
 --
 ALTER TABLE `admins`
-MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `choices`
 --
 ALTER TABLE `choices`
-MODIFY `choice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `choice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `exams`
 --
 ALTER TABLE `exams`
-MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `exam_registrations`
 --
 ALTER TABLE `exam_registrations`
-MODIFY `registration_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `registration_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `levels`
 --
 ALTER TABLE `levels`
-MODIFY `level_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=401;
+  MODIFY `level_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=401;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `programs`
 --
 ALTER TABLE `programs`
-MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `questions`
 --
 ALTER TABLE `questions`
-MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `results`
 --
 ALTER TABLE `results`
-MODIFY `result_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `result_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `semesters`
 --
 ALTER TABLE `semesters`
-MODIFY `semester_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `semester_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `student_answers`
 --
 ALTER TABLE `student_answers`
-MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-MODIFY `teacher_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `teacher_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `teacher_courses`
 --
 ALTER TABLE `teacher_courses`
-MODIFY `teacher_course_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `teacher_course_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -741,79 +785,91 @@ MODIFY `teacher_course_id` int(11) NOT NULL AUTO_INCREMENT;
 -- Constraints for table `choices`
 --
 ALTER TABLE `choices`
-ADD CONSTRAINT `choices_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`);
+  ADD CONSTRAINT `choices_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`);
 
 --
 -- Constraints for table `courses`
 --
 ALTER TABLE `courses`
-ADD CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
-ADD CONSTRAINT `courses_ibfk_2` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
-ADD CONSTRAINT `courses_ibfk_3` FOREIGN KEY (`level_id`) REFERENCES `levels` (`level_id`),
-ADD CONSTRAINT `courses_ibfk_4` FOREIGN KEY (`semester_id`) REFERENCES `semesters` (`semester_id`);
+  ADD CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
+  ADD CONSTRAINT `courses_ibfk_2` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
+  ADD CONSTRAINT `courses_ibfk_3` FOREIGN KEY (`level_id`) REFERENCES `levels` (`level_id`),
+  ADD CONSTRAINT `courses_ibfk_4` FOREIGN KEY (`semester_id`) REFERENCES `semesters` (`semester_id`);
 
 --
 -- Constraints for table `exams`
 --
 ALTER TABLE `exams`
-ADD CONSTRAINT `exams_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
-ADD CONSTRAINT `exams_ibfk_2` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
-ADD CONSTRAINT `exams_ibfk_3` FOREIGN KEY (`semester_id`) REFERENCES `semesters` (`semester_id`),
-ADD CONSTRAINT `exams_ibfk_4` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
-ADD CONSTRAINT `exams_ibfk_5` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`teacher_id`),
-ADD CONSTRAINT `exams_ibfk_6` FOREIGN KEY (`approved_by`) REFERENCES `admins` (`admin_id`);
+  ADD CONSTRAINT `exams_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
+  ADD CONSTRAINT `exams_ibfk_2` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
+  ADD CONSTRAINT `exams_ibfk_3` FOREIGN KEY (`semester_id`) REFERENCES `semesters` (`semester_id`),
+  ADD CONSTRAINT `exams_ibfk_4` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
+  ADD CONSTRAINT `exams_ibfk_5` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`teacher_id`),
+  ADD CONSTRAINT `exams_ibfk_6` FOREIGN KEY (`approved_by`) REFERENCES `admins` (`admin_id`);
 
 --
 -- Constraints for table `exam_registrations`
 --
 ALTER TABLE `exam_registrations`
-ADD CONSTRAINT `exam_registrations_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
-ADD CONSTRAINT `exam_registrations_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`);
+  ADD CONSTRAINT `exam_registrations_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`),
+  ADD CONSTRAINT `exam_registrations_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`);
+
+--
+-- Constraints for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD CONSTRAINT `password_reset_tokens_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`teacher_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `password_reset_tokens_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `password_reset_tokens_ibfk_3` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`admin_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `programs`
 --
 ALTER TABLE `programs`
-ADD CONSTRAINT `programs_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`);
+  ADD CONSTRAINT `programs_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`);
 
 --
 -- Constraints for table `questions`
 --
 ALTER TABLE `questions`
-ADD CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`);
+  ADD CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`);
 
 --
 -- Constraints for table `results`
 --
 ALTER TABLE `results`
-ADD CONSTRAINT `results_ibfk_1` FOREIGN KEY (`registration_id`) REFERENCES `exam_registrations` (`registration_id`);
+  ADD CONSTRAINT `results_ibfk_1` FOREIGN KEY (`registration_id`) REFERENCES `exam_registrations` (`registration_id`);
 
 --
 -- Constraints for table `students`
 --
 ALTER TABLE `students`
-ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
-ADD CONSTRAINT `students_ibfk_2` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
-ADD CONSTRAINT `students_ibfk_3` FOREIGN KEY (`level_id`) REFERENCES `levels` (`level_id`);
+  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`program_id`),
+  ADD CONSTRAINT `students_ibfk_2` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`),
+  ADD CONSTRAINT `students_ibfk_3` FOREIGN KEY (`level_id`) REFERENCES `levels` (`level_id`);
 
 --
 -- Constraints for table `student_answers`
 --
 ALTER TABLE `student_answers`
-ADD CONSTRAINT `student_answers_ibfk_1` FOREIGN KEY (`registration_id`) REFERENCES `exam_registrations` (`registration_id`),
-ADD CONSTRAINT `student_answers_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`),
-ADD CONSTRAINT `student_answers_ibfk_3` FOREIGN KEY (`choice_id`) REFERENCES `choices` (`choice_id`);
+  ADD CONSTRAINT `student_answers_ibfk_1` FOREIGN KEY (`registration_id`) REFERENCES `exam_registrations` (`registration_id`),
+  ADD CONSTRAINT `student_answers_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`),
+  ADD CONSTRAINT `student_answers_ibfk_3` FOREIGN KEY (`choice_id`) REFERENCES `choices` (`choice_id`);
 
 --
 -- Constraints for table `teachers`
 --
 ALTER TABLE `teachers`
-ADD CONSTRAINT `teachers_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`);
+  ADD CONSTRAINT `teachers_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`department_id`);
 
 --
 -- Constraints for table `teacher_courses`
 --
 ALTER TABLE `teacher_courses`
-ADD CONSTRAINT `fk_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE,
-ADD CONSTRAINT `fk_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`teacher_id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`teacher_id`) ON DELETE CASCADE;
 COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

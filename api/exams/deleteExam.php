@@ -1,10 +1,22 @@
 <?php
 header('Content-Type: application/json');
+
+// Include required files
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../login/teacher/teacherSessionCheck.php';
+
+// Check if teacher is logged in
+if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Unauthorized access'
+    ]);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
     exit;
 }
 
@@ -33,15 +45,48 @@ if (isset($data['exam_id'])) {
 
 if ($exam_id <= 0) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Valid exam ID is required.']);
+    echo json_encode(['status' => 'error', 'message' => 'Valid exam ID is required.']);
     exit;
 }
+
+$teacher_id = $_SESSION['teacher_id'];
 
 $db = new Database();
 $conn = $db->getConnection();
 
 try {
+    // First verify this exam belongs to the teacher and check its status
+    $verifyStmt = $conn->prepare("
+        SELECT exam_id, status 
+        FROM exams 
+        WHERE exam_id = :exam_id AND teacher_id = :teacher_id
+    ");
+    $verifyStmt->execute([
+        'exam_id' => $exam_id,
+        'teacher_id' => $teacher_id
+    ]);
+
+    $exam = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$exam) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Exam not found or you do not have permission to delete it'
+        ]);
+        exit;
+    }
+
+    // Don't allow deletion of completed exams
+    if ($exam['status'] === 'Completed') {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Completed exams cannot be deleted'
+        ]);
+        exit;
+    }
+
     $conn->beginTransaction();
+
     // Delete all related data (order matters due to FKs)
     // 1. Get all question IDs for this exam
     $stmt = $conn->prepare("SELECT question_id FROM questions WHERE exam_id = :exam_id");
@@ -73,12 +118,12 @@ try {
     $conn->prepare("DELETE FROM exam_registrations WHERE exam_id = ?")->execute([$exam_id]);
 
     // 7. Delete the exam
-    $conn->prepare("DELETE FROM exams WHERE exam_id = ?")->execute([$exam_id]);
+    $conn->prepare("DELETE FROM exams WHERE exam_id = ? AND teacher_id = ?")->execute([$exam_id, $teacher_id]);
 
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Exam deleted successfully.']);
+    echo json_encode(['status' => 'success', 'message' => 'Exam deleted successfully.']);
 } catch (PDOException $e) {
     $conn->rollBack();
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
 }
