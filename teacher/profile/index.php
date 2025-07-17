@@ -99,10 +99,6 @@ if ($teacher) {
               <i class="fas fa-edit mr-2"></i>
               Edit Profile
             </a>
-            <a href="../settings/" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
-              <i class="fas fa-cog mr-2"></i>
-              Settings
-            </a>
           </div>
         </div>
         <p class="mt-2 text-sm text-gray-600">
