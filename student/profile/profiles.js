@@ -46,7 +46,7 @@ async function loadProfile() {
     try {
         showLoading();
         
-        const response = await fetch('/api/student/getProfile.php');
+        const response = await fetch('/api/students/getProfile.php');
         const data = await response.json();
         
         if (data.success) {

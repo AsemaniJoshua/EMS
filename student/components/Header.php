@@ -86,13 +86,13 @@ $studentProgram = $_SESSION['student_program'] ?? '';
                                 <i class="fas fa-user mr-2"></i>
                                 Your Profile
                             </a>
-                            <a href="/student/settings/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-cog mr-2"></i>
-                                Settings
+                            <a href="/student/exam/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-clipboard-list mr-2"></i>
+                                Exams
                             </a>
-                            <a href="/student/help/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-question-circle mr-2"></i>
-                                Help & Support
+                            <a href="/student/results/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-chart-bar mr-2"></i>
+                               Results
                             </a>
                             <div class="border-t border-gray-200"></div>
                             <button onclick="logoutStudent()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
