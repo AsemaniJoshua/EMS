@@ -2,21 +2,19 @@
 // API endpoint for student logout
 header('Content-Type: application/json');
 
-// Start session
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+// Start session if not already started
 if (session_status() == PHP_SESSION_NONE) {
     ini_set('session.cookie_path', '/');
     session_start();
 }
 
 try {
-    // Log the logout if student was logged in
-    if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === true) {
-        $student_id = $_SESSION['student_id'] ?? 'unknown';
-        $student_email = $_SESSION['student_email'] ?? 'unknown';
-        
-        error_log("Student logout: ID {$student_id}, Email: {$student_email}");
-    }
-    
     // Clear all session variables
     $_SESSION = array();
     
@@ -39,16 +37,10 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Student logout error: " . $e->getMessage());
-    
-    // Even if there's an error, we should still try to clear the session
-    session_unset();
-    session_destroy();
-    
+    http_response_code(500);
     echo json_encode([
-        'success' => true,
-        'message' => 'Logged out successfully',
-        'redirect_url' => '/student/login/'
+        'success' => false,
+        'message' => 'Logout failed: ' . $e->getMessage()
     ]);
 }
 ?>
