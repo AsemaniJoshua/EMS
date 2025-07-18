@@ -62,7 +62,7 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
                     <div class="px-6 py-8">
                         <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                             <!-- Profile Picture -->
-                            <div class="flex-shrink-0">
+                            <div class="flex-shrink-0 mr-3">
                                 <div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-user text-3xl text-emerald-600"></i>
                                 </div>
@@ -386,7 +386,7 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
         </div>
     </div>
 
-    <script src="profile.js"></script>
+    <script src="profiles.js"></script>
 </body>
 </html>
 
