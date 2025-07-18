@@ -1,11 +1,6 @@
 <?php
+// API endpoint to get student dashboard statistics
 header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-    exit;
-}
 
 // Start session and check authentication
 if (session_status() == PHP_SESSION_NONE) {
@@ -29,8 +24,11 @@ try {
     
     // Get student information
     $studentQuery = "
-        SELECT s.student_id, s.program_id, s.department_id, s.level_id
+        SELECT s.*, p.name as program_name, d.name as department_name, l.name as level_name
         FROM students s
+        JOIN programs p ON s.program_id = p.program_id
+        JOIN departments d ON s.department_id = d.department_id
+        JOIN levels l ON s.level_id = l.level_id
         WHERE s.student_id = :student_id
     ";
     $stmt = $conn->prepare($studentQuery);
@@ -67,7 +65,8 @@ try {
         JOIN exam_registrations er ON r.registration_id = er.registration_id 
         WHERE er.student_id = :student_id
     ");
-    $stmt->bindParam(':student_id', $student_id);
+
+        $stmt->bindParam(':student_id', $student_id);
     $stmt->execute();
     $averageScore = round($stmt->fetchColumn() ?: 0, 1);
     
@@ -124,30 +123,112 @@ try {
     $stmt->execute();
     $thisWeekCompleted = $stmt->fetchColumn();
     
+    // Fetch upcoming exams
+    $upcomingExamsQuery = "
+        SELECT e.exam_id, e.title, e.start_datetime, e.end_datetime, e.status,
+               CASE 
+                   WHEN er.registration_id IS NOT NULL THEN 'Registered'
+                   ELSE 'Available'
+               END as registration_status
+        FROM exams e
+        JOIN courses c ON e.course_id = c.course_id
+        LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id AND er.student_id = :student_id
+        WHERE e.status = 'Approved'
+        AND e.start_datetime > NOW()
+        AND (c.program_id = :program_id OR c.department_id = :department_id)
+        ORDER BY e.start_datetime ASC
+        LIMIT 5
+    ";
+    $stmt = $conn->prepare($upcomingExamsQuery);
+    $stmt->bindParam(':student_id', $student_id);
+    $stmt->bindParam(':program_id', $student['program_id']);
+    $stmt->bindParam(':department_id', $student['department_id']);
+    $stmt->execute();
+    $upcomingExams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch recent results
+    $recentResultsQuery = "
+        SELECT r.score_percentage, r.completed_at, e.title, e.pass_mark,
+               CASE WHEN r.score_percentage >= e.pass_mark THEN 'Passed' ELSE 'Failed' END as status
+        FROM results r
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN exams e ON er.exam_id = e.exam_id
+        WHERE er.student_id = :student_id
+        ORDER BY r.completed_at DESC
+        LIMIT 5
+    ";
+    $stmt = $conn->prepare($recentResultsQuery);
+    $stmt->bindParam(':student_id', $student_id);
+    $stmt->execute();
+    $recentResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch recent activity
+    $recentActivityQuery = "
+        SELECT 
+            'exam_completed' as activity_type,
+            e.title as activity_title,
+            r.completed_at as activity_date,
+            CONCAT('Scored ', ROUND(r.score_percentage, 1), '%') as activity_description
+        FROM results r
+        JOIN exam_registrations er ON r.registration_id = er.registration_id
+        JOIN exams e ON er.exam_id = e.exam_id
+        WHERE er.student_id = :student_id
+        
+        UNION ALL
+        
+        SELECT 
+            'exam_registered' as activity_type,
+            e.title as activity_title,
+            er.registered_at as activity_date,
+            'Registered for exam' as activity_description
+        FROM exam_registrations er
+        JOIN exams e ON er.exam_id = e.exam_id
+        WHERE er.student_id = :student_id
+        AND er.registered_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        
+        ORDER BY activity_date DESC
+        LIMIT 6
+    ";
+    $stmt = $conn->prepare($recentActivityQuery);
+    $stmt->bindParam(':student_id', $student_id);
+    $stmt->execute();
+    $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
     echo json_encode([
         'success' => true,
-        'stats' => [
+        'data' => [
+            'student_info' => $student,
             'registered_exams' => $registeredExams,
             'this_month_exams' => $thisMonthExams,
             'average_score' => $averageScore,
             'score_improvement' => $scoreImprovement,
             'pending_exams' => $pendingExams,
             'completed_exams' => $completedExams,
-            'this_week_completed' => $thisWeekCompleted
+            'this_week_completed' => $thisWeekCompleted,
+            'upcoming_exams' => $upcomingExams,
+            'recent_results' => $recentResults,
+            'recent_activity' => $recentActivity
         ]
     ]);
     
 } catch (PDOException $e) {
+    error_log("Get dashboard stats error: " . $e->getMessage());
+    
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Failed to load dashboard statistics'
     ]);
 } catch (Exception $e) {
+    error_log("Get dashboard stats error: " . $e->getMessage());
+    
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'message' => 'Server error: ' . $e->getMessage()
+        'message' => 'Server error occurred'
     ]);
 }
 ?>
+
+
+    
