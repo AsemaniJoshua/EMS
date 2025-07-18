@@ -71,7 +71,7 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
 
         <!-- Login Form -->
         <div class="glass-effect rounded-2xl shadow-xl p-8">
-            <form id="loginForm" class="space-y-6">
+            <form id="loginForm" class="space-y-6" method="POST">
                 <!-- Email Field -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -186,6 +186,6 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
         </div>
     </div>
 
-    <script src="login.js"></script>
+    <script src="/student/login/logins.js"></script>
 </body>
 </html>

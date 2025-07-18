@@ -327,7 +327,7 @@ window.addEventListener('load', function() {
 });
 
 // Handle browser back button
-window.addEventListener('popstate', function(e) {
+window.addEventListener('popstate', function() {
     // Prevent going back to login page if already logged in
     if (sessionStorage.getItem('student_logged_in')) {
         window.location.href = '/student/dashboard/';
