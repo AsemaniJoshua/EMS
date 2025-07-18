@@ -333,7 +333,7 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
                                 <div class="flex items-center space-x-2 text-xs">
                                     <div id="length-check" class="flex items-center text-gray-400">
                                         <i class="fas fa-circle mr-1"></i>
-                                        <span>At least 6 characters</span>
+                                        <span>At least 8 characters</span>
                                     </div>
                                 </div>
                             </div>

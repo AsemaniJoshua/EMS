@@ -1,10 +1,13 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
+    echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
     exit;
 }
 
@@ -23,7 +26,7 @@ $required = [
 ];
 foreach ($required as $field) {
     if (empty($data[$field])) {
-        echo json_encode(['status' => 'error', 'message' => "Missing required field: $field"]);
+        echo json_encode(['success' => false, 'message' => "Missing required field:". $field]);
         exit;
     }
 }
@@ -43,17 +46,17 @@ $username = trim($data['username']);
 $password = $data['password'];
 $status = $data['status'];
 $resetOnLogin = $data['resetOnLogin'];
-$send_notification = $data['send_notification']; 
+$send_notification = isset($data['send_notification']) ? $data['send_notification'] : null;
 
 // Validate email
 if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid email address.']);
+    echo json_encode(['success' => false, 'message' => 'Invalid email address.']);
     exit;
 }
 
 // Validate password length
 if (strlen($password) < 8) {
-    echo json_encode(['status' => 'error', 'message' => 'Password must be at least 8 characters.']);
+    echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters.']);
     exit;
 }
 
@@ -70,7 +73,7 @@ try {
         ':index_number' => $index_number
     ]);
     if ($stmt->fetchColumn() > 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Username, email, or index number already exists.']);
+        echo json_encode(['success' => false, 'message' => 'Username, email, or index number already exists.']);
         exit;
     }
 
@@ -105,10 +108,10 @@ try {
     if($send_notification === 'on') {
         // Send notification logic here (e.g., email)
         // This is a placeholder, implement actual notification logic as needed
-        // mail($email, "Welcome to EMS", "Your account has been created successfully.");
+        mail($email, "Welcome to EMS", "Your account has been created successfully.");
     }
 
-    echo json_encode(['status' => 'success', 'message' => 'Student added successfully!']);
+    echo json_encode(['success' => true, 'message' => 'Student added successfully!']);
 } catch (PDOException $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }

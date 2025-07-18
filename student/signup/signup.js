@@ -158,7 +158,7 @@ function initializePasswordValidation() {
         const password = this.value;
         
         // Length check
-        if (password.length >= 6) {
+        if (password.length >= 8) {
             lengthCheck.classList.remove('text-gray-400');
             lengthCheck.classList.add('text-green-500');
             lengthCheck.querySelector('i').classList.remove('fa-circle');
@@ -389,8 +389,8 @@ function validateCurrentStep() {
                 if (!password) {
             showFieldError('password', 'Password is required');
             isValid = false;
-        } else if (password.length < 6) {
-            showFieldError('password', 'Password must be at least 6 characters');
+        } else if (password.length < 8) {
+            showFieldError('password', 'Password must be at least 8 characters');
             isValid = false;
         }
         
@@ -423,6 +423,7 @@ async function handleSignup(e) {
     const data = Object.fromEntries(formData.entries());
     data.status = 'active';
     data.resetOnLogin = 0;
+    data.send_notification = document.getElementById('send_notification').checked ? 'on' : 'off';
     
     // Show loading state
     setLoadingState(true);
