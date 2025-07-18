@@ -1,10 +1,11 @@
 <?php
 // teacherSessionCheck.php - Checks if teacher is logged in, otherwise redirects to login page
-
+ini_set('session.cookie_path', '/');
+session_start();
 // Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// if (session_status() === PHP_SESSION_NONE) {
+//     session_start();
+// }
 
 // Check if teacher is logged in
 if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
