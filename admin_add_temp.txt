@@ -44,3 +44,46 @@ if ($success) {
 } else {
     echo "Failed to create admin user.";
 } 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sorry!. Lets go back to the student dashboard index.php . There is an updated schema which is exam_management(1).sql .
+
+Also check the endpoints for the student dashboard which are courseEnrollment.php and examsRegistration.php  if there will be a change you have to do.
+ 
+ 
