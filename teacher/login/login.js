@@ -1,7 +1,6 @@
 // login.js
 
 document.addEventListener('DOMContentLoaded', function () {
-<<<<<<< HEAD
     // Set up SweetAlert Toast Mixin (if SweetAlert is available)
     let Toast;
     if (typeof Swal !== 'undefined') {
@@ -18,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const loginForm = document.getElementById('teacher-login-form');
+    const loginForm = document.getElementById('teacherLoginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', function(event) {
             event.preventDefault();
@@ -62,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         showNotification(data.message || 'Login successful!', 'success');
                     }
-                    
                     // Redirect after a short delay
                     setTimeout(() => {
                         window.location.href = data.redirect || '/teacher/';
@@ -100,68 +98,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitButton.innerHTML = originalText;
                 submitButton.disabled = false;
             });
-=======
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        },
-    });
-
-    // Make modal functions available globally
-    window.openModal = function (id) {
-        document.getElementById(id).classList.remove('hidden');
-        document.getElementById(id).classList.add('flex');
-    };
-
-    window.closeModal = function (id) {
-        document.getElementById(id).classList.add('hidden');
-    };
-
-    // Login Handler
-    const loginForm = document.getElementById('teacherLoginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
-
-            axios.post('/api/login/teacher/processTeacherLogin.php', {
-                email,
-                password,
-                remember
-            })
-                .then((res) => {
-                    const data = res.data;
-                    if (data.status === 'success') {
-                        Toast.fire({ icon: 'success', title: data.message || 'Login successful!' });
-                        setTimeout(() => {
-                            window.location.href = data.redirect || '/teacher/dashboard/';
-                        }, 1000);
-                    } else {
-                        Toast.fire({ icon: 'error', title: data.message || 'Login failed. Please try again.' });
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalBtnText;
-                    }
-                })
-                .catch((err) => {
-                    Toast.fire({ icon: 'error', title: 'An error occurred. Please try again.' });
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
-                });
->>>>>>> 6776f878dc1553b01f99c94a6008787df1c74290
         });
     }
 
