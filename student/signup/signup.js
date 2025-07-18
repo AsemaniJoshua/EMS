@@ -38,8 +38,10 @@ async function loadFormData() {
         if (data.success) {
             departments = data.data.departments;
             programs = data.data.programs;
+            window.levels = data.data.levels;
             
             populateDepartments();
+            populateLevels();
         } else {
             throw new Error(data.message);
         }
@@ -80,6 +82,18 @@ function populatePrograms(departmentId) {
     });
     
     programSelect.disabled = false;
+}
+
+function populateLevels() {
+    const levelSelect = document.getElementById('level_id');
+    levelSelect.innerHTML = '<option value="">Select Level</option>';
+    if (!window.levels) return;
+    window.levels.forEach(level => {
+        const option = document.createElement('option');
+        option.value = level.level_id;
+        option.textContent = level.name;
+        levelSelect.appendChild(option);
+    });
 }
 
 function initializeDepartmentProgramLogic() {
@@ -407,18 +421,20 @@ async function handleSignup(e) {
     // Collect form data
     const formData = new FormData(document.getElementById('signupForm'));
     const data = Object.fromEntries(formData.entries());
+    data.status = 'active';
+    data.resetOnLogin = 0;
     
     // Show loading state
     setLoadingState(true);
     
     try {
-        const response = await fetch('/api/students/signup.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+        const response = await fetch('/api/students/createStudent.php', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+});
         
         const result = await response.json();
         

@@ -26,6 +26,11 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     
+    if (!isset($_SESSION['student_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Student ID not found in session']);
+        exit;
+    }
     $student_id = $_SESSION['student_id'];
     
     // Get input data

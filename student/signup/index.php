@@ -279,6 +279,22 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
                             </select>
                             <p class="text-xs text-gray-500 mt-1">Select a department first</p>
                         </div>
+
+                        <!-- Add this to Step 2: Academic Information -->
+                        <div>
+                            <label for="level_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                Level *
+                            </label>
+                            <select 
+                                id="level_id" 
+                                name="level_id" 
+                                required 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 input-focus transition-all duration-200 bg-white bg-opacity-50"
+                            >
+                                <option value="">Select Level</option>
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
                     </div>
                 </div>
 

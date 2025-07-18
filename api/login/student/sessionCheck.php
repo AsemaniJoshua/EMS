@@ -51,7 +51,7 @@ if (isset($_SESSION['last_activity_check']) && (time() - $_SESSION['last_activit
     } catch (Exception $e) {
         // Log error but don't interrupt user session
         error_log("Session check error: " . $e->getMessage());
-            }
+    }
 }
 
 // Update last activity time
