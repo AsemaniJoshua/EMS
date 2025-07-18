@@ -281,7 +281,7 @@ $questionCount = $stmt->fetchColumn();
 
         // Load exam data
         function loadExamData() {
-            fetch(`/api/student/getExamQuestions.php?exam_id=<?php echo $exam_id; ?>`)
+            fetch(`/api/students/getExamQuestions.php?exam_id=<?php echo $exam_id; ?>`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -405,7 +405,7 @@ $questionCount = $stmt->fetchColumn();
             document.getElementById('progress').textContent = `${answeredCount}/${examData.questions.length}`;
             
             // Save to server
-            fetch('/api/student/saveExamAnswer.php', {
+            fetch('/api/students/saveExamAnswer.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -543,7 +543,7 @@ $questionCount = $stmt->fetchColumn();
                 }
             });
             
-            fetch('/api/student/submitExam.php', {
+            fetch('/api/students/submitExam.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

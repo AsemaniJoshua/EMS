@@ -72,7 +72,7 @@ function switchTab(tab) {
 function loadExamData(type) {
     showLoading(true);
     
-    fetch('/api/student/getExams.php', {
+    fetch('/api/students/getExams.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

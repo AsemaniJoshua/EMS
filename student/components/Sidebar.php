@@ -116,7 +116,7 @@ document.getElementById('sidebar-overlay').addEventListener('click', toggleSideb
 // Logout function
 function logoutStudent() {
     if (confirm('Are you sure you want to logout?')) {
-        fetch('/api/student/logout.php', {
+        fetch('/api/students/logout.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

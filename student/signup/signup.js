@@ -32,7 +32,7 @@ function initializeSignupForm() {
 
 async function loadFormData() {
     try {
-        const response = await fetch('/api/student/getFormData.php');
+        const response = await fetch('/api/students/getFormData.php');
         const data = await response.json();
         
         if (data.success) {
@@ -412,7 +412,7 @@ async function handleSignup(e) {
     setLoadingState(true);
     
     try {
-        const response = await fetch('/api/student/signup.php', {
+        const response = await fetch('/api/students/signup.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

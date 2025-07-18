@@ -44,7 +44,7 @@ function initializeExam() {
 }
 
 function loadExamData() {
-    fetch('/api/student/getExamData.php', {
+    fetch('/api/students/getExamData.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ function loadExamData() {
 }
 
 function loadQuestions() {
-    fetch('/api/student/getExamQuestions.php', {
+    fetch('/api/students/getExamQuestions.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ function loadQuestions() {
 }
 
 function loadExamProgress() {
-    fetch('/api/student/getExamProgress.php', {
+    fetch('/api/students/getExamProgress.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ function saveAnswer(questionIndex, choiceId) {
     answers[questionIndex] = choiceId;
     
     // Save to backend
-    fetch('/api/student/saveExamAnswer.php', {
+    fetch('/api/students/saveExamAnswer.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -391,7 +391,7 @@ function updateExamInfo() {
 
 function autoSaveProgress() {
     if (registrationId > 0) {
-        fetch('/api/student/saveExamProgress.php', {
+        fetch('/api/students/saveExamProgress.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -456,7 +456,7 @@ function submitExam() {
     showLoadingOverlay();
     
     // Submit to backend
-    fetch('/api/student/submitExam.php', {
+    fetch('/api/students/submitExam.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

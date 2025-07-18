@@ -133,7 +133,7 @@ function toggleNotifications() {
 
 // Load notifications
 function loadNotifications() {
-    fetch('/api/student/getNotifications.php')
+    fetch('/api/students/getNotifications.php')
         .then(response => response.json())
         .then(data => {
             const notificationsList = document.getElementById('notifications-list');
@@ -209,7 +209,7 @@ function formatNotificationDate(dateString) {
 // Load notifications on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Load notification count
-    fetch('/api/student/getNotifications.php?count_only=1')
+    fetch('/api/students/getNotifications.php?count_only=1')
         .then(response => response.json())
         .then(data => {
             if (data.success && data.unread_count > 0) {

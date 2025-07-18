@@ -539,7 +539,7 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Function to refresh dashboard data
         function refreshDashboardData() {
-            fetch('/api/student/getDashboardStats.php')
+            fetch('/api/students/getDashboardStats.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

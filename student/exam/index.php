@@ -253,7 +253,7 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
         function loadExams(type) {
             showLoading(true);
             
-            fetch('/api/student/getStudentExams.php', {
+            fetch('/api/students/getStudentExams.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

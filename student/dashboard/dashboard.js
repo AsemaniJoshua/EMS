@@ -229,7 +229,7 @@ function handleStatCardClick(statType) {
 }
 
 function refreshDashboardData() {
-    fetch('/api/student/getDashboardStats.php')
+    fetch('/api/students/getDashboardStats.php')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
