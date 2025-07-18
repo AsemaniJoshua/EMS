@@ -12,7 +12,24 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
   <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="/teacher/login/login.js"></script>
+   <style>
+    .animate-pop {
+      animation: popIn .25s cubic-bezier(.4, 2, .6, 1) both;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(.8);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  </style>
+ 
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -161,25 +178,9 @@
     </div>
   </div>
 
-  <style>
-    .animate-pop {
-      animation: popIn .25s cubic-bezier(.4, 2, .6, 1) both;
-    }
+ 
 
-    @keyframes popIn {
-      0% {
-        transform: scale(.8);
-        opacity: 0;
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-  </style>
-
-
+ <script src="/teacher/login/logins.js"></script>
 </body>
 
 </html>

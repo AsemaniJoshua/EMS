@@ -515,6 +515,22 @@ CREATE TABLE `teacher_courses` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `exam_progress`
+--
+
+DROP TABLE IF EXISTS `exam_progress`;
+CREATE TABLE exam_progress (
+    progress_id INT AUTO_INCREMENT PRIMARY KEY,
+    registration_id INT NOT NULL,
+    current_question INT DEFAULT 0,
+    time_remaining INT DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_registration (registration_id),
+    FOREIGN KEY (registration_id) REFERENCES exam_registrations(registration_id) ON DELETE CASCADE
+);
+
+
+--
 -- Structure for view `live_results`
 --
 DROP TABLE IF EXISTS `live_results`;

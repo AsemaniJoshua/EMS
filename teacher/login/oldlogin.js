@@ -19,27 +19,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const loginForm = document.getElementById('teacherLoginForm');
     if (loginForm) {
-        loginForm.addEventListener('submit', function(event) {
+        loginForm.addEventListener('submit', function (event) {
             event.preventDefault();
-            
+
             // Show loading state
             const submitButton = loginForm.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
             submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing In...';
             submitButton.disabled = true;
-            
+
             // Get form data
             const usernameEmail = document.getElementById('username-email').value.trim();
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('remember-me').checked;
-            
+
             // Prepare data for API
             const loginData = {
                 email: usernameEmail, // Using email field for both username and email
                 password: password,
                 remember: rememberMe
             };
-            
+
             // Make API call to teacher login endpoint
             fetch('/api/login/processTeacherLogin.php', {
                 method: 'POST',
@@ -49,55 +49,55 @@ document.addEventListener('DOMContentLoaded', function () {
                 // credentials: 'same-origin', // Ensure cookies are sent
                 body: JSON.stringify(loginData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Show success message
-                    if (Toast) {
-                        Toast.fire({
-                            icon: 'success',
-                            title: data.message || 'Login successful!'
-                        });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success message
+                        if (Toast) {
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message || 'Login successful!'
+                            });
+                        } else {
+                            showNotification(data.message || 'Login successful!', 'success');
+                        }
+                        // Redirect after a short delay
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '/teacher/';
+                        }, 1000);
                     } else {
-                        showNotification(data.message || 'Login successful!', 'success');
+                        // Show error message
+                        if (Toast) {
+                            Toast.fire({
+                                icon: 'error',
+                                title: data.message || 'Login failed. Please try again.'
+                            });
+                        } else {
+                            showNotification(data.message || 'Login failed. Please try again.', 'error');
+                        }
+
+                        // Reset button state
+                        submitButton.innerHTML = originalText;
+                        submitButton.disabled = false;
                     }
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = data.redirect || '/teacher/';
-                    }, 1000);
-                } else {
+                })
+                .catch(error => {
+                    console.error('Login error:', error);
+
                     // Show error message
                     if (Toast) {
                         Toast.fire({
                             icon: 'error',
-                            title: data.message || 'Login failed. Please try again.'
+                            title: 'Network error. Please check your connection and try again.'
                         });
                     } else {
-                        showNotification(data.message || 'Login failed. Please try again.', 'error');
+                        showNotification('Network error. Please check your connection and try again.', 'error');
                     }
-                    
+
                     // Reset button state
                     submitButton.innerHTML = originalText;
                     submitButton.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Login error:', error);
-                
-                // Show error message
-                if (Toast) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Network error. Please check your connection and try again.'
-                    });
-                } else {
-                    showNotification('Network error. Please check your connection and try again.', 'error');
-                }
-                
-                // Reset button state
-                submitButton.innerHTML = originalText;
-                submitButton.disabled = false;
-            });
+                });
         });
     }
 

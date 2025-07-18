@@ -1,10 +1,14 @@
 <?php
+ini_set('session.cookie_path', '/');
+session_start();
 // Prevent direct script access
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['status' => 'error', 'message' => 'Direct access to this script is not allowed']);
     exit;
 }
+
+
 
 // Include database connection
 require_once __DIR__ . '/../../../api/config/database.php';

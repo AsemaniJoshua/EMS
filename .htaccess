@@ -10,5 +10,6 @@ RewriteRule ^admin/?$ /admin/dashboard/ [R=301,L]
 # Teacher URL redirections (if needed)  
 RewriteRule ^teacher/?$ /teacher/dashboard/ [R=301,L]
 
-# API routing (if needed)
-RewriteRule ^api/(.*)$ /api/$1 [L]
+# Exclude API from further rewrites (important!)
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^ - [L]

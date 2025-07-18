@@ -3,16 +3,16 @@ $pageTitle = "Student Dashboard";
 $breadcrumb = "Dashboard";
 
 // Start session and check authentication
-// if (session_status() == PHP_SESSION_NONE) {
-//     ini_set('session.cookie_path', '/');
-//     session_start();
-// }
+if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_path', '/');
+    session_start();
+}
 
 // Check if student is logged in
-// if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !== true) {
-//     header('Location: /student/login/');
-//     exit;
-// }
+if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !== true) {
+    header('Location: /student/login/');
+    exit;
+}
 
 require_once '../../api/config/database.php';
 $db = new Database();
@@ -33,12 +33,6 @@ $stmt = $conn->prepare($studentQuery);
 $stmt->bindParam(':student_id', $student_id);
 $stmt->execute();
 $student = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$student) {
-    session_destroy();
-    header('Location: /student/login/');
-    exit;
-}
 
 // Fetch real statistics from database
 
@@ -125,8 +119,7 @@ $thisWeekCompleted = $stmt->fetchColumn();
 
 // Fetch upcoming exams
 $upcomingExamsQuery = "
-    SELECT e.exam_id, e.title, e.exam_code, e.start_datetime, e.end_datetime, e.status,
-           c.title as course_title,
+    SELECT e.exam_id, e.title, e.start_datetime, e.status,
            CASE 
                WHEN er.registration_id IS NOT NULL THEN 'Registered'
                ELSE 'Available'
@@ -136,7 +129,7 @@ $upcomingExamsQuery = "
     LEFT JOIN exam_registrations er ON e.exam_id = er.exam_id AND er.student_id = :student_id
     WHERE e.status = 'Approved'
     AND e.start_datetime > NOW()
-    AND (c.program_id = :program_id OR c.department_id = :department_id OR c.level_id = :level_id)
+    AND (c.program_id = :program_id OR c.department_id = :department_id)
     ORDER BY e.start_datetime ASC
     LIMIT 5
 ";
@@ -144,7 +137,6 @@ $stmt = $conn->prepare($upcomingExamsQuery);
 $stmt->bindParam(':student_id', $student_id);
 $stmt->bindParam(':program_id', $student['program_id']);
 $stmt->bindParam(':department_id', $student['department_id']);
-$stmt->bindParam(':level_id', $student['level_id']);
 $stmt->execute();
 $upcomingExams = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -216,8 +208,15 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <!-- Page Header -->
             <div class="mb-4 md:flex md:items-center md:justify-between">
                 <div class="flex-1 min-w-0">
-                    <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Student Dashboard</h1>
-                    <p class="mt-1 text-sm text-gray-500">Welcome back, <?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?>!</p>
+                    <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">
+                        Welcome back, <?php echo htmlspecialchars($student['first_name']); ?>!
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">Here's your student overview for today.</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+                        <?php echo htmlspecialchars($student['program_name']); ?>
+                    </span>
                 </div>
             </div>
             
@@ -228,14 +227,17 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p class="text-gray-600 text-sm">Enter your enrollment key to access upcoming exams for your course.</p>
                 </div>
                 <form id="enrollForm" class="flex gap-2 w-full md:w-auto">
-                    <input id="enrollKey" type="text" required placeholder="Enrollment Key" class="px-4 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1" />
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200">Submit</button>
+                    <input id="enrollKey" type="text" required placeholder="Enrollment Key" 
+                           class="px-4 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1" />
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200">
+                        Submit
+                    </button>
                 </form>
             </div>
             
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100" data-stat="registered-exams">
                     <div class="p-5 flex items-center">
                         <div class="flex-shrink-0 bg-blue-50 rounded-lg p-3">
                             <i class="fas fa-clipboard-list text-blue-600 text-xl"></i>
@@ -255,7 +257,7 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
                 
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100" data-stat="average-score">
                     <div class="p-5 flex items-center">
                         <div class="flex-shrink-0 bg-green-50 rounded-lg p-3">
                             <i class="fas fa-chart-line text-green-600 text-xl"></i>
@@ -277,7 +279,7 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
                 
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100" data-stat="pending-exams">
                     <div class="p-5 flex items-center">
                         <div class="flex-shrink-0 bg-yellow-50 rounded-lg p-3">
                             <i class="fas fa-hourglass-half text-yellow-600 text-xl"></i>
@@ -297,7 +299,7 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
                 
-                                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100" data-stat="completed-exams">
                     <div class="p-5 flex items-center">
                         <div class="flex-shrink-0 bg-purple-50 rounded-lg p-3">
                             <i class="fas fa-check-circle text-purple-600 text-xl"></i>
@@ -348,14 +350,10 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?php foreach ($upcomingExams as $exam): ?>
                                             <tr>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div>
-                                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($exam['title']); ?></div>
-                                                        <div class="text-sm text-gray-500"><?php echo htmlspecialchars($exam['course_title']); ?></div>
-                                                    </div>
+                                                    <?php echo htmlspecialchars($exam['title']); ?>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-900"><?php echo date('M j, Y', strtotime($exam['start_datetime'])); ?></div>
-                                                    <div class="text-sm text-gray-500"><?php echo date('H:i', strtotime($exam['start_datetime'])); ?></div>
+                                                    <?php echo date('Y-m-d H:i', strtotime($exam['start_datetime'])); ?>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <span class="px-2 py-1 rounded <?php echo $exam['registration_status'] == 'Registered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'; ?> text-xs font-semibold">
@@ -364,11 +362,15 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <?php if ($exam['registration_status'] == 'Registered'): ?>
-                                                        <button onclick="viewExamDetails(<?php echo $exam['exam_id']; ?>)" class="text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
-                                                            <i class="fas fa-eye text-lg cursor-pointer"></i>
+                                                        <button onclick="window.location.href='../exam/take.php?id=<?php echo $exam['exam_id']; ?>'" 
+                                                                class="text-emerald-600 hover:text-emerald-700 transition-colors duration-200" 
+                                                                title="Take Exam">
+                                                            <i class="fas fa-play text-lg cursor-pointer"></i>
                                                         </button>
                                                     <?php else: ?>
-                                                        <button onclick="registerForExam(<?php echo $exam['exam_id']; ?>)" class="text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                                                        <button onclick="registerForExam(<?php echo $exam['exam_id']; ?>)" 
+                                                                class="text-blue-600 hover:text-blue-700 transition-colors duration-200" 
+                                                                title="Register for Exam">
                                                             <i class="fas fa-plus text-lg cursor-pointer"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -397,7 +399,7 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
+                                <tbody id="recentResultsTable" class="bg-white divide-y divide-gray-200">
                                     <?php if (empty($recentResults)): ?>
                                         <tr>
                                             <td colspan="4" class="px-6 py-4 text-center text-gray-500">
@@ -408,10 +410,10 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?php foreach ($recentResults as $result): ?>
                                             <tr>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($result['title']); ?></div>
+                                                    <?php echo htmlspecialchars($result['title']); ?>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-900"><?php echo round($result['score_percentage'], 1); ?>%</div>
+                                                    <?php echo round($result['score_percentage'], 1); ?>%
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <span class="px-2 py-1 rounded <?php echo $result['status'] == 'Passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?> text-xs font-semibold">
@@ -419,7 +421,7 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     </span>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-900"><?php echo date('M j, Y', strtotime($result['completed_at'])); ?></div>
+                                                    <?php echo date('Y-m-d', strtotime($result['completed_at'])); ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -442,70 +444,252 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php foreach ($recentActivity as $activity): ?>
                                     <li>
                                         <span class="absolute -left-3 top-1 w-3 h-3 <?php echo $activity['activity_type'] == 'exam_completed' ? 'bg-green-500' : 'bg-emerald-500'; ?> rounded-full"></span>
-                                        <div class="font-semibold <?php echo $activity['activity_type'] == 'exam_completed' ? 'text-green-700' : 'text-emerald-700'; ?>">
+                                        <span class="font-semibold <?php echo $activity['activity_type'] == 'exam_completed' ? 'text-green-700' : 'text-emerald-700'; ?>">
                                             <?php echo htmlspecialchars($activity['activity_title']); ?>
-                                        </div>
-                                        <div class="text-gray-700 text-sm"><?php echo htmlspecialchars($activity['activity_description']); ?></div>
-                                        <div class="text-gray-500 text-xs">
-                                            <?php echo date('M j, Y H:i', strtotime($activity['activity_date'])); ?>
-                                        </div>
+                                        </span> - 
+                                        <span class="text-gray-700"><?php echo htmlspecialchars($activity['activity_description']); ?></span>
+                                        <span class="text-gray-500 text-sm block">
+                                            <?php echo date('M j, Y', strtotime($activity['activity_date'])); ?>
+                                        </span>
                                     </li>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </ul>
                     </div>
                     
-                    <!-- Student Info -->
-                    <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Information</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-sm text-gray-600">Index Number:</span>
-                                <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['index_number']); ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-gray-600">Program:</span>
-                                <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['program_name']); ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-gray-600">Department:</span>
-                                <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['department_name']); ?></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-gray-600">Level:</span>
-                                <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($student['level_name']); ?></span>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- Announcements -->
                     <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Announcements</h3>
-                        <ul class="space-y-3 text-sm text-gray-700">
+                        <ul class="space-y-3 text-gray-700 text-sm">
                             <li class="flex items-start">
-                                <i class="fas fa-bullhorn text-blue-500 mt-1 mr-2"></i>
+                                <i class="fas fa-bullhorn text-emerald-600 mt-1 mr-3 flex-shrink-0"></i>
                                 <span>Check your email regularly for exam notifications and updates.</span>
                             </li>
                             <li class="flex items-start">
-                                <i class="fas fa-clock text-yellow-500 mt-1 mr-2"></i>
+                                <i class="fas fa-calendar-check text-blue-600 mt-1 mr-3 flex-shrink-0"></i>
                                 <span>Make sure to register for upcoming exams before the deadline.</span>
                             </li>
                             <li class="flex items-start">
-                                <i class="fas fa-question-circle text-green-500 mt-1 mr-2"></i>
+                                <i class="fas fa-question-circle text-yellow-600 mt-1 mr-3 flex-shrink-0"></i>
                                 <span>Contact your instructor if you have any questions about exam content.</span>
                             </li>
                             <li class="flex items-start">
-                                <i class="fas fa-book text-purple-500 mt-1 mr-2"></i>
+                                <i class="fas fa-book text-purple-600 mt-1 mr-3 flex-shrink-0"></i>
                                 <span>Review your course materials before taking any exam.</span>
                             </li>
                         </ul>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="bg-gradient-to-r from-emerald-500 to-blue-600 rounded-xl p-6 text-white">
+                        <h3 class="text-lg font-semibold mb-4">Quick Stats</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span>Success Rate:</span>
+                                <span class="font-semibold">
+                                    <?php 
+                                    $passedCount = 0;
+                                    $totalResults = count($recentResults);
+                                    foreach ($recentResults as $result) {
+                                        if ($result['status'] == 'Passed') $passedCount++;
+                                    }
+                                    $successRate = $totalResults > 0 ? round(($passedCount / $totalResults) * 100, 1) : 0;
+                                    echo $successRate;
+                                    ?>%
+                                </span>
+                                                            </div>
+                            <div class="flex justify-between">
+                                <span>Program:</span>
+                                <span class="font-semibold"><?php echo htmlspecialchars($student['program_name']); ?></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Level:</span>
+                                <span class="font-semibold"><?php echo htmlspecialchars($student['level_name']); ?></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Department:</span>
+                                <span class="font-semibold"><?php echo htmlspecialchars($student['department_name']); ?></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
     
+    <!-- Include the updated dashboard JavaScript -->
     <script src="dashboard.js"></script>
+    
+    <script>
+        // Initialize dashboard functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loading states to stat cards
+            const statCards = document.querySelectorAll('[data-stat]');
+            statCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const statType = this.dataset.stat;
+                    // You can add navigation or detailed view functionality here
+                    console.log('Clicked on stat:', statType);
+                });
+            });
+            
+            // Auto-refresh dashboard data every 5 minutes
+            setInterval(refreshDashboardData, 5 * 60 * 1000);
+        });
+        
+        // Function to refresh dashboard data
+        function refreshDashboardData() {
+            fetch('/api/students/getDashboardStats.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateDashboardStats(data.data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to refresh dashboard data:', error);
+                });
+        }
+        
+        // Function to update dashboard statistics
+        function updateDashboardStats(data) {
+            // Update stat cards
+            const registeredExamsCard = document.querySelector('[data-stat="registered-exams"] .text-xl');
+            if (registeredExamsCard) {
+                registeredExamsCard.textContent = data.registered_exams;
+            }
+            
+            const averageScoreCard = document.querySelector('[data-stat="average-score"] .text-xl');
+            if (averageScoreCard) {
+                averageScoreCard.textContent = data.average_score + '%';
+            }
+            
+            const pendingExamsCard = document.querySelector('[data-stat="pending-exams"] .text-xl');
+            if (pendingExamsCard) {
+                pendingExamsCard.textContent = data.pending_exams;
+            }
+            
+            const completedExamsCard = document.querySelector('[data-stat="completed-exams"] .text-xl');
+            if (completedExamsCard) {
+                completedExamsCard.textContent = data.completed_exams;
+            }
+            
+            // Update tables if needed
+            updateUpcomingExamsTable(data.upcoming_exams);
+            updateRecentResultsTable(data.recent_results);
+        }
+        
+        // Function to update upcoming exams table
+        function updateUpcomingExamsTable(exams) {
+            const tbody = document.getElementById('upcomingExamsTable');
+            if (!tbody) return;
+            
+            if (exams.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                            No upcoming exams available
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = exams.map(exam => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${escapeHtml(exam.title)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${formatDateTime(exam.start_datetime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 rounded ${exam.registration_status === 'Registered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} text-xs font-semibold">
+                            ${exam.registration_status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${exam.registration_status === 'Registered' ? 
+                            `<button onclick="window.location.href='../exam/take.php?id=${exam.exam_id}'" 
+                                    class="text-emerald-600 hover:text-emerald-700 transition-colors duration-200" 
+                                    title="Take Exam">
+                                <i class="fas fa-play text-lg cursor-pointer"></i>
+                            </button>` :
+                            `<button onclick="registerForExam(${exam.exam_id})" 
+                                    class="text-blue-600 hover:text-blue-700 transition-colors duration-200" 
+                                    title="Register for Exam">
+                                <i class="fas fa-plus text-lg cursor-pointer"></i>
+                            </button>`
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Function to update recent results table
+        function updateRecentResultsTable(results) {
+            const tbody = document.getElementById('recentResultsTable');
+            if (!tbody) return;
+            
+            if (results.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                            No exam results available
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = results.map(result => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${escapeHtml(result.title)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${Math.round(result.score_percentage * 10) / 10}%
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 rounded ${result.status === 'Passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-semibold">
+                            ${result.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${formatDate(result.completed_at)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+    </script>
 </body>
 </html>
+
 
