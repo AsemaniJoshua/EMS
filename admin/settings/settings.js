@@ -81,18 +81,34 @@ function loadAllData() {
 
 // DEPARTMENTS MANAGEMENT
 function loadDepartments() {
-    fetch('/api/admin/settings/departments.php?action=get')
-        .then(response => response.json())
+    const container = document.getElementById('departments-list');
+    if (container) {
+        container.innerHTML = '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><span class="ml-2 text-gray-500">Loading departments...</span></div>';
+    }
+
+    fetch('../../api/admin/settings/departments.php?action=get')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 displayDepartments(data.data);
             } else {
                 showNotification(data.message || 'Failed to load departments', 'error');
+                if (container) {
+                    container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle mb-2"></i><br>Failed to load departments</div>';
+                }
             }
         })
         .catch(error => {
             console.error('Error loading departments:', error);
             showNotification('Error loading departments', 'error');
+            if (container) {
+                container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle mb-2"></i><br>Error loading departments</div>';
+            }
         });
 }
 
@@ -155,8 +171,19 @@ function showAddDepartmentModal() {
 }
 
 function saveDepartment() {
-    const name = document.getElementById('deptName').value;
-    const description = document.getElementById('deptDescription').value;
+    const name = document.getElementById('deptName').value.trim();
+    const description = document.getElementById('deptDescription').value.trim();
+
+    // Validation
+    if (!name) {
+        showNotification('Department name is required', 'error');
+        return;
+    }
+
+    if (name.length < 2) {
+        showNotification('Department name must be at least 2 characters', 'error');
+        return;
+    }
 
     const data = {
         action: currentEditId ? 'update' : 'create',
@@ -168,7 +195,13 @@ function saveDepartment() {
         data.department_id = currentEditId;
     }
 
-    fetch('/api/admin/settings/departments.php', {
+    // Show loading state
+    const submitBtn = document.querySelector('#departmentForm button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+
+    fetch('../../api/admin/settings/departments.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -189,20 +222,43 @@ function saveDepartment() {
         .catch(error => {
             console.error('Error saving department:', error);
             showNotification('Error saving department', 'error');
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
         });
 }
 
 function editDepartment(id) {
-    fetch(`/api/admin/settings/departments.php?action=get&id=${id}`)
-        .then(response => response.json())
+    fetch(`../../api/admin/settings/departments.php?action=get&id=${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.data) {
                 currentEditId = id;
                 showAddDepartmentModal();
-                document.getElementById('deptName').value = data.data.name;
-                document.getElementById('deptDescription').value = data.data.description || '';
-                document.querySelector('#departmentModal h3').textContent = 'Edit Department';
-                document.querySelector('#departmentModal button[type="submit"]').textContent = 'Update Department';
+
+                // Wait for modal to be inserted then populate
+                setTimeout(() => {
+                    const nameInput = document.getElementById('deptName');
+                    const descInput = document.getElementById('deptDescription');
+                    const submitBtn = document.querySelector('#departmentModal button[type="submit"]');
+                    const modalTitle = document.querySelector('#departmentModal h3');
+
+                    if (nameInput && descInput && submitBtn && modalTitle) {
+                        nameInput.value = data.data.name || '';
+                        descInput.value = data.data.description || '';
+                        submitBtn.textContent = 'Update Department';
+                        modalTitle.textContent = 'Edit Department';
+                    }
+                }, 100);
+            } else {
+                showNotification(data.message || 'Department not found', 'error');
             }
         })
         .catch(error => {
@@ -222,7 +278,7 @@ function deleteDepartment(id) {
         confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch('/api/admin/settings/departments.php', {
+            fetch('../../api/admin/settings/departments.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -251,7 +307,7 @@ function deleteDepartment(id) {
 
 // PROGRAMS MANAGEMENT
 function loadPrograms() {
-    fetch('/api/admin/settings/programs.php?action=get')
+    fetch('../../api/admin/settings/programs.php?action=get')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -295,7 +351,7 @@ function displayPrograms(programs) {
 
 function showAddProgramModal() {
     // First load departments for the dropdown
-    fetch('/api/admin/settings/departments.php?action=get')
+    fetch('../../api/admin/settings/departments.php?action=get')
         .then(response => response.json())
         .then(data => {
             const departmentOptions = data.success ?
@@ -356,7 +412,7 @@ function saveProgram() {
         data.program_id = currentEditId;
     }
 
-    fetch('/api/admin/settings/programs.php', {
+    fetch('../../api/admin/settings/programs.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -382,7 +438,7 @@ function saveProgram() {
 
 // COURSES MANAGEMENT (similar pattern)
 function loadCourses() {
-    fetch('/api/admin/settings/courses.php?action=get')
+    fetch('../../api/admin/settings/courses.php?action=get')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -427,10 +483,10 @@ function displayCourses(courses) {
 function showAddCourseModal() {
     // Load departments, programs, levels, and semesters for dropdowns
     Promise.all([
-        fetch('/api/admin/settings/departments.php?action=get').then(r => r.json()),
-        fetch('/api/admin/settings/programs.php?action=get').then(r => r.json()),
-        fetch('/api/admin/settings/levels.php?action=get').then(r => r.json()),
-        fetch('/api/admin/settings/semesters.php?action=get').then(r => r.json())
+        fetch('../../api/admin/settings/departments.php?action=get').then(r => r.json()),
+        fetch('../../api/admin/settings/programs.php?action=get').then(r => r.json()),
+        fetch('../../api/admin/settings/levels.php?action=get').then(r => r.json()),
+        fetch('../../api/admin/settings/semesters.php?action=get').then(r => r.json())
     ]).then(([deptData, progData, levelData, semData]) => {
         const departmentOptions = deptData.success ?
             deptData.data.map(dept => `<option value="${dept.department_id}">${escapeHtml(dept.name)}</option>`).join('') : '';
@@ -526,7 +582,7 @@ function saveCourse() {
         data.course_id = currentEditId;
     }
 
-    fetch('/api/admin/settings/courses.php', {
+    fetch('../../api/admin/settings/courses.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -552,7 +608,7 @@ function saveCourse() {
 
 // LEVELS MANAGEMENT
 function loadLevels() {
-    fetch('/api/admin/settings/levels.php?action=get')
+    fetch('../../api/admin/settings/levels.php?action=get')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -636,7 +692,7 @@ function saveLevel() {
         data.old_level_id = currentEditId;
     }
 
-    fetch('/api/admin/settings/levels.php', {
+    fetch('../../api/admin/settings/levels.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -662,7 +718,7 @@ function saveLevel() {
 
 // SEMESTERS MANAGEMENT
 function loadSemesters() {
-    fetch('/api/admin/settings/semesters.php?action=get')
+    fetch('../../api/admin/settings/semesters.php?action=get')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -754,7 +810,7 @@ function saveSemester() {
         data.semester_id = currentEditId;
     }
 
-    fetch('/api/admin/settings/semesters.php', {
+    fetch('../../api/admin/settings/semesters.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -785,6 +841,32 @@ function closeModal() {
     currentEditId = null;
 }
 
+// Show notification using SweetAlert Toast
+function showNotification(message, type = 'info') {
+    if (window.Toast) {
+        window.Toast.fire({
+            icon: type,
+            title: message
+        });
+    } else {
+        // Fallback to regular alert if Toast is not available
+        alert(message);
+    }
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
+}
+
 // Database backup function
 async function performBackup() {
     try {
@@ -797,18 +879,45 @@ async function performBackup() {
             }
         });
 
-        const response = await axios.post('../../api/admin/settings/backup.php');
+        const response = await axios.post('../../api/admin/settings/backup_simple.php');
 
         if (response.data.success) {
-            Swal.fire('Success', 'Database backup created successfully', 'success');
+            Swal.fire({
+                title: 'Success!',
+                text: `Database backup created successfully: ${response.data.filename}`,
+                icon: 'success',
+                confirmButtonColor: '#10b981'
+            });
         } else {
             throw new Error(response.data.message);
         }
     } catch (error) {
         console.error('Error creating backup:', error);
-        Swal.fire('Error', error.response?.data?.message || 'Failed to create backup', 'error');
+        Swal.fire({
+            title: 'Error',
+            text: error.response?.data?.message || 'Failed to create backup',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+        });
     }
 }
 
 // Make functions globally available
 window.performBackup = performBackup;
+window.showTab = showTab;
+window.showAddDepartmentModal = showAddDepartmentModal;
+window.showAddProgramModal = showAddProgramModal;
+window.showAddCourseModal = showAddCourseModal;
+window.showAddLevelModal = showAddLevelModal;
+window.showAddSemesterModal = showAddSemesterModal;
+window.editDepartment = editDepartment;
+window.deleteDepartment = deleteDepartment;
+window.editProgram = editProgram;
+window.deleteProgram = deleteProgram;
+window.editCourse = editCourse;
+window.deleteCourse = deleteCourse;
+window.editLevel = editLevel;
+window.deleteLevel = deleteLevel;
+window.editSemester = editSemester;
+window.deleteSemester = deleteSemester;
+window.closeModal = closeModal;

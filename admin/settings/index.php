@@ -63,6 +63,16 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .tab-content.hidden {
+            display: none !important;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #10b981 !important;
+            color: #10b981 !important;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
