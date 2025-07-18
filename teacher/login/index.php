@@ -180,7 +180,7 @@
 
  
 
- <script src="/teacher/login/login.js"></script>
+ <script src="/teacher/login/logins.js"></script>
 </body>
 
 </html>

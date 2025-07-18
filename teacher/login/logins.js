@@ -1,15 +1,23 @@
+// Ensure SweetAlert2 is loaded before this script in your HTML:
+// <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 document.addEventListener('DOMContentLoaded', function () {
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        },
-    });
+
+    // Set up SweetAlert Toast Mixin (if SweetAlert is available)
+    let Toast;
+    if (typeof Swal !== 'undefined') {
+        Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+    }
 
     // Make modal functions available globally
     window.openModal = function (id) {
@@ -20,10 +28,85 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById(id).classList.add('hidden');
     };
 
-    // Login Handler
-    const loginForm = document.getElementById('teacherLoginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function (e) {
+    // Login Handler for teacher-login-form
+    const loginForm1 = document.getElementById('teacher-login-form');
+    if (loginForm1) {
+        loginForm1.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Show loading state
+            const submitButton = loginForm1.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing In...';
+            submitButton.disabled = true;
+
+            // Get form data
+            const usernameEmail = document.getElementById('username-email').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+
+            // Prepare data for API
+            const loginData = {
+                email: usernameEmail, // Using email field for both username and email
+                password: password,
+                remember: rememberMe
+            };
+
+            // Make API call to teacher login endpoint
+            fetch('/api/login/processTeacherLogin.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message
+                    if (Toast) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: data.message || 'Login successful!'
+                        });
+                    }
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/teacher/';
+                    }, 1000);
+                } else {
+                    // Show error message
+                    if (Toast) {
+                        Toast.fire({
+                            icon: 'error',
+                            title: data.message || 'Login failed. Please try again.'
+                        });
+                    }
+                    // Reset button state
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                // Show error message
+                if (Toast) {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Network error. Please check your connection and try again.'
+                    });
+                }
+                // Reset button state
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            });
+        });
+    }
+
+    // Login Handler for teacherLoginForm
+    const loginForm2 = document.getElementById('teacherLoginForm');
+    if (loginForm2) {
+        loginForm2.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const submitBtn = this.querySelector('button[type="submit"]');
