@@ -129,11 +129,7 @@ try {
     }
 
     $stmt = null;
-<<<<<<< HEAD:api/login/processTeacherLogin.php
 } catch(Exception $e) {
-=======
-
->>>>>>> 6776f878dc1553b01f99c94a6008787df1c74290:api/login/teacher/processTeacherLogin.php
     // Handle any exceptions
     error_log('Teacher login - Exception: ' . $e->getMessage());
     $response['message'] = 'An error occurred. Please try again later.';

@@ -6,11 +6,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Include database connection
-require_once __DIR__ .'/../../../api/config/database.php';
-$database = new Database();
-$conn = $database->getConnection();
-
 // Allow CORS for development (adjust in production)
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
@@ -26,9 +21,8 @@ $response = [
 
 // Process only if it's a POST request with JSON content
 $input = json_decode(file_get_contents('php://input'), true);
-
-// If input is empty, try getting from POST
-if (empty($input)) {
+if (json_last_error() !== JSON_ERROR_NONE || !is_array($input)) {
+    // Fallback to POST if JSON is invalid or not sent
     $input = [
         'email' => isset($_POST['email']) ? trim($_POST['email']) : '',
         'password' => isset($_POST['password']) ? $_POST['password'] : '',
@@ -44,6 +38,11 @@ if (empty($input['email']) || empty($input['password'])) {
 }
 
 try {
+    // Include database connection
+    require_once __DIR__ .'/../../../api/config/database.php';
+    $database = new Database();
+    $conn = $database->getConnection();
+    
     // Sanitize inputs
     $email = filter_var($input['email'], FILTER_SANITIZE_EMAIL);
     $password = $input['password'];
@@ -64,10 +63,13 @@ try {
     if ($stmt->rowCount() === 1) {
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // Store password hash separately and unset after verification
+        $password_hash = $admin['password_hash'];
+        unset($admin['password_hash']);
+
         // Verify password
-        if (password_verify($password, $admin['password_hash'])) {
-            // Start session if not already started
-            if (session_status() == PHP_SESSION_NONE) {
+        if (password_verify($password, $password_hash)) {
+            if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
 
@@ -89,7 +91,8 @@ try {
             }
 
             // Log successful login attempt
-            // In a production system, you'd log this to a database or file
+            // In a production system, use a dedicated logging system for better traceability and security
+            error_log('Admin login successful for email: ' . $admin['email']);
 
             $response['status'] = 'success';
             $response['message'] = 'Login successful';
@@ -97,19 +100,21 @@ try {
         } else {
             // Incorrect password
             $response['message'] = 'Invalid email or password';
+            error_log('Admin login failed: Incorrect password for email: ' . $email);
         }
     } else {
         // Admin not found
         $response['message'] = 'Invalid email or password';
+        error_log('Admin login failed: Email not found - ' . $email);
     }
-
-    $stmt = null;
-}catch(Exception $e) {
+} catch (Exception $e) {
     // Handle any exceptions
-    $response['message'] = 'An error occurred. Please try again later.';
     // Log the error (in production, use a proper logging system)
     error_log('Login error: ' . $e->getMessage());
- 
+    $response = [
+        'status' => 'error',
+        'message' => "An error occurred while processing your request. Please try again later."
+    ];
 }
 
 // Return JSON response

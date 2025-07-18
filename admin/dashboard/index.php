@@ -79,7 +79,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <p class="mt-1 text-sm text-gray-500">Welcome back! Here's your examination overview.</p>
                 </div>
                 <div class="mt-4 md:mt-0">
-                    <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500" onclick="window.location.href='/admin/exams/createExam.php'">
                         <i class="fas fa-plus mr-2 -ml-1"></i>
                         New Exam
                     </button>

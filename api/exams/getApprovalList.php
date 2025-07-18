@@ -1,17 +1,6 @@
 <?php
 header('Content-Type: application/json');
 require_once '../config/database.php';
-require_once '../login/sessionCheck.php'; // Ensure admin is logged in
-
-// Check if user is admin
-if (!isset($_SESSION['admin_id'])) {
-    http_response_code(401);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Unauthorized access'
-    ]);
-    exit;
-}
 
 try {
     $db = new Database();
