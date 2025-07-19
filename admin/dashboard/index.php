@@ -186,7 +186,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                         <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
                             <h2 class="font-semibold text-gray-900">Recent Activity</h2>
-                            <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">View all</a>
+                            <!-- <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">View all</a> -->
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <?php foreach ($recentActivity as $activity): ?>
@@ -216,7 +216,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                         <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
                             <h2 class="font-semibold text-gray-900">Upcoming Exams</h2>
-                            <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">See all</a>
+                            <a href="/admin/exams/" class="text-sm text-emerald-600 hover:text-emerald-700">See all</a>
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <?php foreach ($upcomingExams as $exam): ?>

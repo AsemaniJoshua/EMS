@@ -178,8 +178,6 @@
     </div>
   </div>
 
- 
-
  <script src="/teacher/login/logins.js"></script>
 </body>
 

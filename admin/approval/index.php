@@ -44,7 +44,7 @@ $row = $rejectedTodayQuery->fetch(PDO::FETCH_ASSOC);
 $rejectedToday = $row['count'];
 
 // Get yesterday's rejections
-$rejectedYesterdayQuery = $conn->prepare("SELECT COUNT(*) FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = :yesterday");
+$rejectedYesterdayQuery = $conn->prepare("SELECT COUNT(*) AS count FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = :yesterday");
 $rejectedYesterdayQuery->bindParam(':yesterday', $yesterday);
 $rejectedYesterdayQuery->execute();
 $row = $rejectedYesterdayQuery->fetch(PDO::FETCH_ASSOC);
