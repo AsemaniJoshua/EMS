@@ -161,10 +161,6 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <option value="<?= $teacher['id'] ?>"><?= htmlspecialchars($teacher['name']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <?php foreach ($teachers as $teacher): ?>
-                                    <option value="<?php echo $teacher['id']; ?>"><?php echo $teacher['name']; ?></option>
-                                <?php endforeach; ?>
-                                </select>
                             </div>
 
                             <div>
