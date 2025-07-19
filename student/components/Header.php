@@ -33,7 +33,7 @@ $studentProgram = $_SESSION['student_program'] ?? '';
                     <button onclick="toggleNotifications()" class="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <i class="fas fa-bell h-5 w-5"></i>
                         <!-- Notification badge -->
-                        <span id="notification-badge" class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden">
+                        <span id="notification-badge" class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full items-center justify-center hidden">
                             0
                         </span>
                     </button>
