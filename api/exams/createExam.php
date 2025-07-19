@@ -54,7 +54,21 @@ $conn = $db->getConnection();
 
 try {
     session_start();
-    $teacher_id = $_SESSION['teacher_id'];
+
+    // Check if user is admin or teacher and set the appropriate user ID
+    $is_admin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+    $is_teacher = isset($_SESSION['teacher_logged_in']) && $_SESSION['teacher_logged_in'] === true;
+
+    if (!$is_admin && !$is_teacher) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Unauthorized access'
+        ]);
+        exit;
+    }
+
+    $teacher_id = $is_teacher ? $_SESSION['teacher_id'] : null;
+    $admin_id = $is_admin ? $_SESSION['admin_id'] : null;
 
     // Check if exam code already exists
     $checkStmt = $conn->prepare("SELECT exam_id FROM exams WHERE exam_code = :exam_code");
@@ -69,8 +83,19 @@ try {
     }
 
     // Validate datetime values
-    $startDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $data['start_datetime']);
-    $endDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $data['end_datetime']);
+    if (isset($data['start_datetime']) && isset($data['end_datetime'])) {
+        // Format from teacher's form (datetime-local)
+        $startDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $data['start_datetime']);
+        $endDateTime = DateTime::createFromFormat('Y-m-d\TH:i', $data['end_datetime']);
+    } else {
+        // Format from admin's form (separate date and time fields)
+        $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $data['start_date'] . ' ' . $data['start_time']);
+        $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $data['end_date'] . ' ' . $data['end_time']);
+
+        // Set the datetime fields for consistency
+        $data['start_datetime'] = $data['start_date'] . 'T' . $data['start_time'];
+        $data['end_datetime'] = $data['end_date'] . 'T' . $data['end_time'];
+    }
 
     if (!$startDateTime || !$endDateTime) {
         echo json_encode([
@@ -96,30 +121,35 @@ try {
         'department_id' => $data['department_id'],
         'program_id' => $data['program_id'],
         'semester_id' => $data['semester_id'],
+        'level_id' => $data['level_id'] ?? null,
         'course_id' => $data['course_id'],
-        'teacher_id' => $teacher_id,
+        'teacher_id' => $is_admin ? ($data['teacher_id'] ?? null) : $teacher_id,
         'status' => $data['status'] ?? 'Draft',
-        'duration_minutes' => $data['duration_minutes'],
-        'pass_mark' => $data['pass_mark'],
+        'duration_minutes' => $data['duration_minutes'] ?? $data['duration'],
+        'pass_mark' => $data['pass_mark'] ?? $data['passing_score'],
         'total_marks' => $data['total_marks'],
         'start_datetime' => $startDateTime->format('Y-m-d H:i:s'),
         'end_datetime' => $endDateTime->format('Y-m-d H:i:s'),
         'max_attempts' => $data['max_attempts'] ?? 1,
         'randomize' => isset($data['randomize']) ? (int)$data['randomize'] : 0,
         'show_results' => isset($data['show_results']) ? (int)$data['show_results'] : 1,
-        'anti_cheating' => isset($data['anti_cheating']) ? (int)$data['anti_cheating'] : 1
+        'anti_cheating' => isset($data['anti_cheating']) ? (int)$data['anti_cheating'] : 0,
+        'created_by' => $is_admin ? $admin_id : $teacher_id,
+        'created_at' => date('Y-m-d H:i:s')
     ];
 
     // Insert the exam
     $insertStmt = $conn->prepare("
         INSERT INTO exams (
-            exam_code, title, description, department_id, program_id, semester_id, 
+            exam_code, title, description, department_id, program_id, semester_id, level_id,
             course_id, teacher_id, status, duration_minutes, pass_mark, total_marks, 
-            start_datetime, end_datetime, max_attempts, randomize, show_results, anti_cheating
+            start_datetime, end_datetime, max_attempts, randomize, show_results, anti_cheating,
+            created_by, created_at
         ) VALUES (
-            :exam_code, :title, :description, :department_id, :program_id, :semester_id,
+            :exam_code, :title, :description, :department_id, :program_id, :semester_id, :level_id,
             :course_id, :teacher_id, :status, :duration_minutes, :pass_mark, :total_marks,
-            :start_datetime, :end_datetime, :max_attempts, :randomize, :show_results, :anti_cheating
+            :start_datetime, :end_datetime, :max_attempts, :randomize, :show_results, :anti_cheating,
+            :created_by, :created_at
         )
     ");
 

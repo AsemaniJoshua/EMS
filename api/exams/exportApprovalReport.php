@@ -1,7 +1,6 @@
 <?php
 require_once '../config/database.php';
-require_once '../login/sessionCheck.php'; // Ensure admin is logged in
-
+session_start();
 // Check if user is admin
 if (!isset($_SESSION['admin_id'])) {
     http_response_code(401);
