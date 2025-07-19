@@ -49,11 +49,11 @@ $studentProgram = $_SESSION['student_program'] ?? '';
                                     Loading notifications...
                                 </div>
                             </div>
-                            <div class="border-t border-gray-200">
+                            <!-- <div class="border-t border-gray-200">
                                 <a href="/student/notifications/" class="block px-4 py-2 text-sm text-emerald-600 hover:bg-gray-50 text-center">
                                     View all notifications
                                 </a>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>

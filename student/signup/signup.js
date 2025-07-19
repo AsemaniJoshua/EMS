@@ -423,7 +423,7 @@ async function handleSignup(e) {
     const data = Object.fromEntries(formData.entries());
     data.status = 'active';
     data.resetOnLogin = 0;
-    data.send_notification = document.getElementById('send_notification').checked ? 'on' : 'off';
+    // data.send_notification = document.getElementById('send_notification').checked ? 'on' : 'off';
     
     // Show loading state
     setLoadingState(true);

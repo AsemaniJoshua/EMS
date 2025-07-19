@@ -1,4 +1,9 @@
 <?php
+// Start session and check authentication
+if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_path', '/');
+    session_start();
+}
 // API endpoint for direct exam registration
 header('Content-Type: application/json');
 
@@ -8,11 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Start session and check authentication
-// if (session_status() == PHP_SESSION_NONE) {
-//     ini_set('session.cookie_path', '/');
-//     session_start();
-// }
+
 
 if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !== true) {
     http_response_code(401);

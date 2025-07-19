@@ -210,7 +210,7 @@ function switchTab(tabName) {
 
 async function loadAcademicPerformance() {
     try {
-        const response = await fetch('/api/student/getAcademicPerformance.php');
+        const response = await fetch('/api/students/getAcademicPerformance.php');
         const data = await response.json();
         
         if (data.success) {
@@ -410,7 +410,7 @@ async function handleProfileUpdate(e) {
     }
     
     try {
-        const response = await fetch('/api/student/updateProfile.php', {
+        const response = await fetch('/api/students/updateProfile.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -452,7 +452,7 @@ async function handlePasswordChange(e) {
     }
     
     try {
-        const response = await fetch('/api/student/changePassword.php', {
+        const response = await fetch('/api/students/changePassword.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
