@@ -48,10 +48,10 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
                         <p class="mt-1 text-sm text-gray-500">Manage your personal information and view your academic progress</p>
                     </div>
                     <div class="flex space-x-3">
-                        <button id="editProfileBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-200">
+                        <button onclick="window.location.href='edit.php'" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-200">
                             <i class="fas fa-edit mr-2"></i>Edit Profile
                         </button>
-                        <button id="changePasswordBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-200">
+                        <button onclick="window.location.href='change-password.php'" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-200">
                             <i class="fas fa-key mr-2"></i>Change Password
                         </button>
                     </div>
@@ -367,7 +367,7 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">New Password *</label>
                         <input type="password" id="newPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
-                        <p class="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
+                        <p class="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password *</label>

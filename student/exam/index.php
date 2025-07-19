@@ -62,17 +62,28 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
             </div>
             
             <!-- Search & Filter -->
-            <div class="flex flex-col md:flex-row gap-4 mb-6 items-center">
-                <input type="text" id="searchInput" placeholder="Search exams..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1" />
-                <select id="subjectFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 mb-6 items-stretch sm:items-center">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search exams..."
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1 min-w-0"
+                />
+                <select
+                    id="subjectFilter"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1 min-w-0"
+                >
                     <option value="">All Subjects</option>
                 </select>
-                <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <select
+                    id="statusFilter"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1 min-w-0"
+                >
                     <option value="">All Statuses</option>
                     <option value="upcoming">Upcoming</option>
                     <option value="active">Active</option>
                     <option value="completed">Completed</option>
-                                        <option value="expired">Expired</option>
+                    <option value="expired">Expired</option>
                 </select>
             </div>
             

@@ -115,7 +115,7 @@ function renderUpcomingExams(exams) {
     
     if (exams.length === 0) {
         container.innerHTML = `
-            <div class="col-span-2 text-center py-8">
+            <div class="col-span-2 text-center py-8 flex flex-col justify-center items-center">
                 <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
                 <p class="text-gray-500">No upcoming exams found</p>
             </div>
@@ -179,7 +179,7 @@ function renderOngoingExams(exams) {
     
     if (exams.length === 0) {
         container.innerHTML = `
-            <div class="col-span-2 text-center py-8">
+            <div class="col-span-2 text-center py-8 flex flex-col justify-center items-center">
                 <i class="fas fa-clock text-4xl text-gray-400 mb-4"></i>
                 <p class="text-gray-500">No ongoing exams</p>
             </div>
@@ -242,7 +242,7 @@ function renderPastExams(exams) {
     if (exams.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500 flex flex-col justify-center items-center">
                     <i class="fas fa-history text-2xl mb-2 block"></i>
                     No past exams found
                 </td>
