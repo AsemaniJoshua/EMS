@@ -422,7 +422,7 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 });
             });
         });
-        });
+      
     </script>
 </body>
 
