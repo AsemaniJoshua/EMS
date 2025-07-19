@@ -20,8 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Get JSON input
-$data = json_decode(file_get_contents('php://input'), true);
+// Get input data - handle both FormData and JSON
+$data = $_POST;
+if (empty($_POST)) {
+    $data = json_decode(file_get_contents('php://input'), true);
+}
 
 // Validate required fields
 $requiredFields = [
@@ -31,11 +34,13 @@ $requiredFields = [
     'program_id',
     'semester_id',
     'course_id',
-    'start_datetime',
-    'end_datetime',
+    'start_date',
+    'start_time',
+    'end_date',
+    'end_time',
     'duration_minutes',
     'total_marks',
-    'pass_mark'
+    'passing_score'
 ];
 
 foreach ($requiredFields as $field) {

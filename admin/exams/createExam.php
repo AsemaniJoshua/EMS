@@ -90,7 +90,7 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <h3 class="text-lg font-semibold text-gray-900">Exam Information</h3>
                 </div>
 
-                <form id="createExamForm" class="p-6 space-y-8">
+                <form id="createExamForm" method="post" class="p-6 space-y-8">
                     <!-- Basic Exam Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -347,82 +347,111 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }
             });
 
+            // Validate end date is after start date
+            function validateDates() {
+                if (startDateInput && startTimeInput && endDateInput && endTimeInput) {
+                    const startDate = startDateInput.value;
+                    const startTime = startTimeInput.value;
+                    const endDate = endDateInput.value;
+                    const endTime = endTimeInput.value;
 
-        });
+                    if (startDate && startTime && endDate && endTime) {
+                        const start = moment(`${startDate} ${startTime}`);
+                        const end = moment(`${endDate} ${endTime}`);
 
-        // Validate end date is after start date
-        function validateDates() {
-            if (startDateInput && startTimeInput && endDateInput && endTimeInput) {
-                const startDate = startDateInput.value;
-                const startTime = startTimeInput.value;
-                const endDate = endDateInput.value;
-                const endTime = endTimeInput.value;
-
-                if (startDate && startTime && endDate && endTime) {
-                    const start = moment(`${startDate} ${startTime}`);
-                    const end = moment(`${endDate} ${endTime}`);
-
-                    if (end.isAfter(start)) {
-                        return true;
-                    } else {
-                        // End time is before start time
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'End time must be after start time',
-                            icon: 'error'
-                        });
-                        return false;
+                        if (end.isAfter(start)) {
+                            return true;
+                        } else {
+                            // End time is before start time
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'End time must be after start time',
+                                icon: 'error'
+                            });
+                            return false;
+                        }
                     }
                 }
+                return true; // If inputs aren't available yet, consider it valid
             }
-        }
 
-        // Add event listeners for date validation
-        if (endDateInput) endDateInput.addEventListener('change', validateDates);
-        if (endTimeInput) endTimeInput.addEventListener('change', validateDates);
+            // Add event listeners for date validation
+            if (endDateInput) endDateInput.addEventListener('change', validateDates);
+            if (endTimeInput) endTimeInput.addEventListener('change', validateDates);
+        });
 
         // Form submission handler
-        document.getElementById('createExamForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('createExamForm').addEventListener('submit', function(e) {
+                e.preventDefault();
 
-        // Validate dates before submission
-        if (!validateDates()) {
-            return;
-        }
+                // Validate dates before submission
+                // We'll use a different approach since validateDates is now inside the DOMContentLoaded scope
+                const startDateInput = document.querySelector('input[name="start_date"]');
+                const startTimeInput = document.querySelector('input[name="start_time"]');
+                const endDateInput = document.querySelector('input[name="end_date"]');
+                const endTimeInput = document.querySelector('input[name="end_time"]');
 
-        const formData = new FormData(this);
+                // Basic validation for dates
+                if (startDateInput && startTimeInput && endDateInput && endTimeInput) {
+                    const startDate = startDateInput.value;
+                    const startTime = startTimeInput.value;
+                    const endDate = endDateInput.value;
+                    const endTime = endTimeInput.value;
 
-        axios.post('/api/exams/createExam.php', formData)
-            .then(response => {
-                if (response.data.status === 'success') {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Exam created successfully.',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        window.location.href = 'index.php';
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: response.data.message || 'Failed to create exam.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
+                    if (startDate && startTime && endDate && endTime) {
+                        const start = moment(`${startDate} ${startTime}`);
+                        const end = moment(`${endDate} ${endTime}`);
+
+                        if (!end.isAfter(start)) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'End time must be after start time',
+                                icon: 'error'
+                            });
+                            return;
+                        }
+                    }
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'An unexpected error occurred. Please try again.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
+
+                const formData = new FormData(this);
+
+                // Use FormData with the correct configuration for Axios
+                axios.post('/api/exams/createExam.php', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.status === 'success') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Exam created successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                window.location.href = 'index.php';
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.data.message || 'Failed to create exam.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'An unexpected error occurred. Please try again.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
             });
         });
-      
     </script>
 </body>
 
