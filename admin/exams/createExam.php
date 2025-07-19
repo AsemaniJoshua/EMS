@@ -155,8 +155,8 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Assign Teacher</label>
-                                <select name="teacher_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                    <option value="">Select Teacher (Optional)</option>
+                                <select name="teacher_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required>
+                                    <option value="">Select Teacher</option>
                                     <?php foreach ($teachers as $teacher): ?>
                                         <option value="<?= $teacher['id'] ?>"><?= htmlspecialchars($teacher['name']) ?></option>
                                     <?php endforeach; ?>
@@ -194,17 +194,17 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Duration (Minutes) *</label>
-                                <input type="number" name="duration" min="15" max="480" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120" id="duration">
+                                <input type="number" name="duration_minutes" min="15" max="480" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120" id="duration">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date (Auto-calculated)</label>
-                                <input type="date" name="end_date" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600" id="endDate">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                                <input type="date" name="end_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" id="endDate">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">End Time (Auto-calculated)</label>
-                                <input type="time" name="end_time" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600" id="endTime">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
+                                <input type="time" name="end_time" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" id="endTime">
                             </div>
 
                             <div>
@@ -347,82 +347,81 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }
             });
 
-            // Course change handler (no auto-generation of exam code)
-            courseSelect.addEventListener('change', function() {
-                // No automatic exam code generation
-            });
-            semesterSelect.addEventListener('change', function() {
-                // No automatic exam code generation
-            }); // Calculate duration when start/end dates change
-            function updateDuration() {
-                if (startDateInput && startTimeInput && endDateInput && endTimeInput) {
-                    const startDate = startDateInput.value;
-                    const startTime = startTimeInput.value;
-                    const endDate = endDateInput.value;
-                    const endTime = endTimeInput.value;
 
-                    if (startDate && startTime && endDate && endTime) {
-                        const start = moment(`${startDate} ${startTime}`);
-                        const end = moment(`${endDate} ${endTime}`);
+        });
 
-                        if (end.isAfter(start)) {
-                            const durationMinutes = end.diff(start, 'minutes');
-                            durationInput.value = durationMinutes;
-                        } else {
-                            // End time is before start time
-                            durationInput.value = '';
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'End time must be after start time',
-                                icon: 'error'
-                            });
-                        }
+        // Validate end date is after start date
+        function validateDates() {
+            if (startDateInput && startTimeInput && endDateInput && endTimeInput) {
+                const startDate = startDateInput.value;
+                const startTime = startTimeInput.value;
+                const endDate = endDateInput.value;
+                const endTime = endTimeInput.value;
+
+                if (startDate && startTime && endDate && endTime) {
+                    const start = moment(`${startDate} ${startTime}`);
+                    const end = moment(`${endDate} ${endTime}`);
+
+                    if (end.isAfter(start)) {
+                        return true;
+                    } else {
+                        // End time is before start time
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'End time must be after start time',
+                            icon: 'error'
+                        });
+                        return false;
                     }
                 }
             }
+        }
 
-            // Add event listeners for date/time changes
-            if (startDateInput) startDateInput.addEventListener('change', updateDuration);
-            if (startTimeInput) startTimeInput.addEventListener('change', updateDuration);
-            if (endDateInput) endDateInput.addEventListener('change', updateDuration);
-            if (endTimeInput) endTimeInput.addEventListener('change', updateDuration);
+        // Add event listeners for date validation
+        if (endDateInput) endDateInput.addEventListener('change', validateDates);
+        if (endTimeInput) endTimeInput.addEventListener('change', validateDates);
 
-            // Form submission handler
-            document.getElementById('createExamForm').addEventListener('submit', function(e) {
-                e.preventDefault();
+        // Form submission handler
+        document.getElementById('createExamForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-                const formData = new FormData(this);
+        // Validate dates before submission
+        if (!validateDates()) {
+            return;
+        }
 
-                axios.post('../api/exams/createExam.php', formData)
-                    .then(response => {
-                        if (response.data.status === 'success') {
-                            Swal.fire({
-                                title: 'Success!',
-                                text: 'Exam created successfully.',
-                                icon: 'success',
-                                confirmButtonText: 'OK'
-                            }).then(() => {
-                                window.location.href = 'index.php';
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: response.data.message || 'Failed to create exam.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'An unexpected error occurred. Please try again.',
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
+        const formData = new FormData(this);
+
+        axios.post('/api/exams/createExam.php', formData)
+            .then(response => {
+                if (response.data.status === 'success') {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Exam created successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.href = 'index.php';
                     });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: response.data.message || 'Failed to create exam.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An unexpected error occurred. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
             });
+        });
         });
     </script>
 </body>
