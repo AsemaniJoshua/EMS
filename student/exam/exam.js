@@ -350,6 +350,7 @@ function handleEnrollment(e) {
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
             enrollment_key: key
         })
@@ -400,6 +401,7 @@ function registerForExam(examId) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     exam_id: examId
                 })
