@@ -230,6 +230,8 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
                 <span id="submitBtnText">Create Account</span>
                 <i id="submitSpinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
               </button>
+              <!-- Overlay -->
+<div id="loadingOverlay" class="hidden fixed inset-0 bg-black opacity-25 z-50"></div>
             </div>
           </div>
         </form>

@@ -106,7 +106,7 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
               <i class="fas fa-spinner fa-spin"></i>
             </span>
           </button>
-          <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-30  items-center justify-center z-50">
             <div class="bg-white p-5 rounded-lg shadow-lg animate-pulse">
               <div class="flex items-center space-x-3">
                 <i class="fas fa-spinner fa-spin text-emerald-600 text-xl"></i>
