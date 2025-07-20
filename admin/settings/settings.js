@@ -148,8 +148,8 @@ function displayDepartments(departments) {
 
 function showAddDepartmentModal() {
     const modalHtml = `
-        <div id="departmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <div id="departmentModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl border border-gray-200 transform transition-all duration-300 scale-100">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-900">Add New Department</h3>
                     <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
@@ -565,6 +565,9 @@ function saveProgram() {
 }
 
 function editProgram(id) {
+    // Debug logs
+    console.log('editProgram function called with ID:', id);
+
     // Show loading notification
     const loadingToast = showNotification('Loading program data...', 'info', false);
 
@@ -873,6 +876,9 @@ function saveCourse() {
 }
 
 function editCourse(id) {
+    // Debug logs
+    console.log('editCourse function called with ID:', id);
+
     // Show loading notification
     const loadingToast = showNotification('Loading course data...', 'info', false);
 
@@ -1159,6 +1165,9 @@ function saveLevel() {
 }
 
 function editLevel(id) {
+    // Debug logs
+    console.log('editLevel function called with ID:', id);
+
     // Show loading notification
     const loadingToast = showNotification('Loading level data...', 'info', false);
 

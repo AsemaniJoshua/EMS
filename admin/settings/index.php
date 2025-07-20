@@ -277,7 +277,7 @@ try {
     </main>
 
     <!-- Modals will be inserted here by JavaScript -->
-    <script src="settings.js"></script>
+    <script src="settings.min.js"></script>
 </body>
 
 </html>
