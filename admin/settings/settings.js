@@ -3,6 +3,13 @@
 document.addEventListener('DOMContentLoaded', function () {
     initializeSettings();
     loadAllData();
+
+    // NOTE: Edit and delete functionality has been implemented for all entity types:
+    // - Departments: editDepartment, deleteDepartment
+    // - Programs: editProgram, deleteProgram 
+    // - Courses: editCourse, deleteCourse
+    // - Levels: editLevel, deleteLevel
+    // - Semesters: editSemester, deleteSemester
 });
 
 // Global variables
@@ -143,19 +150,28 @@ function showAddDepartmentModal() {
     const modalHtml = `
         <div id="departmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Department</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Add New Department</h3>
+                    <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
                 <form id="departmentForm">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Department Name</label>
                         <input type="text" id="deptName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                         <textarea id="deptDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                     </div>
                     <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Add Department</button>
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
+                        <button type="submit" id="departmentSubmitBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center">
+                            <span>Add Department</span>
+                            <span class="ml-2 hidden spinner"><i class="fas fa-spinner fa-spin"></i></span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -168,20 +184,33 @@ function showAddDepartmentModal() {
         e.preventDefault();
         saveDepartment();
     });
+
+    setupModalCloseEvents();
 }
 
 function saveDepartment() {
-    const name = document.getElementById('deptName').value.trim();
+    // Reset error states
+    document.querySelectorAll('.error-feedback').forEach(el => {
+        el.classList.add('hidden');
+        el.textContent = '';
+    });
+
+    const nameInput = document.getElementById('deptName');
+    const name = nameInput.value.trim();
     const description = document.getElementById('deptDescription').value.trim();
 
-    // Validation
+    // Enhanced validation with field-specific error messages
+    let isValid = true;
+
     if (!name) {
-        showNotification('Department name is required', 'error');
-        return;
+        showInputError(nameInput, 'Department name is required');
+        isValid = false;
+    } else if (name.length < 2) {
+        showInputError(nameInput, 'Department name must be at least 2 characters');
+        isValid = false;
     }
 
-    if (name.length < 2) {
-        showNotification('Department name must be at least 2 characters', 'error');
+    if (!isValid) {
         return;
     }
 
@@ -196,10 +225,14 @@ function saveDepartment() {
     }
 
     // Show loading state
-    const submitBtn = document.querySelector('#departmentForm button[type="submit"]');
-    const originalText = submitBtn.textContent;
+    const submitBtn = document.getElementById('departmentSubmitBtn');
+    const btnText = submitBtn.querySelector('span:not(.spinner)');
+    const spinner = submitBtn.querySelector('.spinner');
+    const originalText = btnText.textContent;
+
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+    btnText.textContent = currentEditId ? 'Updating...' : 'Saving...';
+    spinner.classList.remove('hidden');
 
     fetch('../../api/admin/settings/departments.php', {
         method: 'POST',
@@ -217,6 +250,15 @@ function saveDepartment() {
                 currentEditId = null;
             } else {
                 showNotification(data.message || 'Failed to save department', 'error');
+                // Show API validation errors if available
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const input = document.getElementById(`dept${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                        if (input) {
+                            showInputError(input, data.errors[field]);
+                        }
+                    });
+                }
             }
         })
         .catch(error => {
@@ -226,11 +268,38 @@ function saveDepartment() {
         .finally(() => {
             // Reset button state
             submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            btnText.textContent = originalText;
+            spinner.classList.add('hidden');
         });
 }
 
+// Helper function to show input-specific error messages
+function showInputError(inputElement, errorMessage) {
+    // Add error class to input
+    inputElement.classList.add('border-red-500');
+    inputElement.classList.remove('border-gray-300');
+
+    // Find and show error message container
+    const errorContainer = inputElement.nextElementSibling;
+    if (errorContainer && errorContainer.classList.contains('error-feedback')) {
+        errorContainer.textContent = errorMessage;
+        errorContainer.classList.remove('hidden');
+    } else {
+        // If no error container exists, create one
+        const newErrorContainer = document.createElement('div');
+        newErrorContainer.className = 'error-feedback text-red-500 text-sm mt-1';
+        newErrorContainer.textContent = errorMessage;
+        inputElement.parentNode.insertBefore(newErrorContainer, inputElement.nextSibling);
+    }
+
+    // Focus on the first input with error
+    inputElement.focus();
+}
+
 function editDepartment(id) {
+    // Show loading notification
+    const loadingToast = showNotification('Loading department data...', 'info', false);
+
     fetch(`../../api/admin/settings/departments.php?action=get&id=${id}`)
         .then(response => {
             if (!response.ok) {
@@ -239,6 +308,11 @@ function editDepartment(id) {
             return response.json();
         })
         .then(data => {
+            // Close the loading toast
+            if (loadingToast && loadingToast.close) {
+                loadingToast.close();
+            }
+
             if (data.success && data.data) {
                 currentEditId = id;
                 showAddDepartmentModal();
@@ -247,14 +321,20 @@ function editDepartment(id) {
                 setTimeout(() => {
                     const nameInput = document.getElementById('deptName');
                     const descInput = document.getElementById('deptDescription');
-                    const submitBtn = document.querySelector('#departmentModal button[type="submit"]');
+                    const submitBtn = document.getElementById('departmentSubmitBtn');
+                    const submitBtnText = submitBtn.querySelector('span:not(.spinner)');
                     const modalTitle = document.querySelector('#departmentModal h3');
 
                     if (nameInput && descInput && submitBtn && modalTitle) {
                         nameInput.value = data.data.name || '';
                         descInput.value = data.data.description || '';
-                        submitBtn.textContent = 'Update Department';
+                        submitBtnText.textContent = 'Update Department';
                         modalTitle.textContent = 'Edit Department';
+
+                        // Set focus to the name field
+                        nameInput.focus();
+                        // Select all text for easy editing
+                        nameInput.select();
                     }
                 }, 100);
             } else {
@@ -397,9 +477,37 @@ function showAddProgramModal() {
 }
 
 function saveProgram() {
-    const name = document.getElementById('programName').value;
-    const departmentId = document.getElementById('programDepartment').value;
-    const description = document.getElementById('programDescription').value;
+    // Reset error states
+    document.querySelectorAll('.error-feedback').forEach(el => {
+        el.classList.add('hidden');
+        el.textContent = '';
+    });
+
+    const nameInput = document.getElementById('programName');
+    const name = nameInput.value.trim();
+    const departmentSelect = document.getElementById('programDepartment');
+    const departmentId = departmentSelect.value;
+    const description = document.getElementById('programDescription').value.trim();
+
+    // Enhanced validation with field-specific error messages
+    let isValid = true;
+
+    if (!name) {
+        showInputError(nameInput, 'Program name is required');
+        isValid = false;
+    } else if (name.length < 2) {
+        showInputError(nameInput, 'Program name must be at least 2 characters');
+        isValid = false;
+    }
+
+    if (!departmentId) {
+        showInputError(departmentSelect, 'Department is required');
+        isValid = false;
+    }
+
+    if (!isValid) {
+        return;
+    }
 
     const data = {
         action: currentEditId ? 'update' : 'create',
@@ -411,6 +519,12 @@ function saveProgram() {
     if (currentEditId) {
         data.program_id = currentEditId;
     }
+
+    // Show loading state
+    const submitBtn = document.querySelector('#programForm button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>${currentEditId ? 'Updating...' : 'Saving...'}</span> <i class="fas fa-spinner fa-spin ml-2"></i>`;
 
     fetch('../../api/admin/settings/programs.php', {
         method: 'POST',
@@ -428,12 +542,164 @@ function saveProgram() {
                 currentEditId = null;
             } else {
                 showNotification(data.message || 'Failed to save program', 'error');
+                // Show API validation errors if available
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const input = document.getElementById(`program${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                        if (input) {
+                            showInputError(input, data.errors[field]);
+                        }
+                    });
+                }
             }
         })
         .catch(error => {
             console.error('Error saving program:', error);
             showNotification('Error saving program', 'error');
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         });
+}
+
+function editProgram(id) {
+    // Show loading notification
+    const loadingToast = showNotification('Loading program data...', 'info', false);
+
+    fetch(`../../api/admin/settings/programs.php?action=get&id=${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the loading toast
+            if (loadingToast && loadingToast.close) {
+                loadingToast.close();
+            }
+
+            if (data.success && data.data) {
+                currentEditId = id;
+
+                // First load departments for the dropdown, then show modal
+                fetch('../../api/admin/settings/departments.php?action=get')
+                    .then(response => response.json())
+                    .then(deptData => {
+                        const departmentOptions = deptData.success ?
+                            deptData.data.map(dept => `<option value="${dept.department_id}">${escapeHtml(dept.name)}</option>`).join('') :
+                            '<option value="">No departments available</option>';
+
+                        const modalHtml = `
+                            <div id="programModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                                <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900">Edit Program</h3>
+                                        <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <form id="programForm">
+                                        <div class="mb-4">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Program Name</label>
+                                            <input type="text" id="programName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                            <select id="programDepartment" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                                <option value="">Select Department</option>
+                                                ${departmentOptions}
+                                            </select>
+                                            <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                            <textarea id="programDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                                        </div>
+                                        <div class="flex justify-end space-x-3">
+                                            <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
+                                            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center">
+                                                <span>Update Program</span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        `;
+
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        setupModalCloseEvents();
+
+                        document.getElementById('programForm').addEventListener('submit', function (e) {
+                            e.preventDefault();
+                            saveProgram();
+                        });
+
+                        // Fill form with data
+                        const nameInput = document.getElementById('programName');
+                        const deptSelect = document.getElementById('programDepartment');
+                        const descInput = document.getElementById('programDescription');
+
+                        if (nameInput && deptSelect && descInput) {
+                            nameInput.value = data.data.name || '';
+                            deptSelect.value = data.data.department_id || '';
+                            descInput.value = data.data.description || '';
+
+                            // Set focus to the name field
+                            nameInput.focus();
+                            // Select all text for easy editing
+                            nameInput.select();
+                        }
+                    });
+            } else {
+                showNotification(data.message || 'Program not found', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading program:', error);
+            showNotification('Error loading program', 'error');
+        });
+}
+
+function deleteProgram(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will delete the program and may affect related data!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('../../api/admin/settings/programs.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'delete',
+                    program_id: id
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || 'Program deleted successfully', 'success');
+                        loadPrograms();
+                    } else {
+                        showNotification(data.message || 'Failed to delete program', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting program:', error);
+                    showNotification('Error deleting program', 'error');
+                });
+        }
+    });
 }
 
 // COURSES MANAGEMENT (similar pattern)
@@ -606,6 +872,182 @@ function saveCourse() {
         });
 }
 
+function editCourse(id) {
+    // Show loading notification
+    const loadingToast = showNotification('Loading course data...', 'info', false);
+
+    // First get the course data
+    fetch(`../../api/admin/settings/courses.php?action=get&id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            // Close loading notification
+            if (loadingToast && loadingToast.close) {
+                loadingToast.close();
+            }
+
+            if (!data.success || !data.data) {
+                showNotification(data.message || 'Failed to load course', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            const course = data.data;
+
+            // Now get required data for dropdowns
+            Promise.all([
+                fetch('../../api/admin/settings/departments.php?action=get').then(r => r.json()),
+                fetch('../../api/admin/settings/programs.php?action=get').then(r => r.json()),
+                fetch('../../api/admin/settings/levels.php?action=get').then(r => r.json()),
+                fetch('../../api/admin/settings/semesters.php?action=get').then(r => r.json())
+            ]).then(([deptData, progData, levelData, semData]) => {
+                const departmentOptions = deptData.success ?
+                    deptData.data.map(dept => `<option value="${dept.department_id}">${escapeHtml(dept.name)}</option>`).join('') : '';
+                const programOptions = progData.success ?
+                    progData.data.map(prog => `<option value="${prog.program_id}">${escapeHtml(prog.name)}</option>`).join('') : '';
+                const levelOptions = levelData.success ?
+                    levelData.data.map(level => `<option value="${level.level_id}">${escapeHtml(level.name)}</option>`).join('') : '';
+                const semesterOptions = semData.success ?
+                    semData.data.map(sem => `<option value="${sem.semester_id}">${escapeHtml(sem.name)}</option>`).join('') : '';
+
+                const modalHtml = `
+                    <div id="courseModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">Edit Course</h3>
+                                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="courseForm">
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Course Code</label>
+                                        <input type="text" id="courseCode" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Credits</label>
+                                        <input type="number" id="courseCredits" min="1" max="10" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
+                                    <input type="text" id="courseTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                        <select id="courseDepartment" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <option value="">Select Department</option>
+                                            ${departmentOptions}
+                                        </select>
+                                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Program</label>
+                                        <select id="courseProgram" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <option value="">Select Program</option>
+                                            ${programOptions}
+                                        </select>
+                                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Level</label>
+                                        <select id="courseLevel" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <option value="">Select Level</option>
+                                            ${levelOptions}
+                                        </select>
+                                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+                                        <select id="courseSemester" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <option value="">Select Semester</option>
+                                            ${semesterOptions}
+                                        </select>
+                                        <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
+                                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center">
+                                        <span>Update Course</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                setupModalCloseEvents();
+
+                document.getElementById('courseForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    saveCourse();
+                });
+
+                // Populate the form with data
+                document.getElementById('courseCode').value = course.code || '';
+                document.getElementById('courseTitle').value = course.name || '';
+                document.getElementById('courseDepartment').value = course.department_id || '';
+                document.getElementById('courseProgram').value = course.program_id || '';
+                document.getElementById('courseLevel').value = course.level_id || '';
+                document.getElementById('courseSemester').value = course.semester_id || '';
+                document.getElementById('courseCredits').value = course.credit_hours || '';
+
+                // Set focus to the code field
+                document.getElementById('courseCode').focus();
+            });
+        })
+        .catch(error => {
+            console.error('Error loading course:', error);
+            showNotification('Error loading course', 'error');
+        });
+}
+
+function deleteCourse(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will delete the course and may affect related data!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('../../api/admin/settings/courses.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'delete',
+                    course_id: id
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || 'Course deleted successfully', 'success');
+                        loadCourses();
+                    } else {
+                        showNotification(data.message || 'Failed to delete course', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting course:', error);
+                    showNotification('Error deleting course', 'error');
+                });
+        }
+    });
+}
+
 // LEVELS MANAGEMENT
 function loadLevels() {
     fetch('../../api/admin/settings/levels.php?action=get')
@@ -714,6 +1156,119 @@ function saveLevel() {
             console.error('Error saving level:', error);
             showNotification('Error saving level', 'error');
         });
+}
+
+function editLevel(id) {
+    // Show loading notification
+    const loadingToast = showNotification('Loading level data...', 'info', false);
+
+    fetch(`../../api/admin/settings/levels.php?action=get&id=${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close loading notification
+            if (loadingToast && loadingToast.close) {
+                loadingToast.close();
+            }
+
+            if (data.success && data.data) {
+                currentEditId = id;
+
+                const modalHtml = `
+                    <div id="levelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">Edit Level</h3>
+                                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="levelForm">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Level ID</label>
+                                    <input type="number" id="levelId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g., 100, 200, 300">
+                                    <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Level Name</label>
+                                    <input type="text" id="levelName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g., Level 100">
+                                    <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
+                                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center">
+                                        <span>Update Level</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                setupModalCloseEvents();
+
+                document.getElementById('levelForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    saveLevel();
+                });
+
+                // Populate form with data
+                document.getElementById('levelId').value = data.data.level_id || '';
+                document.getElementById('levelName').value = data.data.name || '';
+
+                // Set focus to the level id field
+                document.getElementById('levelId').focus();
+            } else {
+                showNotification(data.message || 'Level not found', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading level:', error);
+            showNotification('Error loading level', 'error');
+        });
+}
+
+function deleteLevel(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will delete the level and may affect related data!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('../../api/admin/settings/levels.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'delete',
+                    level_id: id
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || 'Level deleted successfully', 'success');
+                        loadLevels();
+                    } else {
+                        showNotification(data.message || 'Failed to delete level', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting level:', error);
+                    showNotification('Error deleting level', 'error');
+                });
+        }
+    });
 }
 
 // SEMESTERS MANAGEMENT
@@ -834,23 +1389,181 @@ function saveSemester() {
         });
 }
 
+function editSemester(id) {
+    // Show loading notification
+    const loadingToast = showNotification('Loading semester data...', 'info', false);
+
+    fetch(`../../api/admin/settings/semesters.php?action=get&id=${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close loading notification
+            if (loadingToast && loadingToast.close) {
+                loadingToast.close();
+            }
+
+            if (data.success && data.data) {
+                currentEditId = id;
+
+                const modalHtml = `
+                    <div id="semesterModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">Edit Semester</h3>
+                                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="semesterForm">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Semester Name</label>
+                                    <input type="text" id="semesterName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g., Fall 2024">
+                                    <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                    <input type="date" id="semesterStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                    <input type="date" id="semesterEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <div class="error-feedback text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Cancel</button>
+                                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center">
+                                        <span>Update Semester</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                setupModalCloseEvents();
+
+                document.getElementById('semesterForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    saveSemester();
+                });
+
+                // Populate form with data
+                const nameInput = document.getElementById('semesterName');
+                const startDateInput = document.getElementById('semesterStartDate');
+                const endDateInput = document.getElementById('semesterEndDate');
+
+                nameInput.value = data.data.name || '';
+                startDateInput.value = data.data.start_date || '';
+                endDateInput.value = data.data.end_date || '';
+
+                // Set focus to the name field
+                nameInput.focus();
+            } else {
+                showNotification(data.message || 'Semester not found', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading semester:', error);
+            showNotification('Error loading semester', 'error');
+        });
+}
+
+function deleteSemester(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will delete the semester and may affect related data!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('../../api/admin/settings/semesters.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'delete',
+                    semester_id: id
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || 'Semester deleted successfully', 'success');
+                        loadSemesters();
+                    } else {
+                        showNotification(data.message || 'Failed to delete semester', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting semester:', error);
+                    showNotification('Error deleting semester', 'error');
+                });
+        }
+    });
+}
+
 // UTILITY FUNCTIONS
 function closeModal() {
     const modals = document.querySelectorAll('[id$="Modal"]');
     modals.forEach(modal => modal.remove());
     currentEditId = null;
+
+    // Remove event listeners
+    document.removeEventListener('keydown', handleEscKeyForModal);
+}
+
+// Add ESC key support for modals
+function handleEscKeyForModal(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+}
+
+// Setup modal close events (ESC key)
+function setupModalCloseEvents() {
+    document.addEventListener('keydown', handleEscKeyForModal);
+}
+
+// Add click outside support for modals
+function setupModalCloseEvents() {
+    document.addEventListener('keydown', handleEscKeyForModal);
+
+    // Add click event for clicking outside modal
+    const modalElements = document.querySelectorAll('[id$="Modal"]');
+    modalElements.forEach(modal => {
+        modal.addEventListener('click', function (e) {
+            // Only close if the click is on the background, not the modal content
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    });
 }
 
 // Show notification using SweetAlert Toast
-function showNotification(message, type = 'info') {
+function showNotification(message, type = 'info', autoClose = true) {
     if (window.Toast) {
-        window.Toast.fire({
+        const toast = window.Toast.fire({
             icon: type,
-            title: message
+            title: message,
+            timer: autoClose ? 3000 : undefined,
+            showConfirmButton: !autoClose
         });
+        return toast;
     } else {
         // Fallback to regular alert if Toast is not available
         alert(message);
+        return null;
     }
 }
 

@@ -160,7 +160,7 @@ try {
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 rounded-lg shadow-lg text-white">
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-6 rounded-lg shadow-lg text-white">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-indigo-100 text-sm font-medium">Active Teachers</p>
@@ -172,6 +172,8 @@ try {
                     </div>
                 </div>
             </div>
+
+
             <!-- Management Tabs -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
                 <div class="border-b border-gray-200">
