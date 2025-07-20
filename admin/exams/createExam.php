@@ -234,7 +234,7 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <span class="ml-2 text-sm text-gray-700">Show results immediately after exam</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input type="checkbox" name="preventCheating" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                        <input type="checkbox" name="anti_cheating" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                         <span class="ml-2 text-sm text-gray-700">Enable anti-cheating measures</span>
                                     </label>
                                 </div>
@@ -304,48 +304,40 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Handle department change - update programs dropdown
             departmentSelect.addEventListener('change', function() {
-                const departmentId = this.value;
+    const departmentId = this.value;
+    programSelect.innerHTML = '<option value="">Select Program</option>';
+    programSelect.disabled = !departmentId;
+    courseSelect.innerHTML = '<option value="">Select Course</option>';
+    courseSelect.disabled = true;
 
-                // Clear and disable dependent dropdowns
-                programSelect.innerHTML = '<option value="">Select Program</option>';
-                programSelect.disabled = !departmentId;
+    if (departmentId) {
+        const filteredPrograms = programs.filter(p => p.department_id == departmentId);
+        filteredPrograms.forEach(program => {
+            const option = document.createElement('option');
+            option.value = program.id;
+            option.textContent = program.name;
+            programSelect.appendChild(option);
+        });
+        programSelect.disabled = false; // <-- Enable when options are available
+    }
+});
 
-                courseSelect.innerHTML = '<option value="">Select Course</option>';
-                courseSelect.disabled = true;
+programSelect.addEventListener('change', function() {
+    const programId = this.value;
+    courseSelect.innerHTML = '<option value="">Select Course</option>';
+    courseSelect.disabled = !programId;
 
-                // Filter programs by department_id
-                if (departmentId) {
-                    const filteredPrograms = programs.filter(p => p.department_id == departmentId);
-
-                    filteredPrograms.forEach(program => {
-                        const option = document.createElement('option');
-                        option.value = program.id;
-                        option.textContent = program.name;
-                        programSelect.appendChild(option);
-                    });
-                }
-            });
-
-            // Handle program change - update courses dropdown
-            programSelect.addEventListener('change', function() {
-                const programId = this.value;
-
-                // Clear and disable courses dropdown
-                courseSelect.innerHTML = '<option value="">Select Course</option>';
-                courseSelect.disabled = !programId;
-
-                // Filter courses by program_id
-                if (programId) {
-                    const filteredCourses = courses.filter(c => c.program_id == programId);
-
-                    filteredCourses.forEach(course => {
-                        const option = document.createElement('option');
-                        option.value = course.id;
-                        option.textContent = `${course.code} - ${course.name}`;
-                        courseSelect.appendChild(option);
-                    });
-                }
-            });
+    if (programId) {
+        const filteredCourses = courses.filter(c => c.program_id == programId);
+        filteredCourses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = `${course.code} - ${course.name}`;
+            courseSelect.appendChild(option);
+        });
+        courseSelect.disabled = false; // <-- Enable when options are available
+    }
+});
 
             // Validate end date is after start date
             function validateDates() {
