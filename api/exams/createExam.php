@@ -139,7 +139,7 @@ try {
         'randomize' => isset($data['randomize']) ? (int)$data['randomize'] : 0,
         'show_results' => isset($data['show_results']) ? (int)$data['show_results'] : 1,
         'anti_cheating' => isset($data['anti_cheating']) ? (int)$data['anti_cheating'] : 0,
-        'created_by' => $is_admin ? $admin_id : $teacher_id,
+        // 'created_by' => $is_admin ? $admin_id : $teacher_id,
         'created_at' => date('Y-m-d H:i:s')
     ];
 
@@ -149,12 +149,12 @@ try {
             exam_code, title, description, department_id, program_id, semester_id, level_id,
             course_id, teacher_id, status, duration_minutes, pass_mark, total_marks, 
             start_datetime, end_datetime, max_attempts, randomize, show_results, anti_cheating,
-            created_by, created_at
+             created_at
         ) VALUES (
             :exam_code, :title, :description, :department_id, :program_id, :semester_id, :level_id,
             :course_id, :teacher_id, :status, :duration_minutes, :pass_mark, :total_marks,
             :start_datetime, :end_datetime, :max_attempts, :randomize, :show_results, :anti_cheating,
-            :created_by, :created_at
+            :created_at
         )
     ");
 
