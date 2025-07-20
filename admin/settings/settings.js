@@ -439,9 +439,14 @@ function showAddProgramModal() {
                 '<option value="">No departments available</option>';
 
             const modalHtml = `
-                <div id="programModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                    <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Program</h3>
+                <div id="programModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300">
+                    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl border border-gray-200 transform transition-all duration-300 scale-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Add New Program</h3>
+                            <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                         <form id="programForm">
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Program Name</label>
