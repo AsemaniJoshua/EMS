@@ -14,7 +14,7 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
     exit;
 }
 
-require_once '../../api/config/database.php';
+require_once __DIR__ .'/../../api/config/database.php';
 $db = new Database();
 $conn = $db->getConnection();
 

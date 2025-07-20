@@ -16,6 +16,13 @@ function initializeLoginForm() {
     // Form submission
     loginForm.addEventListener('submit', handleLogin);
 
+    // Input validation on blur
+    emailInput.addEventListener('blur', validateEmail);
+
+    // Real-time validation
+    emailInput.addEventListener('input', clearFieldError);
+    passwordInput.addEventListener('input', clearFieldError);
+
     // Enter key handling
     emailInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
@@ -35,8 +42,7 @@ function initializePasswordToggle() {
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eyeIcon');
 
-    if (togglePassword){
-        togglePassword.addEventListener('click', function () {
+    togglePassword.addEventListener('click', function () {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
 
@@ -78,6 +84,11 @@ async function handleLogin(e) {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const remember = document.getElementById('remember').checked;
+
+    // Validate inputs
+    if (!validateForm(email)) {
+        return;
+    }
 
     // Show loading state
     setLoadingState(true);
@@ -131,6 +142,85 @@ async function handleLogin(e) {
     } finally {
         setLoadingState(false);
     }
+}
+
+function validateForm(email) {
+    let isValid = true;
+
+    // Clear previous errors
+    clearAllErrors();
+
+    // Validate email
+    if (!email) {
+        showFieldError('email', 'Email is required');
+        isValid = false;
+    } else if (!isValidEmail(email)) {
+        showFieldError('email', 'Please enter a valid email address');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+function validateEmail() {
+    const email = document.getElementById('email').value.trim();
+    if (email && !isValidEmail(email)) {
+        showFieldError('email', 'Please enter a valid email address');
+        return false;
+    }
+    clearFieldError('email');
+    return true;
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function showFieldError(fieldName, message) {
+    const field = document.getElementById(fieldName);
+    const existingError = field.parentNode.querySelector('.error-message');
+
+    // Remove existing error
+    if (existingError) {
+        existingError.remove();
+    }
+
+    // Add error styling
+    field.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+    field.classList.remove('border-gray-300', 'focus:border-emerald-500', 'focus:ring-emerald-500');
+
+    // Add error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
+
+    field.parentNode.appendChild(errorDiv);
+}
+
+function clearFieldError(fieldName) {
+    const field = typeof fieldName === 'string' ? document.getElementById(fieldName) : fieldName.target;
+    const errorMessage = field.parentNode.querySelector('.error-message');
+
+    if (errorMessage) {
+        errorMessage.remove();
+    }
+
+    // Reset styling
+    field.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+    field.classList.add('border-gray-300', 'focus:border-emerald-500', 'focus:ring-emerald-500');
+}
+
+function clearAllErrors() {
+    const errorMessages = document.querySelectorAll('.error-message');
+    errorMessages.forEach(error => error.remove());
+
+    const fields = ['email'];
+    fields.forEach(fieldName => {
+        const field = document.getElementById(fieldName);
+        field.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+        field.classList.add('border-gray-300', 'focus:border-emerald-500', 'focus:ring-emerald-500');
+    });
 }
 
 function setLoadingState(loading) {
@@ -205,3 +295,24 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
+
+// Load remembered email on page load
+window.addEventListener('load', function () {
+    const rememberedEmail = localStorage.getItem('student_email');
+    if (rememberedEmail) {
+        document.getElementById('email').value = rememberedEmail;
+        document.getElementById('remember').checked = true;
+        document.getElementById('password').focus();
+    } else {
+        document.getElementById('email').focus();
+    }
+});
+
+// Handle browser back button
+window.addEventListener('popstate', function () {
+    // Prevent going back to login page if already logged in
+    if (sessionStorage.getItem('student_logged_in')) {
+        window.location.href = '/student/dashboard/';
+    }
+});
+

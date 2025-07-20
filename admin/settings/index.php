@@ -98,7 +98,6 @@ try {
                 </div>
             </div>
 
-            <!-- System Overview Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                 <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg text-white">
                     <div class="flex items-center justify-between">
@@ -148,19 +147,19 @@ try {
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-teal-500 to-teal-600 p-6 rounded-lg shadow-lg text-white">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-lg shadow-lg text-white">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-teal-100 text-sm font-medium">Semesters</p>
+                            <p class="text-rose-100 text-sm font-medium">Semesters</p>
                             <p class="text-2xl font-bold"><?php echo $semesters_count; ?></p>
                         </div>
-                        <div class="text-teal-200">
+                        <div class="text-rose-200">
                             <i class="fas fa-calendar-alt text-2xl"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 rounded-lg shadow-lg text-white">
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-6 rounded-lg shadow-lg text-white">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-indigo-100 text-sm font-medium">Active Teachers</p>
@@ -172,6 +171,8 @@ try {
                     </div>
                 </div>
             </div>
+
+
             <!-- Management Tabs -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
                 <div class="border-b border-gray-200">
@@ -275,7 +276,7 @@ try {
     </main>
 
     <!-- Modals will be inserted here by JavaScript -->
-    <script src="settings.js"></script>
+    <script src="settings.min.js"></script>
 </body>
 
 </html>

@@ -1,15 +1,16 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_path', '/');
-    session_start();
+  ini_set('session.cookie_path', '/');
+  session_start();
 }
 if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === true) {
-    header('Location: /student/dashboard/');
-    exit;
+  header('Location: /student/dashboard/');
+  exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,12 +24,21 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
     .animate-pop {
       animation: popIn .25s cubic-bezier(.4, 2, .6, 1) both;
     }
+
     @keyframes popIn {
-      0% { transform: scale(.8); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+      0% {
+        transform: scale(.8);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
   </style>
 </head>
+
 <body class="bg-gray-50 h-">
   <div class="grid lg:grid-cols-2 h-screen">
     <!-- Left Panel -->
@@ -73,8 +83,13 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" />
+            <div class="relative">
+              <input type="password" id="password" name="password" placeholder="Enter your password" required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" />
+              <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 px-3 flex items-center">
+                <i id="eyeIcon" class="fas fa-eye text-gray-500"></i>
+              </button>
+            </div>
           </div>
           <div class="flex items-center justify-between">
             <label class="flex items-center">
@@ -84,11 +99,21 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
             </label>
             <a href="#" class="text-sm text-emerald-600 hover:text-emerald-500 font-medium">Forgot password?</a>
           </div>
-          <button type="submit"
+          <button type="submit" id="loginBtn"
             class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-sign-in-alt"></i>
-            Sign In
+            <span id="loginBtnText">Sign In</span>
+            <span id="loginSpinner" class="hidden">
+              <i class="fas fa-spinner fa-spin"></i>
+            </span>
           </button>
+          <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div class="bg-white p-5 rounded-lg shadow-lg animate-pulse">
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin text-emerald-600 text-xl"></i>
+                <span>Processing...</span>
+              </div>
+            </div>
+          </div>
         </form>
         <div class="mt-8 text-center">
           <p class="text-sm text-gray-600">
@@ -99,6 +124,7 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
       </div>
     </div>
   </div>
-  <script src="/student/login/logins.js"></script>
+  <script src="/student/login/logins.min.js"></script>
 </body>
+
 </html>
