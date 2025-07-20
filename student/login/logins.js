@@ -55,8 +55,6 @@ function initializePasswordToggle() {
             eyeIcon.classList.add('fa-eye-slash');
         }
     });
-    }
-    
 }
 
 function checkUrlParameters() {
