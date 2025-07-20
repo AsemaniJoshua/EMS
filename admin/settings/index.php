@@ -147,7 +147,7 @@ try {
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-gray-500 to-gray-600 p-6 rounded-lg shadow-lg text-white">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-lg shadow-lg text-white">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-rose-100 text-sm font-medium">Semesters</p>
