@@ -11,7 +11,7 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Login - EMS</title>
   <link rel="stylesheet" href="/src/output.css" />
@@ -99,6 +99,6 @@ if (isset($_SESSION['student_logged_in']) && $_SESSION['student_logged_in'] === 
       </div>
     </div>
   </div>
-  <script src="/student/login/logins.js"></script>
+  <script src="/student/login/logins.min.js"></script>
 </body>
 </html>
