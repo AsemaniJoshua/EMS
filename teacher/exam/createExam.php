@@ -33,6 +33,11 @@ $stmt = $conn->prepare("SELECT semester_id, name FROM semesters ORDER BY name");
 $stmt->execute();
 $semesters = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch levels
+$stmt = $conn->prepare("SELECT level_id, name FROM levels ORDER BY level_id");
+$stmt->execute();
+$levels = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Fetch all courses
 $stmt = $conn->prepare("
     SELECT DISTINCT c.course_id, c.code, c.title as name, c.department_id, c.program_id
@@ -62,7 +67,6 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Main content -->
     <main class="pt-16 lg:pt-18 lg:ml-60 min-h-screen transition-all duration-300">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
-
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex items-center mb-4">
@@ -112,7 +116,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Program *</label>
-                                <select name="program_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                <select name="program_id" required disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                     <option value="">Select Program</option>
                                     <!-- Options will be populated by JavaScript based on department selection -->
                                 </select>
@@ -129,8 +133,18 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
 
                             <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Level *</label>
+                                <select name="level_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    <option value="">Select Level</option>
+                                    <?php foreach ($levels as $level): ?>
+                                        <option value="<?php echo $level['level_id']; ?>"><?php echo htmlspecialchars($level['name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Course *</label>
-                                <select name="course_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                <select name="course_id" required disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                     <option value="">Select Course</option>
                                     <!-- Options will be populated by JavaScript based on department/program selection -->
                                 </select>
@@ -153,56 +167,56 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             Exam Settings
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div>
-  <label class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
-  <input type="datetime-local" name="start_datetime" id="start_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
+                                <input type="datetime-local" name="start_datetime" id="start_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            </div>
 
-<div>
-  <label class="block text-sm font-medium text-gray-700 mb-2">End Date & Time *</label>
-  <input type="datetime-local" name="end_datetime" id="end_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date & Time *</label>
+                                <input type="datetime-local" name="end_datetime" id="end_datetime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            </div>
 
-<div>
-  <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
-  <input type="number" name="duration_minutes" id="duration_minutes" min="15" max="240" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120">
-</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
+                                <input type="number" name="duration_minutes" id="duration_minutes" min="15" max="240" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 120">
+                            </div>
 
-<script>
-  const startInput = document.getElementById('start_datetime');
-  const endInput = document.getElementById('end_datetime');
-  const durationInput = document.getElementById('duration_minutes');
+                            <script>
+                                const startInput = document.getElementById('start_datetime');
+                                const endInput = document.getElementById('end_datetime');
+                                const durationInput = document.getElementById('duration_minutes');
 
-  function updateEndFromDuration() {
-    const startVal = startInput.value;
-    const duration = parseInt(durationInput.value);
-    if (startVal && !isNaN(duration)) {
-      const start = new Date(startVal);
-      const end = new Date(start.getTime() + duration * 60000);
-      endInput.value = end.toISOString().slice(0, 16);
-    }
-  }
+                                function updateEndFromDuration() {
+                                    const startVal = startInput.value;
+                                    const duration = parseInt(durationInput.value);
+                                    if (startVal && !isNaN(duration)) {
+                                        const start = new Date(startVal);
+                                        const end = new Date(start.getTime() + duration * 60000);
+                                        endInput.value = end.toISOString().slice(0, 16);
+                                    }
+                                }
 
-  function updateDurationFromEnd() {
-    const startVal = startInput.value;
-    const endVal = endInput.value;
-    if (startVal && endVal) {
-      const start = new Date(startVal);
-      const end = new Date(endVal);
-      const duration = Math.round((end - start) / 60000);
-      if (duration > 0) {
-        durationInput.value = duration;
-      }
-    }
-  }
+                                function updateDurationFromEnd() {
+                                    const startVal = startInput.value;
+                                    const endVal = endInput.value;
+                                    if (startVal && endVal) {
+                                        const start = new Date(startVal);
+                                        const end = new Date(endVal);
+                                        const duration = Math.round((end - start) / 60000);
+                                        if (duration > 0) {
+                                            durationInput.value = duration;
+                                        }
+                                    }
+                                }
 
-  durationInput.addEventListener('input', updateEndFromDuration);
-  endInput.addEventListener('input', updateDurationFromEnd);
-  startInput.addEventListener('input', () => {
-    if (durationInput.value) updateEndFromDuration();
-    if (endInput.value) updateDurationFromEnd();
-  });
-</script>
+                                durationInput.addEventListener('input', updateEndFromDuration);
+                                endInput.addEventListener('input', updateDurationFromEnd);
+                                startInput.addEventListener('input', () => {
+                                    if (durationInput.value) updateEndFromDuration();
+                                    if (endInput.value) updateDurationFromEnd();
+                                });
+                            </script>
 
 
                             <div>
@@ -211,8 +225,8 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pass Mark (%) *</label>
-                                <input type="number" name="pass_mark" min="1" max="100" step="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 50.00" value="50.00">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score (%) *</label>
+                                <input type="number" name="passing_score" min="1" max="100" step="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="e.g., 50.00" value="50.00">
                             </div>
 
                             <div>
@@ -298,16 +312,21 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
 
+        // DOM elements
+        const departmentSelect = document.querySelector('select[name="department_id"]');
+        const programSelect = document.querySelector('select[name="program_id"]');
+        const courseSelect = document.querySelector('select[name="course_id"]');
+        const semesterSelect = document.querySelector('select[name="semester_id"]');
+        const levelSelect = document.querySelector('select[name="level_id"]');
+
         // Handle department change to populate programs
-        document.querySelector('select[name="department_id"]').addEventListener('change', function() {
+        departmentSelect.addEventListener('change', function() {
             const departmentId = this.value;
-            const programSelect = document.querySelector('select[name="program_id"]');
-            const courseSelect = document.querySelector('select[name="course_id"]');
-            
-            // Clear existing options
             programSelect.innerHTML = '<option value="">Select Program</option>';
+            programSelect.disabled = !departmentId;
             courseSelect.innerHTML = '<option value="">Select Course</option>';
-            
+            courseSelect.disabled = true;
+
             if (departmentId) {
                 // Fetch programs from API
                 fetch(`/api/exams/getProgramsByDepartment.php?departmentId=${departmentId}`)
@@ -320,40 +339,48 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 option.textContent = program.name;
                                 programSelect.appendChild(option);
                             });
+                            programSelect.disabled = false;
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching programs:', error);
-                        showNotification('Error loading programs', 'error');
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to load programs. Please try again.',
+                            icon: 'error'
+                        });
                     });
             }
         });
 
         // Handle program change to populate courses
-        document.querySelector('select[name="program_id"]').addEventListener('change', function() {
+        programSelect.addEventListener('change', function() {
             const programId = this.value;
-            const courseSelect = document.querySelector('select[name="course_id"]');
-            
-            // Clear existing options
             courseSelect.innerHTML = '<option value="">Select Course</option>';
-            
+            courseSelect.disabled = !programId;
+
             if (programId) {
                 // Fetch courses from API
-                fetch(`/api/exams/getCoursesByProgram.php?program_id=${programId}`)
+                fetch(`/api/exams/getCoursesByProgram.php?programId=${programId}`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.status === 'success' && data.courses) {
+                        if (data.success && data.courses) {
                             data.courses.forEach(course => {
                                 const option = document.createElement('option');
                                 option.value = course.course_id;
                                 option.textContent = `${course.code} - ${course.name}`;
                                 courseSelect.appendChild(option);
                             });
+                            courseSelect.disabled = false;
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching courses:', error);
-                        showNotification('Error loading courses', 'error');
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to load courses. Please try again.',
+                            icon: 'error'
+                        });
                     });
             }
         });
@@ -380,7 +407,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 const start = new Date(startDateTime);
                 const end = new Date(endDateTime);
                 const diffMinutes = Math.round((end - start) / (1000 * 60));
-                
+
                 if (diffMinutes > 0) {
                     durationField.value = diffMinutes;
                 }
@@ -405,7 +432,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             // Validate required fields
-            const requiredFields = ['title', 'exam_code', 'department_id', 'program_id', 'semester_id', 'course_id', 'start_datetime', 'end_datetime', 'duration_minutes', 'total_marks', 'pass_mark'];
+            const requiredFields = ['title', 'exam_code', 'department_id', 'program_id', 'semester_id', 'level_id', 'course_id', 'start_datetime', 'end_datetime', 'duration_minutes', 'total_marks', 'passing_score'];
             for (let field of requiredFields) {
                 if (!examData[field]) {
                     const fieldName = field.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').toLowerCase();
@@ -423,82 +450,87 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 return;
             }
 
+            // Split datetime into separate date and time fields for the backend
+            // For start datetime
+            const startDate = startDateTime.toISOString().split('T')[0]; // YYYY-MM-DD
+            const startTime = startDateTime.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+
+            // For end datetime
+            const endDate = endDateTime.toISOString().split('T')[0]; // YYYY-MM-DD
+            const endTime = endDateTime.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+
+            // Add these fields to the exam data
+            examData.start_date = startDate;
+            examData.start_time = startTime;
+            examData.end_date = endDate;
+            examData.end_time = endTime;
+
             // Submit the form
             fetch('/api/exams/createExam.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify(examData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Exam created successfully! You can now add questions to your exam.',
-                        icon: 'success',
-                        confirmButtonColor: '#10B981'
-                    }).then(() => {
-                        window.location.href = 'index.php';
-                    });
-                } else {
-                    showNotification(data.message || 'Failed to create exam', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Network error. Please try again.', 'error');
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(examData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Exam created successfully! You can now add questions to your exam.',
+                            icon: 'success',
+                            confirmButtonColor: '#10B981'
+                        }).then(() => {
+                            window.location.href = 'index.php';
+                        });
+                    } else {
+                        showNotification(data.message || 'Failed to create exam', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Network error. Please try again.', 'error');
+                });
         });
 
-        // Notification system
+        // Notification system using SweetAlert2 toast
         function showNotification(message, type = 'info') {
-            const colors = {
-                success: 'bg-emerald-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500',
-                warning: 'bg-orange-500'
-            };
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
 
-            const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${colors[type] || colors.info} transform transition-all duration-300 ease-in-out translate-x-full`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
+            Toast.fire({
+                icon: type,
+                title: message
+            });
         }
 
         // Helper function to initialize date fields with current date
         document.addEventListener('DOMContentLoaded', function() {
             const now = new Date();
             const today = now.toISOString().slice(0, 16); // Format for datetime-local
-            
+
             // Set default start time to current time
             document.querySelector('input[name="start_datetime"]').value = today;
-            
+
             // Set default end time to 2 hours later
             const twoHoursLater = new Date(now.getTime() + (2 * 60 * 60 * 1000));
             document.querySelector('input[name="end_datetime"]').value = twoHoursLater.toISOString().slice(0, 16);
-            
+
             // Set default duration
             document.querySelector('input[name="duration_minutes"]').value = 120;
         });
     </script>
 </body>
-</html> 
+
+</html>

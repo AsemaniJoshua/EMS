@@ -436,7 +436,7 @@ if (!isset($_SESSION['csrf_token'])) {
                   </div>
                 </div>
                 <div class="flex justify-end pt-6">
-                  <button type="submit" onclick="return confirm('Are you sure you want to change your password? You will need to use the new password for future logins.')" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-white bg-yellow-500 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-200" onclick="return confirm('Are you sure you want to change your password? You will need to use the new password for future logins.')" >
+                  <button type="submit" onclick="return confirm('Are you sure you want to change your password? You will need to use the new password for future logins.')" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg text-white bg-emerald-500 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200" onclick="return confirm('Are you sure you want to change your password? You will need to use the new password for future logins.')" >
                     <i class="fas fa-key mr-2"></i>
                     Change Password
                   </button>
