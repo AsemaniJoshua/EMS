@@ -69,7 +69,7 @@
           <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
           <p class="text-gray-600">Please sign in to your account</p>
         </div>
-        <form id="teacherLoginForm" class="space-y-6">
+        <form id="teacherLoginForm" class="space-y-6" method="POST">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input type="email" id="email" name="email" placeholder="Enter your email" required
