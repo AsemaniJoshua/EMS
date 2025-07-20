@@ -38,23 +38,25 @@ function initializeLoginForm() {
 }
 
 function initializePasswordToggle() {
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    const eyeIcon = document.getElementById('eyeIcon');
+    const togglePassword = document.querySelector('#togglePassword');
+    const passwordInput = document.querySelector('#password');
+    const eyeIcon = document.querySelector('#eyeIcon');
 
-    togglePassword.addEventListener('click', function () {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
+    if (togglePassword && passwordInput && eyeIcon) {
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
 
-        // Toggle eye icon
-        if (type === 'password') {
-            eyeIcon.classList.remove('fa-eye-slash');
-            eyeIcon.classList.add('fa-eye');
-        } else {
-            eyeIcon.classList.remove('fa-eye');
-            eyeIcon.classList.add('fa-eye-slash');
-        }
-    });
+            // Toggle eye icon
+            if (type === 'password') {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            } else {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
+        });
+    }
 }
 
 function checkUrlParameters() {
@@ -89,7 +91,13 @@ async function handleLogin(e) {
     }
 
     // Show loading state
+    if (document.getElementById('loginBtn') &&
+    document.getElementById('loginBtnText') &&
+    document.getElementById('loginSpinner') &&
+    document.getElementById('loadingOverlay')) {
     setLoadingState(true);
+}
+
 
     try {
         const response = await fetch('/api/students/login.php', {
@@ -227,6 +235,12 @@ function setLoadingState(loading) {
     const loginSpinner = document.getElementById('loginSpinner');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
+    // Check if elements exist before accessing their properties
+    if (!loginBtn || !loginBtnText || !loginSpinner || !loadingOverlay) {
+        console.error('One or more required elements not found');
+        return;
+    }
+
     if (loading) {
         loginBtn.disabled = true;
         loginBtn.classList.add('opacity-75', 'cursor-not-allowed');
@@ -313,4 +327,3 @@ window.addEventListener('popstate', function () {
         window.location.href = '/student/dashboard/';
     }
 });
-
