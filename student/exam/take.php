@@ -13,8 +13,8 @@ if (!isset($_SESSION['student_logged_in']) || $_SESSION['student_logged_in'] !==
     exit;
 }
 
-$exam_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if ($exam_id <= 0) {
+$registration_id = isset($_GET['registration_id']) ? intval($_GET['registration_id']) : 0;
+if ($registration_id <= 0) {
     header('Location: /student/exam/');
     exit;
 }
@@ -25,19 +25,19 @@ $student_id = $_SESSION['student_id'];
 $db = new Database();
 $conn = $db->getConnection();
 
-// Verify student is registered for this exam
+// Verify student is registered for this exam using registration_id
 $registrationQuery = "
-    SELECT er.registration_id, e.title, e.description, e.duration_minutes, 
+    SELECT er.registration_id, e.exam_id, e.title, e.description, e.duration_minutes, 
            e.start_datetime, e.end_datetime, e.anti_cheating, e.total_marks,
            c.title as course_title, c.code as course_code
     FROM exam_registrations er
     JOIN exams e ON er.exam_id = e.exam_id
     JOIN courses c ON e.course_id = c.course_id
-    WHERE er.exam_id = :exam_id AND er.student_id = :student_id
+    WHERE er.registration_id = :registration_id AND er.student_id = :student_id
 ";
 
 $stmt = $conn->prepare($registrationQuery);
-$stmt->bindParam(':exam_id', $exam_id);
+$stmt->bindParam(':registration_id', $registration_id);
 $stmt->bindParam(':student_id', $student_id);
 $stmt->execute();
 $exam = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -76,7 +76,7 @@ if ($stmt->fetch()) {
 // Get question count
 $questionCountQuery = "SELECT COUNT(*) FROM questions WHERE exam_id = :exam_id";
 $stmt = $conn->prepare($questionCountQuery);
-$stmt->bindParam(':exam_id', $exam_id);
+$stmt->bindParam(':exam_id', $exam['exam_id']);
 $stmt->execute();
 $questionCount = $stmt->fetchColumn();
 ?>
@@ -281,7 +281,7 @@ $questionCount = $stmt->fetchColumn();
 
         // Load exam data
         function loadExamData() {
-            fetch(`/api/students/getExamQuestions.php?exam_id=<?php echo $exam_id; ?>`)
+            fetch(`/api/students/getExamQuestions.php?registration_id=<?php echo $registration_id; ?>`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
