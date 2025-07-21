@@ -244,13 +244,13 @@ $questionCount = $stmt->fetchColumn();
                         allowEscapeKey: false,
                         showConfirmButton: false
                     });
-                    setTimeout(submitExam, 2000);
+                    setTimeout(submitExam, 3000);
                 } else {
                     Swal.fire({
                         title: 'Warning',
                         text: `Tab switching detected (${tabSwitchCount}/${maxTabSwitches}). Please stay on this page.`,
                         icon: 'warning',
-                        timer: 3000,
+                        timer: 4000,
                         showConfirmButton: false
                     });
                 }
@@ -459,7 +459,7 @@ $questionCount = $stmt->fetchColumn();
                         allowEscapeKey: false,
                         showConfirmButton: false
                     });
-                    setTimeout(submitExam, 2000);
+                    setTimeout(submitExam, 4000);
                 }
             }, 1000);
         }
