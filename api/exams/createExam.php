@@ -58,7 +58,10 @@ $db = new Database();
 $conn = $db->getConnection();
 
 try {
-    session_start();
+    // Start session if not already started
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 
     // Check if user is admin or teacher and set the appropriate user ID
     $is_admin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
@@ -128,7 +131,7 @@ try {
         'semester_id' => $data['semester_id'],
         'level_id' => $data['level_id'] ?? null,
         'course_id' => $data['course_id'],
-        'teacher_id' => $is_admin ? ($data['teacher_id'] ?? null) : $teacher_id,
+        'teacher_id' => $data['teacher_id'],
         'status' => $data['status'] ?? 'Draft',
         'duration_minutes' => $data['duration_minutes'] ?? $data['duration'],
         'pass_mark' => $data['pass_mark'] ?? $data['passing_score'],

@@ -8,16 +8,14 @@ require_once __DIR__ . '/../components/teacherHeader.php';
 $currentPage = 'exams';
 $pageTitle = "Create New Exam";
 
-// Check teacher session
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
-    header('Location: /teacher/login/');
-    exit;
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+$teacher_id = $_SESSION['teacher_id'];
 
 $db = new Database();
 $conn = $db->getConnection();
-$teacher_id = $_SESSION['teacher_id'];
-
 // Fetch departments
 $stmt = $conn->prepare("SELECT department_id, name FROM departments ORDER BY name");
 $stmt->execute();
@@ -87,6 +85,7 @@ $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <form id="createExamForm" class="p-6 space-y-8">
+                  <input type="text" name="teacher_id" required class="hidden" value="<?php echo $teacher_id;?>">
                     <!-- Basic Exam Information Section -->
                     <div class="border-b border-gray-100 pb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
