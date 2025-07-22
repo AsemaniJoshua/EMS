@@ -5,7 +5,7 @@ $currentDir = basename(dirname($_SERVER['PHP_SELF']));
 ?>
 
 <!-- Sidebar -->
-<div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-60 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0">
+<div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-60 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
     <div class="flex items-center justify-center h-16 px-4 bg-emerald-600 mb-3">
         <h1 class="text-xl font-bold text-white">EMS Student</h1>
     </div>
