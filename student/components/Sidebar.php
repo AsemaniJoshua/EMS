@@ -10,11 +10,11 @@ $currentDir = basename(dirname($_SERVER['PHP_SELF']));
         <h1 class="text-xl font-bold text-white">EMS Student</h1>
     </div>
     
-    <nav class="mt-[60px] px-2">
-        <div class="space-y-5">
+    <nav class="mt-[20px] px-2">
+        <div class="space-y-2">
             <!-- Dashboard -->
             <a href="/student/dashboard/" 
-               class="<?php echo ($currentDir == 'dashboard') ? 'bg-emerald-100 text-emerald-700 border-r-4 border-emerald-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?> group flex items-center px-2 py-4 text-sm font-medium rounded-md transition-colors duration-200 mt-[100px]">
+               class="<?php echo ($currentDir == 'dashboard') ? 'bg-emerald-100 text-emerald-700 border-r-4 border-emerald-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?> group flex items-center px-2 py-4 text-sm font-medium rounded-md transition-colors duration-200 mt-[40px]">
                 <i class="fas fa-tachometer-alt <?php echo ($currentDir == 'dashboard') ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500'; ?> mr-3 flex-shrink-0 h-5 w-5"></i>
                 Dashboard
             </a>
