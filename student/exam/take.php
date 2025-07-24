@@ -47,10 +47,21 @@ if (!$exam) {
     exit;
 }
 
-// Check if exam is active
-$now = new DateTime();
-$start_time = new DateTime($exam['start_datetime']);
-$end_time = new DateTime($exam['end_datetime']);
+// Check if exam is active - using strtotime for reliable datetime parsing
+$now = time();
+$start_time = strtotime($exam['start_datetime']);
+$end_time = strtotime($exam['end_datetime']);
+
+// If parsing fails, log error and use fallback values to prevent false redirects
+if ($start_time === false) {
+    error_log("Failed to parse exam start time: {$exam['start_datetime']}");
+    $start_time = $now - 3600; // Set to 1 hour ago to allow access
+}
+
+if ($end_time === false) {
+    error_log("Failed to parse exam end time: {$exam['end_datetime']}");
+    $end_time = $now + 86400; // Set to 24 hours from now to allow access
+}
 
 if ($now < $start_time) {
     header('Location: /student/exam/?error=not_started');

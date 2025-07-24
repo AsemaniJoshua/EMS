@@ -167,9 +167,7 @@ $recentActivityQuery = "
     JOIN exam_registrations er ON r.registration_id = er.registration_id
     JOIN exams e ON er.exam_id = e.exam_id
     WHERE er.student_id = :student_id
-    
     UNION ALL
-    
     SELECT 
         'exam_registered' as activity_type,
         e.title as activity_title,
