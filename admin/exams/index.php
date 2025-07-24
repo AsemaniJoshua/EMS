@@ -226,6 +226,59 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             </div>
         </div>
     </main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+function deleteExam(examId, examTitle) {
+    Swal.fire({
+        title: 'Delete Exam',
+        text: `Are you sure you want to delete the exam "${examTitle}"? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Deleting...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            axios.post('../../api/exams/deleteExam.php', {
+                examId: examId
+            })
+            .then(response => {
+                Swal.close();
+                if (response.data.success || response.data.status === 'success') {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: response.data.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error!', response.data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                const errorMsg = error.response && error.response.data && error.response.data.message ?
+                    error.response.data.message :
+                    'An error occurred while deleting the exam.';
+                Swal.fire('Error!', errorMsg, 'error');
+            });
+        }
+    });
+}
+</script>
 </body>
 
 </html>

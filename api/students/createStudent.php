@@ -111,7 +111,7 @@ try {
         mail($email, "Welcome to EMS", "Your account has been created successfully.");
     }
 
-    echo json_encode(['status' => 'success', 'message' => 'Student added successfully!']);
+    echo json_encode(['success' => true, 'message' => 'Student added successfully!']);
 } catch (PDOException $e) {
     echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
 }
