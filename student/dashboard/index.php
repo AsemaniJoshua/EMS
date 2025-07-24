@@ -224,10 +224,10 @@ $recentActivity = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <h2 class="text-xl font-bold text-emerald-700 mb-1">Join a Course or Exam</h2>
                     <p class="text-gray-600 text-sm">Enter your enrollment key to access upcoming exams for your course.</p>
                 </div>
-                <form id="enrollForm" class="flex gap-2 w-full md:w-auto">
+                <form id="enrollForm" class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
                     <input id="enrollKey" type="text" required placeholder="Enrollment Key" 
-                           class="px-4 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent flex-1" />
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200">
+                           class="px-4 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent w-full md:w-auto" />
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200 w-full md:w-auto">
                         Submit
                     </button>
                 </form>

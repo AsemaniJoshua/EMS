@@ -446,6 +446,8 @@ async function handleSignup(e) {
             setTimeout(() => {
                 window.location.href = '/student/login/?message=' + encodeURIComponent('Account created successfully! You can now sign in.');
             }, 2000);
+            // Do NOT call setLoadingState(false) here, let loading persist until redirect
+            return;
         } else {
             throw new Error(result.message);
         }
@@ -456,7 +458,6 @@ async function handleSignup(e) {
         
         // Shake the form on error
         shakeForm();
-    } finally {
         setLoadingState(false);
     }
 }

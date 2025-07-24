@@ -3,10 +3,16 @@ header('Content-Type: application/json');
 
 // Include required files
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../login/teacher/teacherSessionCheck.php';
 
-// Check if teacher is logged in
-if (!isset($_SESSION['teacher_logged_in']) || $_SESSION['teacher_logged_in'] !== true) {
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$isAdmin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+$isTeacher = isset($_SESSION['teacher_logged_in']) && $_SESSION['teacher_logged_in'] === true;
+
+if (!$isAdmin && !$isTeacher) {
     echo json_encode([
         'status' => 'error',
         'message' => 'Unauthorized access'
@@ -49,22 +55,22 @@ if ($exam_id <= 0) {
     exit;
 }
 
-$teacher_id = $_SESSION['teacher_id'];
-
 $db = new Database();
 $conn = $db->getConnection();
 
 try {
-    // First verify this exam belongs to the teacher and check its status
-    $verifyStmt = $conn->prepare("
-        SELECT exam_id, status 
-        FROM exams 
-        WHERE exam_id = :exam_id AND teacher_id = :teacher_id
-    ");
-    $verifyStmt->execute([
-        'exam_id' => $exam_id,
-        'teacher_id' => $teacher_id
-    ]);
+    // Admin: can delete any exam; Teacher: can only delete their own
+    if ($isAdmin) {
+        $verifyStmt = $conn->prepare("SELECT exam_id, status FROM exams WHERE exam_id = :exam_id");
+        $verifyStmt->execute(['exam_id' => $exam_id]);
+    } else {
+        $teacher_id = $_SESSION['teacher_id'];
+        $verifyStmt = $conn->prepare("SELECT exam_id, status FROM exams WHERE exam_id = :exam_id AND teacher_id = :teacher_id");
+        $verifyStmt->execute([
+            'exam_id' => $exam_id,
+            'teacher_id' => $teacher_id
+        ]);
+    }
 
     $exam = $verifyStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -118,7 +124,11 @@ try {
     $conn->prepare("DELETE FROM exam_registrations WHERE exam_id = ?")->execute([$exam_id]);
 
     // 7. Delete the exam
-    $conn->prepare("DELETE FROM exams WHERE exam_id = ? AND teacher_id = ?")->execute([$exam_id, $teacher_id]);
+    if ($isAdmin) {
+        $conn->prepare("DELETE FROM exams WHERE exam_id = ?")->execute([$exam_id]);
+    } else {
+        $conn->prepare("DELETE FROM exams WHERE exam_id = ? AND teacher_id = ?")->execute([$exam_id, $teacher_id]);
+    }
 
     $conn->commit();
     echo json_encode(['status' => 'success', 'message' => 'Exam deleted successfully.']);
