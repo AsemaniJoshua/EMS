@@ -176,7 +176,7 @@ try {
             <!-- Management Tabs -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
                 <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                    <nav class="-mb-px flex space-x-8 px-6 overflow-x-auto" aria-label="Tabs">
                         <button onclick="showTab('departments')" id="tab-departments" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button active">
                             <i class="fas fa-building mr-2"></i>Departments
                         </button>
