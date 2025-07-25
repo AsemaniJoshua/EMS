@@ -44,7 +44,7 @@ $row = $rejectedTodayQuery->fetch(PDO::FETCH_ASSOC);
 $rejectedToday = $row['count'];
 
 // Get yesterday's rejections
-$rejectedYesterdayQuery = $conn->prepare("SELECT COUNT(*) FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = :yesterday");
+$rejectedYesterdayQuery = $conn->prepare("SELECT COUNT(*) AS count FROM exams WHERE status = 'Rejected' AND DATE(approved_at) = :yesterday");
 $rejectedYesterdayQuery->bindParam(':yesterday', $yesterday);
 $rejectedYesterdayQuery->execute();
 $row = $rejectedYesterdayQuery->fetch(PDO::FETCH_ASSOC);
@@ -52,30 +52,6 @@ $rejectedYesterday = $row['count'];
 
 $rejectedDiff = $rejectedToday - $rejectedYesterday;
 $rejectedChange = $rejectedDiff; // Alias for template compatibility
-
-// Calculate average response time for the last 7 days
-$responseTimeQuery = $conn->query("
-    SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)), 1) as avg_hours 
-    FROM exams 
-    WHERE (status = 'Approved' OR status = 'Rejected') 
-    AND approved_at IS NOT NULL
-    AND approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-");
-$row = $responseTimeQuery->fetch(PDO::FETCH_ASSOC);
-$avgResponseTime = $row['avg_hours'] ? $row['avg_hours'] : 0;
-
-// Calculate previous week's average response time
-$prevWeekResponseTimeQuery = $conn->query("
-    SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)), 1) as avg_hours 
-    FROM exams 
-    WHERE (status = 'Approved' OR status = 'Rejected') 
-    AND approved_at IS NOT NULL
-    AND approved_at BETWEEN DATE_SUB(NOW(), INTERVAL 14 DAY) AND DATE_SUB(NOW(), INTERVAL 7 DAY)
-");
-$row = $prevWeekResponseTimeQuery->fetch(PDO::FETCH_ASSOC);
-$prevWeekAvgResponseTime = $row['avg_hours'] ? $row['avg_hours'] : 0;
-
-$responseTimeDiff = $avgResponseTime - $prevWeekAvgResponseTime;
 ?>
 
 <!DOCTYPE html>
@@ -115,7 +91,7 @@ $responseTimeDiff = $avgResponseTime - $prevWeekAvgResponseTime;
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -183,33 +159,6 @@ $responseTimeDiff = $avgResponseTime - $prevWeekAvgResponseTime;
                                                 <span>No change</span>
                                             <?php endif; ?>
                                             from yesterday
-                                        </div>
-                                    </dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
-                    <div class="p-5">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-purple-50 rounded-lg p-3">
-                                <i class="fas fa-clock text-purple-600 text-xl"></i>
-                            </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Avg. Response Time</dt>
-                                    <dd>
-                                        <div class="text-xl font-semibold text-gray-900"><?php echo $avgResponseTime ? $avgResponseTime . 'h' : 'N/A'; ?></div>
-                                        <div class="text-sm text-gray-500">
-                                            <?php if ($responseTimeDiff > 0): ?>
-                                                <span class="text-red-600"><?php echo $responseTimeDiff; ?>h slower</span>
-                                            <?php elseif ($responseTimeDiff < 0): ?>
-                                                <span class="text-emerald-600"><?php echo abs($responseTimeDiff); ?>h faster</span>
-                                            <?php else: ?>
-                                                <span>No change</span>
-                                            <?php endif; ?>
                                         </div>
                                     </dd>
                                 </dl>

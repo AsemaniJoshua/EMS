@@ -326,6 +326,18 @@ $teachers = $teacherStmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <script>
+        // Get today's date in YYYY-MM-DD format for comparison
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Date Validation
+        document.querySelector('input[name="startDate"]').addEventListener('change', function() {
+            const startDate = document.querySelector('input[name="startDate"]').value;
+            if (startDate < today) {
+                showNotification('Start date cannot be before today', 'error');
+                this.value = startDate;
+            }
+        });
+
         // Date validation
         document.querySelector('input[name="endDate"]').addEventListener('change', function() {
             const startDate = document.querySelector('input[name="startDate"]').value;
@@ -625,7 +637,7 @@ $teachers = $teacherStmt->fetchAll(PDO::FETCH_ASSOC);
                             courses.forEach(course => {
                                 const option = document.createElement('option');
                                 option.value = course.course_id;
-                                option.textContent = `${course.code} - ${course.title}`;
+                                option.textContent = `${course.code} - ${course.name}`;
                                 courseSelect.appendChild(option);
                             });
 

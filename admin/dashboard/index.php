@@ -79,7 +79,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <p class="mt-1 text-sm text-gray-500">Welcome back! Here's your examination overview.</p>
                 </div>
                 <div class="mt-4 md:mt-0">
-                    <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500" onclick="window.location.href='/admin/exams/createExam.php'">
                         <i class="fas fa-plus mr-2 -ml-1"></i>
                         New Exam
                     </button>
@@ -186,7 +186,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                         <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
                             <h2 class="font-semibold text-gray-900">Recent Activity</h2>
-                            <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">View all</a>
+                            <!-- <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">View all</a> -->
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <?php foreach ($recentActivity as $activity): ?>
@@ -216,7 +216,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                         <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
                             <h2 class="font-semibold text-gray-900">Upcoming Exams</h2>
-                            <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700">See all</a>
+                            <a href="/admin/exams/" class="text-sm text-emerald-600 hover:text-emerald-700">See all</a>
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <?php foreach ($upcomingExams as $exam): ?>

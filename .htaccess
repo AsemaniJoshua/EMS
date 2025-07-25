@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# Student URL redirections
+RewriteRule ^student/?$ /student/dashboard/ [R=301,L]
+RewriteRule ^students/?$ /student/dashboard/ [R=301,L]
+
+# Admin URL redirections (if needed)
+RewriteRule ^admin/?$ /admin/dashboard/ [R=301,L]
+
+# Teacher URL redirections (if needed)  
+RewriteRule ^teacher/?$ /teacher/dashboard/ [R=301,L]
+
+# Exclude API from further rewrites (important!)
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^ - [L]

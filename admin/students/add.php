@@ -345,6 +345,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                         icon: 'error',
                         title: 'Server error. Please try again later.'
                     });
+                    console.error('Error:', error);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i><span>Add Student</span>';
                 });

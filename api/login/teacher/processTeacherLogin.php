@@ -1,10 +1,14 @@
 <?php
+ini_set('session.cookie_path', '/');
+session_start();
 // Prevent direct script access
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['status' => 'error', 'message' => 'Direct access to this script is not allowed']);
     exit;
 }
+
+
 
 // Include database connection
 require_once __DIR__ . '/../../../api/config/database.php';
@@ -36,6 +40,9 @@ if (empty($input)) {
     ];
 }
 
+// Debug: Log the received input
+error_log('Teacher login attempt - Email: ' . ($input['email'] ?? 'NOT SET') . ', Password length: ' . strlen($input['password'] ?? ''));
+
 // Validate required fields
 if (empty($input['email']) || empty($input['password'])) {
     $response['message'] = 'Email and password are required';
@@ -56,13 +63,21 @@ try {
         exit;
     }
 
+    // Debug: Log the sanitized email
+    error_log('Teacher login - Sanitized email: ' . $email);
+
     // Prepare SQL statement to find the teacher
     $stmt = $conn->prepare("SELECT teacher_id, email, username, first_name, last_name, password_hash, status FROM teachers WHERE email = :email");
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->execute();
 
+    error_log('Teacher login - Database query result count: ' . $stmt->rowCount());
+
     if ($stmt->rowCount() === 1) {
         $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Debug: Log teacher found info (without password)
+        error_log('Teacher login - Teacher found: ID=' . $teacher['teacher_id'] . ', Status=' . $teacher['status']);
 
         // Check if teacher is active
         if ($teacher['status'] !== 'active') {
@@ -71,8 +86,13 @@ try {
             exit;
         }
 
+        // Debug: Log password verification attempt
+        error_log('Teacher login - Attempting password verification for teacher ID: ' . $teacher['teacher_id']);
+
         // Verify password
         if (password_verify($password, $teacher['password_hash'])) {
+            error_log('Teacher login - Password verification SUCCESS for teacher ID: ' . $teacher['teacher_id']);
+            
             // Start session if not already started
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -96,27 +116,33 @@ try {
             }
 
             // Log successful login attempt
-            // In a production system, you'd log this to a database or file
+            error_log('Teacher login - Session created successfully for teacher ID: ' . $teacher['teacher_id']);
 
             $response['status'] = 'success';
             $response['message'] = 'Login successful';
             $response['redirect'] = '/teacher/dashboard/'; // Redirect to teacher dashboard
         } else {
             // Incorrect password
+            error_log('Teacher login - Password verification FAILED for teacher ID: ' . $teacher['teacher_id']);
             $response['message'] = 'Invalid email or password';
         }
     } else {
         // Teacher not found
+        error_log('Teacher login - No teacher found with email: ' . $email);
         $response['message'] = 'Invalid email or password';
     }
 
     $stmt = null;
-} catch (Exception $e) {
+} catch(Exception $e) {
     // Handle any exceptions
+    error_log('Teacher login - Exception: ' . $e->getMessage());
     $response['message'] = 'An error occurred. Please try again later.';
     // Log the error (in production, use a proper logging system)
     error_log('Teacher login error: ' . $e->getMessage());
 }
+
+// Debug: Log final response
+error_log('Teacher login - Final response: ' . json_encode($response));
 
 // Return JSON response
 echo json_encode($response);

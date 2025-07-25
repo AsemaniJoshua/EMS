@@ -1,103 +1,94 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF'], '.php');
-$current_dir = basename(dirname($_SERVER['PHP_SELF']));
-function isStudentActive($dir) {
-    global $current_dir;
-    return $current_dir === $dir;
-}
+// Get current page for active menu highlighting
+$currentPage = basename($_SERVER['PHP_SELF']);
+$currentDir = basename(dirname($_SERVER['PHP_SELF']));
 ?>
-<aside id="sidebar" class="fixed left-0 top-0 min-h-screen lg:h-screen h-[100dvh] w-60 bg-white shadow-2xl z-100 flex flex-col overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full">
-    <!-- Header -->
-    <div class="p-5 border-b border-emerald-100 flex items-center justify-between bg-white">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shadow-md">
-                <i class="fas fa-user-graduate text-white text-xl"></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800">EMS Student</span>
+
+<!-- Sidebar -->
+<div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-60 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
+    <div class="flex items-center justify-center h-16 px-4 bg-emerald-600 mb-3">
+        <h1 class="text-xl font-bold text-white">EMS Student</h1>
+    </div>
+    
+    <nav class="mt-[20px] px-2">
+        <div class="space-y-2">
+            <!-- Dashboard -->
+            <a href="/student/dashboard/" 
+               class="<?php echo ($currentDir == 'dashboard') ? 'bg-emerald-100 text-emerald-700 border-r-4 border-emerald-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?> group flex items-center px-2 py-4 text-sm font-medium rounded-md transition-colors duration-200 mt-[40px]">
+                <i class="fas fa-tachometer-alt <?php echo ($currentDir == 'dashboard') ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500'; ?> mr-3 flex-shrink-0 h-5 w-5"></i>
+                Dashboard
+            </a>
+            
+            <!-- Exams -->
+            <a href="/student/exam/" 
+               class="<?php echo ($currentDir == 'exam') ? 'bg-emerald-100 text-emerald-700 border-r-4 border-emerald-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?> group flex items-center px-2 py-4 text-sm font-medium rounded-md transition-colors duration-200">
+                <i class="fas fa-clipboard-list <?php echo ($currentDir == 'exam') ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500'; ?> mr-3 flex-shrink-0 h-5 w-5"></i>
+                Exams
+            </a>
+            
+            <!-- Results -->
+            <a href="/student/results/" 
+               class="<?php echo ($currentDir == 'results') ? 'bg-emerald-100 text-emerald-700 border-r-4 border-emerald-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?> group flex items-center px-2 py-4 text-sm font-medium rounded-md transition-colors duration-200">
+                <i class="fas fa-chart-bar <?php echo ($currentDir == 'results') ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500'; ?> mr-3 flex-shrink-0 h-5 w-5"></i>
+                Results
+            </a>
+            
+            <!-- Profile -->
+            <a href="/student/profile/" 
+               class="<?php echo ($currentDir == 'profile') ? 'bg-emerald-100 text-emerald-700 border-r-4 border-emerald-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'; ?> group flex items-center px-2 py-4 text-sm font-medium rounded-md transition-colors duration-200">
+                <i class="fas fa-user <?php echo ($currentDir == 'profile') ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500'; ?> mr-3 flex-shrink-0 h-5 w-5"></i>
+                Profile
+            </a>
         </div>
-        <button id="closeSidebar" class="lg:hidden text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Close sidebar">
-            <i class="fas fa-times w-6 h-6"></i>
+    </nav>
+    <!-- Logout button below the sidebar -->
+    <div class="absolute bottom-0 left-0 w-full px-2 pb-6">
+        <button onclick="logoutStudent()" 
+            class="w-full text-left text-red-600 hover:bg-red-50 hover:text-red-700 group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200">
+            <i class="fas fa-sign-out-alt text-red-400 group-hover:text-red-700 mr-3 flex-shrink-0 h-5 w-5"></i>
+            Logout
         </button>
     </div>
-    <!-- Navigation -->
-    <nav class="flex-1 p-4 overflow-y-auto">
-        <ul class="space-y-1">
-            <li>
-                <a href="../dashboard/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('dashboard') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
-                    <i class="fas fa-tachometer-alt text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('dashboard') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
-                    Dashboard
-                </a>
-            </li>
-            <li>
-                <a href="../exam/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('exam') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
-                    <i class="fas fa-clipboard text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('exam') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
-                    Exams
-                </a>
-            </li>
-            <li>
-                <a href="../results/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('results') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
-                    <i class="fas fa-chart-bar text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('results') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
-                    Results
-                </a>
-            </li>
-            <li>
-                <a href="../profile/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 <?php echo isStudentActive('profile') ? 'bg-emerald-100 text-emerald-800 border-l-4 border-emerald-600 font-semibold' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-l-4 hover:border-emerald-300'; ?>">
-                    <i class="fas fa-user text-lg mr-3 flex-shrink-0 <?php echo isStudentActive('profile') ? 'text-emerald-700' : 'text-gray-500 group-hover:text-emerald-600'; ?>"></i>
-                    Profile
-                </a>
-            </li>
-        </ul>
-    </nav>
-    <!-- Logout -->
-    <div class="p-4 border-t border-emerald-100 bg-white">
-        <a href="../login/index.php" class="group flex items-center px-3 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-            <i class="fas fa-sign-out-alt w-5 h-5 mr-3 flex-shrink-0 text-red-500 group-hover:text-red-600"></i>
-            Logout
-        </a>
-    </div>
-</aside>
-<!-- Mobile overlay -->
-<div id="sidebarOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 lg:hidden hidden"></div>
-<!-- Mobile menu button -->
-<button
-    id="openSidebar"
-    class="lg:hidden fixed top-4 left-4 p-2.5 w-10 h-10 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg drop-shadow-lg z-50 focus:outline-none transition-colors duration-200 flex items-center justify-center"
-    aria-label="Open sidebar">
-    <i class="fas fa-bars w-5 h-5"></i>
-</button>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div id="sidebar-overlay" class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 hidden lg:hidden"></div>
+
 <script>
-// Sidebar toggle functionality (same as admin)
+// Sidebar toggle functionality
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar.classList.contains('-translate-x-full')) {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    } else {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-        document.body.style.overflow = 'auto';
+    const overlay = document.getElementById('sidebar-overlay');
+    
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+}
+
+// Close sidebar when clicking overlay
+document.getElementById('sidebar-overlay').addEventListener('click', toggleSidebar);
+
+// Logout function
+function logoutStudent() {
+    if (confirm('Are you sure you want to logout?')) {
+        fetch('/api/students/logout.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/student/login/';
+            } else {
+                alert('Logout failed. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
+            // Force redirect even if API fails
+            window.location.href = '/student/login/';
+        });
     }
 }
-function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.add('-translate-x-full');
-    overlay.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('closeSidebar');
-    const openBtn = document.getElementById('openSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-    if (openBtn) openBtn.addEventListener('click', toggleSidebar);
-    if (overlay) overlay.addEventListener('click', closeSidebar);
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 1024) closeSidebar();
-    });
-});
-window.toggleSidebar = toggleSidebar;
-window.closeSidebar = closeSidebar;
-</script> 
+</script>

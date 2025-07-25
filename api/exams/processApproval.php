@@ -1,8 +1,10 @@
 <?php
 header('Content-Type: application/json');
 require_once '../config/database.php';
-require_once '../login/sessionCheck.php'; // Ensure admin is logged in
-
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // Check if user is admin
 if (!isset($_SESSION['admin_id'])) {
     http_response_code(401);

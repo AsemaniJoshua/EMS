@@ -1,0 +1,315 @@
+{
+    "timestamp": "2025-07-20 18:02:45",
+    "version": "1.0",
+    "tables": {
+        "departments": [
+            {
+                "department_id": 1,
+                "name": "Computer Science",
+                "description": "Department focusing on computing and software development."
+            },
+            {
+                "department_id": 2,
+                "name": "Electrical Engineering",
+                "description": "Department focusing on electrical systems and electronics."
+            },
+            {
+                "department_id": 3,
+                "name": "Business Administration",
+                "description": "Department focusing on management and business studies."
+            },
+            {
+                "department_id": 4,
+                "name": "Automobile Department",
+                "description": "Automobile Department"
+            }
+        ],
+        "programs": [
+            {
+                "program_id": 1,
+                "name": "BSc Computer Science",
+                "description": "Undergraduate program in Computer Science",
+                "department_id": 1
+            },
+            {
+                "program_id": 2,
+                "name": "BSc Electrical Engineering",
+                "description": "Undergraduate program in Electrical Engineering",
+                "department_id": 4
+            },
+            {
+                "program_id": 3,
+                "name": "BBA Business Administration",
+                "description": "Undergraduate program in Business Administration",
+                "department_id": 3
+            },
+            {
+                "program_id": 4,
+                "name": "BSc Information Technology Education",
+                "description": "Undergraduate in Information Technology Education",
+                "department_id": 1
+            }
+        ],
+        "courses": [
+            {
+                "course_id": 1,
+                "code": "CS101",
+                "title": "Introduction to Programming",
+                "department_id": 1,
+                "credits": 3,
+                "program_id": 1,
+                "level_id": 100,
+                "semester_id": 1
+            },
+            {
+                "course_id": 2,
+                "code": "EE201",
+                "title": "Circuit Analysis",
+                "department_id": 2,
+                "credits": 4,
+                "program_id": 2,
+                "level_id": 200,
+                "semester_id": 1
+            },
+            {
+                "course_id": 3,
+                "code": "CS202",
+                "title": "Data Structures",
+                "department_id": 1,
+                "credits": 3,
+                "program_id": 1,
+                "level_id": 200,
+                "semester_id": 2
+            },
+            {
+                "course_id": 4,
+                "code": "BA101",
+                "title": "Computer Architecture",
+                "department_id": 3,
+                "credits": 3,
+                "program_id": 3,
+                "level_id": 100,
+                "semester_id": 1
+            },
+            {
+                "course_id": 5,
+                "code": "ICT212",
+                "title": "Computer Architecture",
+                "department_id": 1,
+                "credits": 3,
+                "program_id": 4,
+                "level_id": 300,
+                "semester_id": 3
+            }
+        ],
+        "levels": [
+            {
+                "level_id": 100,
+                "name": "Level 100"
+            },
+            {
+                "level_id": 200,
+                "name": "Level 200"
+            },
+            {
+                "level_id": 300,
+                "name": "Level 300"
+            },
+            {
+                "level_id": 400,
+                "name": "Level 400"
+            }
+        ],
+        "semesters": [
+            {
+                "semester_id": 1,
+                "name": "Fall 2024",
+                "start_date": "2024-09-01",
+                "end_date": "2024-12-15"
+            },
+            {
+                "semester_id": 2,
+                "name": "Spring 2025",
+                "start_date": "2025-01-15",
+                "end_date": "2025-05-10"
+            },
+            {
+                "semester_id": 3,
+                "name": "Summer 2025",
+                "start_date": "2025-06-01",
+                "end_date": "2025-07-31"
+            },
+            {
+                "semester_id": 4,
+                "name": "Last Semester 2025",
+                "start_date": "2004-12-11",
+                "end_date": "2025-01-12"
+            }
+        ],
+        "admins": [
+            {
+                "admin_id": 1,
+                "email": "admin@app.ems.com",
+                "username": "admin",
+                "first_name": "Gilbert",
+                "last_name": "Kukah",
+                "password_hash": "$2y$12$CSWpzv6.SeRUp8RcStt\/2uM6Zi1t1OdqRY18OZ\/Up11VfF0UhOggW",
+                "created_at": "2025-07-06 22:10:28"
+            },
+            {
+                "admin_id": 2,
+                "email": "admin1@example.com",
+                "username": "admin_user1",
+                "first_name": "Alice",
+                "last_name": "Smith",
+                "password_hash": "hashed_password_admin1",
+                "created_at": "2025-07-07 10:52:21"
+            },
+            {
+                "admin_id": 3,
+                "email": "admin2@example.com",
+                "username": "admin_user2",
+                "first_name": "Bob",
+                "last_name": "Johnson",
+                "password_hash": "hashed_password_admin2",
+                "created_at": "2025-07-07 10:52:21"
+            }
+        ],
+        "teachers": [
+            {
+                "teacher_id": 1,
+                "staff_id": "TCH001",
+                "email": "teacher1@example.com",
+                "phone_number": "0241234567",
+                "username": "dr_adams",
+                "first_name": "John",
+                "last_name": "Adams",
+                "password_hash": "hashed_password_teacher1",
+                "department_id": 1,
+                "status": "active",
+                "resetOnLogin": 0,
+                "created_at": "2025-07-07 10:52:21",
+                "updated_at": "2025-07-07 10:52:21"
+            },
+            {
+                "teacher_id": 2,
+                "staff_id": "TCH002",
+                "email": "teacher2@example.com",
+                "phone_number": "0242345678",
+                "username": "prof_brown",
+                "first_name": "Rudith",
+                "last_name": "Brown",
+                "password_hash": "hashed_password_teacher2",
+                "department_id": 2,
+                "status": "active",
+                "resetOnLogin": 1,
+                "created_at": "2025-07-07 10:52:21",
+                "updated_at": "2025-07-08 14:26:08"
+            },
+            {
+                "teacher_id": 3,
+                "staff_id": "TCH003",
+                "email": "teacher3@example.com",
+                "phone_number": "0243456789",
+                "username": "Anthony",
+                "first_name": "Emily Gomez",
+                "last_name": "Davis Garcia",
+                "password_hash": "hashed_password_teacher3",
+                "department_id": 1,
+                "status": "inactive",
+                "resetOnLogin": 0,
+                "created_at": "2025-07-07 10:52:21",
+                "updated_at": "2025-07-16 14:26:43"
+            },
+            {
+                "teacher_id": 5,
+                "staff_id": "TCH7894566",
+                "email": "sykukah@gmail.com",
+                "phone_number": "0246706020",
+                "username": "sykukah@gmail.com",
+                "first_name": "SIMON",
+                "last_name": "KUKAH",
+                "password_hash": "$2y$12$ZxHRB5xMWvOmhV9r2.UAOOfTO3tCxIoMe.Uy2KZCjCSgV.RlqQ5Zu",
+                "department_id": 2,
+                "status": "active",
+                "resetOnLogin": 0,
+                "created_at": "2025-07-07 11:04:52",
+                "updated_at": "2025-07-07 11:04:52"
+            },
+            {
+                "teacher_id": 6,
+                "staff_id": "adsklj",
+                "email": "teacher@app.ems.com",
+                "phone_number": "0541436414",
+                "username": "micheal",
+                "first_name": "Micheal",
+                "last_name": "Adu",
+                "password_hash": "$2y$12$FfBf6fShIjfJDcwx8Dz9LeOMJd2ALVBXTmHROHruaO6J4NZCrdwuy",
+                "department_id": 1,
+                "status": "active",
+                "resetOnLogin": 0,
+                "created_at": "2025-07-08 16:15:59",
+                "updated_at": "2025-07-17 18:42:02"
+            }
+        ],
+        "students": [
+            {
+                "student_id": 1,
+                "index_number": "10001",
+                "username": "student_alice",
+                "first_name": "Alice",
+                "last_name": "Wonder",
+                "email": "alice@example.com",
+                "phone_number": "0201112233",
+                "password_hash": "hashed_password_alice",
+                "date_of_birth": "2003-05-10",
+                "gender": "female",
+                "status": "inactive",
+                "level_id": 100,
+                "program_id": 1,
+                "department_id": 1,
+                "resetOnLogin": 0,
+                "created_at": "2025-07-07 10:52:22",
+                "updated_at": "2025-07-09 16:35:52"
+            },
+            {
+                "student_id": 2,
+                "index_number": "10002",
+                "username": "student_bob",
+                "first_name": "Bob",
+                "last_name": "Builder",
+                "email": "bob@example.com",
+                "phone_number": "0204445566",
+                "password_hash": "hashed_password_bob",
+                "date_of_birth": "2002-11-20",
+                "gender": "male",
+                "status": "inactive",
+                "level_id": 200,
+                "program_id": 1,
+                "department_id": 1,
+                "resetOnLogin": 0,
+                "created_at": "2025-07-07 10:52:22",
+                "updated_at": "2025-07-09 16:36:06"
+            },
+            {
+                "student_id": 4,
+                "index_number": "5221040415",
+                "username": "sykukah",
+                "first_name": "SIMON",
+                "last_name": "KUKAH",
+                "email": "sykukah@gmail.com",
+                "phone_number": "0246706020",
+                "password_hash": "$2y$12$pVNe5lMqbOuuVynQMHyx0..MYkp4BZ4cTD20NMk2bHRyEXTXCvLP2",
+                "date_of_birth": "2025-07-23",
+                "gender": "male",
+                "status": "active",
+                "level_id": 300,
+                "program_id": 1,
+                "department_id": 1,
+                "resetOnLogin": 0,
+                "created_at": "2025-07-09 16:00:35",
+                "updated_at": "2025-07-20 14:07:58"
+            }
+        ]
+    }
+}

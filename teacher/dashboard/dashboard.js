@@ -12,10 +12,16 @@ document.addEventListener('DOMContentLoaded', function () {
         timer: 3000,
         timerProgressBar: true,
         didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
     });
+
+    // Initialize sidebar toggle
+    setupSidebar();
+
+    // Initialize profile dropdown
+    setupProfileDropdown();
 
     // Delete exam function with SweetAlert confirmation
     window.deleteExam = function (examId) {
@@ -24,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function () {
             text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -67,98 +73,127 @@ document.addEventListener('DOMContentLoaded', function () {
         initExamStatusChart();
     }
 
-    if (document.getElementById('studentProgressChart')) {
-        initStudentProgressChart();
+    if (document.getElementById('resultsChart')) {
+        initResultsChart();
     }
 });
+
+/**
+ * Set up sidebar toggle functionality
+ */
+function setupSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+
+    if (mobileSidebarToggle && sidebar) {
+        mobileSidebarToggle.addEventListener('click', function () {
+            sidebar.classList.toggle('-translate-x-full');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.toggle('opacity-0');
+                sidebarOverlay.classList.toggle('pointer-events-none');
+            }
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function () {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('opacity-0');
+            sidebarOverlay.classList.add('pointer-events-none');
+        });
+    }
+}
+
+/**
+ * Set up profile dropdown functionality
+ */
+function setupProfileDropdown() {
+    const profileMenuButton = document.getElementById('profileMenuButton');
+    const profileMenu = document.getElementById('profileMenu');
+
+    if (profileMenuButton && profileMenu) {
+        profileMenuButton.addEventListener('click', function () {
+            profileMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) {
+                profileMenu.classList.add('hidden');
+            }
+        });
+    }
+}
+
+/**
+ * Show no data message when chart has no data
+ * @param {HTMLElement} element - The chart element
+ * @param {string} message - Message to display
+ */
+function showNoDataMessage(element, message) {
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex items-center justify-center h-40 text-gray-500';
+    messageDiv.innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-chart-bar text-3xl mb-2 opacity-30"></i>
+            <p>${message}</p>
+        </div>
+    `;
+
+    // Replace chart with message
+    element.style.display = 'none';
+    element.parentNode.appendChild(messageDiv);
+}
 
 /**
  * Initialize Exam Status pie chart
  */
 function initExamStatusChart() {
     const ctx = document.getElementById('examStatusChart').getContext('2d');
-
-    // Get chart data from the data attribute
     const chartCanvas = document.getElementById('examStatusChart');
-    const chartData = JSON.parse(chartCanvas.getAttribute('data-chart'));
 
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                data: chartData.data,
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.8)',  // Blue
-                    'rgba(255, 159, 64, 0.8)',  // Orange
-                    'rgba(75, 192, 192, 0.8)',  // Green
-                    'rgba(255, 99, 132, 0.8)',  // Red
-                    'rgba(153, 102, 255, 0.8)'  // Purple
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 159, 64, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                },
-                title: {
-                    display: true,
-                    text: 'Exam Status Distribution'
-                }
-            }
+    try {
+        const chartData = JSON.parse(chartCanvas.getAttribute('data-chart') || '{"labels":[],"data":[]}');
+
+        if (chartData.labels.length === 0) {
+            showNoDataMessage(chartCanvas, 'No exam status data available');
+            return;
         }
-    });
-}
 
-/**
- * Initialize Student Progress bar chart
- */
-function initStudentProgressChart() {
-    const ctx = document.getElementById('studentProgressChart').getContext('2d');
-
-    // Get chart data from the data attribute
-    const chartCanvas = document.getElementById('studentProgressChart');
-    const chartData = JSON.parse(chartCanvas.getAttribute('data-chart'));
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Average Score (%)',
-                data: chartData.data,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.data,
+                    backgroundColor: [
+                        '#10B981', // Approved - Emerald
+                        '#F59E0B', // Pending - Amber 
+                        '#EF4444', // Rejected - Red
+                        '#6B7280', // Draft - Gray
+                        '#3B82F6'  // Completed - Blue
+                    ],
+                    borderWidth: 1
+                }]
             },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: 'Average Student Scores by Exam'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Exam Status Distribution'
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error initializing exam status chart:', error);
+        showNoDataMessage(chartCanvas, 'Error loading chart data');
+    }
 }
+              
